@@ -1,4 +1,4 @@
-<script>
+﻿<script>
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { page } from '$app/stores';
@@ -106,12 +106,12 @@
 			font-style: normal;
 
 			font-size: 2rem;
-			// color: theme('colors.blue.800');
+			// color: var(--color-blue-800);
 
 			background: linear-gradient(
 				to right,
-				theme('colors.blue.500') 0%,
-				theme('colors.purple.500') 60%
+				var(--color-blue-500) 0%,
+				var(--color-purple-500) 60%
 			);
 			-webkit-background-clip: text;
 			-webkit-text-fill-color: transparent;
@@ -123,7 +123,7 @@
 		.icons {
 			flex-shrink: 0;
 			svg {
-				fill: theme('colors.gray.600');
+				fill: var(--color-gray-600);
 			}
 		}
 	}

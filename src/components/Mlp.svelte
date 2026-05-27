@@ -1,47 +1,46 @@
 <script lang="ts">
-	import { tokens, modelMeta, blockIdx, attentionHeadIdx, vectorHeight } from '~/store';
-	import classNames from 'classnames';
-	import { onMount, setContext } from 'svelte';
-	import OperationGroup from './OperationGroup.svelte';
-	import VectorCanvas from './common/VectorCanvas.svelte';
-	import { Tooltip } from 'flowbite-svelte';
-	import { onClickReadMore } from '~/utils/event';
-	import TextbookTooltip from '~/components/common/TextbookTooltip.svelte';
+import classNames from 'classnames'
+import { Tooltip } from 'flowbite-svelte'
+import { onMount, setContext } from 'svelte'
+import TextbookTooltip from '~/components/common/TextbookTooltip.svelte'
+import { attentionHeadIdx, blockIdx, modelMeta, tokens, vectorHeight } from '~/store'
+import VectorCanvas from './common/VectorCanvas.svelte'
+import OperationGroup from './OperationGroup.svelte'
 
-	export let className: string | undefined = undefined;
+export let className: string | undefined = undefined
 
-	setContext('block-id', 'mlp');
+setContext('block-id', 'mlp')
 
-	const firstLayerlColor = 'bg-purple-200';
-	const secondLayerColor = 'bg-indigo-200';
-	const outputColor = 'bg-blue-200';
+const firstLayerlColor = 'bg-purple-200'
+const secondLayerColor = 'bg-indigo-200'
+const outputColor = 'bg-blue-200'
 
-	let isHovered = false;
+let isHovered = false
 
-	function handleMouseEnter() {
-		isHovered = true;
-	}
+function handleMouseEnter() {
+  isHovered = true
+}
 
-	function handleMouseLeave() {
-		isHovered = false;
-	}
+function handleMouseLeave() {
+  isHovered = false
+}
 
-	let vectorHoverIdx: number | null = null;
+let vectorHoverIdx: number | null = null
 
-	// attentionHeadIdx subscribe
-	const headCursors = {};
+// attentionHeadIdx subscribe
+const headCursors = {}
 
-	onMount(() => {
-		const unsubscribe = attentionHeadIdx.subscribe(async (newIdx) => {
-			Object.values(headCursors).forEach((el) => {
-				el.style.top = `${($vectorHeight / $modelMeta.attention_head_num) * newIdx}px`;
-			});
-		});
+onMount(() => {
+  const unsubscribe = attentionHeadIdx.subscribe(async (newIdx) => {
+    Object.values(headCursors).forEach((el) => {
+      el.style.top = `${($vectorHeight / $modelMeta.attention_head_num) * newIdx}px`
+    })
+  })
 
-		return () => {
-			unsubscribe();
-		};
-	});
+  return () => {
+    unsubscribe()
+  }
+})
 </script>
 
 <div class={classNames('mlp', 'mlpUp', 'mlpDown', className)} data-click="mlp-step">

@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { Button } from 'flowbite-svelte';
 	import { fade } from 'svelte/transition';
 	import { textbookCurrentPage } from '~/store';
@@ -258,7 +258,7 @@
 				<h3 class="text-lg font-semibold text-gray-900">
 					{textPages[$textbookCurrentPage].title}
 				</h3>
-				<Button color="light" size="xs" class="close-btn" on:click={handleClose}>✕</Button>
+				<Button color="light" size="xs" class="close-btn" on:click={handleClose}>âœ•</Button>
 			</div>
 		</div>
 		<div class="card-body">
@@ -361,20 +361,20 @@
 	}
 
 	:global(.textbook-content span.red) {
-		color: theme('colors.red.500');
+		color: var(--color-red-500);
 		font-weight: 500;
 	}
 	:global(.textbook-content span.blue) {
-		color: theme('colors.blue.500');
+		color: var(--color-blue-500);
 		font-weight: 500;
 	}
 	:global(.textbook-content span.green) {
-		color: theme('colors.green.500');
+		color: var(--color-green-500);
 		font-weight: 500;
 	}
 
 	:global(.textbook-content span.purple) {
-		color: theme('colors.purple.500');
+		color: var(--color-purple-500);
 		font-weight: 500;
 	}
 

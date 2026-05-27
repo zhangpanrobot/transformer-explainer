@@ -1,183 +1,174 @@
-<script lang="ts">
-	import {
-		tokens,
-		expandedBlock,
-		vectorHeight,
-		inputText,
-		rootRem,
-		sampling,
-		maxVectorHeight,
-		minVectorHeight,
-		maxVectorScale,
-		headContentHeight,
-		temperature,
-		modelData,
-		modelSession,
-		isFetchingModel,
-		selectedExampleIdx,
-		isMobile,
-		isOnBlockTransition,
-		blockIdx,
-		isTextbookOpen,
-		userId
-	} from '~/store';
-	import { PreTrainedTokenizer } from '@xenova/transformers';
-	import Sankey from '~/components/Sankey.svelte';
-	import Attention from '~/components/Attention.svelte';
-	import SubsequentBlocks from '~/components/SubsequentBlocks.svelte';
-	import LinearSoftmax from '~/components/LinearSoftmax.svelte';
-	import Embedding from '~/components/Embedding.svelte';
-	import Mlp from '~/components/Mlp.svelte';
+﻿<script lang="ts">
+import { AutoTokenizer, PreTrainedTokenizer } from '@xenova/transformers'
+import classNames from 'classnames'
+import * as ort from 'onnxruntime-web'
+import { onMount } from 'svelte'
+import { fade } from 'svelte/transition'
+import { base } from '$app/paths'
+import Attention from '~/components/Attention.svelte'
+import BlockTransition from '~/components/BlockTransition.svelte'
+import Embedding from '~/components/Embedding.svelte'
+import LinearSoftmax from '~/components/LinearSoftmax.svelte'
+import Mlp from '~/components/Mlp.svelte'
+import QKV from '~/components/QKV.svelte'
+import Sankey from '~/components/Sankey.svelte'
+import SubsequentBlocks from '~/components/SubsequentBlocks.svelte'
+import Textbook from '~/components/textbook/Textbook.svelte'
+import WeightPopovers from '~/components/WeightPopovers.svelte'
+import { ex0, ex1, ex2, ex3, ex4 } from '~/constants/examples'
+import {
+  blockIdx,
+  expandedBlock,
+  headContentHeight,
+  inputText,
+  isFetchingModel,
+  isMobile,
+  isOnBlockTransition,
+  isTextbookOpen,
+  maxVectorHeight,
+  maxVectorScale,
+  minVectorHeight,
+  modelData,
+  modelSession,
+  rootRem,
+  sampling,
+  selectedExampleIdx,
+  temperature,
+  tokens,
+  userId,
+  vectorHeight,
+} from '~/store'
+import { adjustTemperature, fakeRunWithCachedData, runModel } from '~/utils/data'
+import { fetchAndMergeChunks } from '~/utils/fetchChunks'
 
-	import { onMount } from 'svelte';
-	import classNames from 'classnames';
-	import { base } from '$app/paths';
-	import * as ort from 'onnxruntime-web';
+ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.0/dist/'
+ort.env.logLevel = 'error'
 
-	import { adjustTemperature, runModel, fakeRunWithCachedData } from '~/utils/data';
-	import { fetchAndMergeChunks } from '~/utils/fetchChunks';
-	import WeightPopovers from '~/components/WeightPopovers.svelte';
-	import { fade } from 'svelte/transition';
-	import { AutoTokenizer } from '@xenova/transformers';
-	import { ex0, ex1, ex2, ex3, ex4 } from '~/constants/examples';
-	import BlockTransition from '~/components/BlockTransition.svelte';
-	import QKV from '~/components/QKV.svelte';
-	import Textbook from '~/components/textbook/Textbook.svelte';
+let active = false
+let appStartTime = Date.now()
 
-	ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.0/dist/';
-	ort.env.logLevel = 'error';
+// fetch model
+onMount(async () => {
+  const gpt2Tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2')
+  active = true
 
-	let active = false;
-	let appStartTime = Date.now();
+  const unsubscribe = subscribeInputs(gpt2Tokenizer)
 
-	// fetch model
-	onMount(async () => {
-		const gpt2Tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2');
-		active = true;
+  if (!$isMobile) {
+    await fetchModel()
+  }
 
-		const unsubscribe = subscribeInputs(gpt2Tokenizer);
+  return unsubscribe
+})
 
-		if (!$isMobile) {
-			await fetchModel();
-		}
+// Fetch model onnx
+const fetchModel = async () => {
+  const chunkNum = 63 //TODO: move to model meta
+  const chunkUrls = Array(chunkNum)
+    .fill(0)
+    .map((d, i) => `${base}/model-v2/gpt2.onnx.part${i}`)
 
-		return unsubscribe;
-	});
+  // Fetch from cache
+  const { hasCache, mergedArray } = await fetchAndMergeChunks(chunkUrls)
 
-	// Fetch model onnx
-	const fetchModel = async () => {
-		const chunkNum = 63; //TODO: move to model meta
-		const chunkUrls = Array(chunkNum)
-			.fill(0)
-			.map((d, i) => `${base}/model-v2/gpt2.onnx.part${i}`);
+  // Create a Blob from the merged array
+  const blob = new Blob([mergedArray], { type: 'application/octet-stream' })
 
-		// Fetch from cache
-		const { hasCache, mergedArray } = await fetchAndMergeChunks(chunkUrls);
+  // Create a URL for the Blob
+  const url = URL.createObjectURL(blob)
 
-		// Create a Blob from the merged array
-		const blob = new Blob([mergedArray], { type: 'application/octet-stream' });
+  // Create ONNX session using the Blob URL
+  const session = await ort.InferenceSession.create(url, {
+    // logSeverityLevel: 0
+  })
 
-		// Create a URL for the Blob
-		const url = URL.createObjectURL(blob);
+  modelSession.set(session)
 
-		// Create ONNX session using the Blob URL
-		const session = await ort.InferenceSession.create(url, {
-			// logSeverityLevel: 0
-		});
+  isFetchingModel.set(false)
 
-		modelSession.set(session);
+  const loadTime = Date.now() - appStartTime
+}
 
-		isFetchingModel.set(false);
+// Subscribe inputs
+const cachedDataMap = [ex0, ex1, ex2, ex3, ex4]
+const subscribeInputs = (tokenizer: PreTrainedTokenizer) => {
+  const runModelOrCache = () => {
+    if ($isFetchingModel || !$modelSession) {
+      const cachedData = cachedDataMap[$selectedExampleIdx]
 
-		const loadTime = Date.now() - appStartTime;
-		window.dataLayer?.push({
-			event: `model-loaded`,
-			use_cache: hasCache,
-			load_time_ms: loadTime,
-			user_id: $userId
-		});
-	};
+      fakeRunWithCachedData({
+        cachedData,
+        tokenizer,
+        temperature: $temperature,
+        sampling: $sampling,
+      })
+      return
+    }
+    // run model when input has changed
+    runModel({
+      tokenizer,
+      input: $inputText.trim(),
+      temperature: $temperature,
+      sampling: $sampling,
+    })
+  }
 
-	// Subscribe inputs
-	const cachedDataMap = [ex0, ex1, ex2, ex3, ex4];
-	const subscribeInputs = (tokenizer: PreTrainedTokenizer) => {
-		const runModelOrCache = () => {
-			if ($isFetchingModel || !$modelSession) {
-				const cachedData = cachedDataMap[$selectedExampleIdx];
+  const unsubscribeInputText = inputText.subscribe((value) => {
+    runModelOrCache()
+  })
 
-				fakeRunWithCachedData({
-					cachedData,
-					tokenizer,
-					temperature: $temperature,
-					sampling: $sampling
-				});
-				return;
-			}
-			// run model when input has changed
-			runModel({
-				tokenizer,
-				input: $inputText.trim(),
-				temperature: $temperature,
-				sampling: $sampling
-			});
-		};
+  let initialTemperature = true // prevent initial redundant rendering
+  const unsubscribeTemperature = temperature.subscribe((value) => {
+    if (initialTemperature) {
+      initialTemperature = false
+      return
+    }
+    adjustTemperature({
+      tokenizer,
+      logits: $modelData.logits,
+      temperature: value,
+      sampling: $sampling,
+    })
+  })
 
-		const unsubscribeInputText = inputText.subscribe((value) => {
-			runModelOrCache();
-		});
+  let initialSampling = true // prevent initial redundant rendering
+  const unsubscribeSmapling = sampling.subscribe((value) => {
+    if (initialSampling) {
+      initialSampling = false
+      return
+    }
+    adjustTemperature({
+      tokenizer,
+      logits: $modelData.logits,
+      temperature: $temperature,
+      sampling: value,
+    })
+  })
 
-		let initialTemperature = true; // prevent initial redundant rendering
-		const unsubscribeTemperature = temperature.subscribe((value) => {
-			if (initialTemperature) {
-				initialTemperature = false;
-				return;
-			}
-			adjustTemperature({
-				tokenizer,
-				logits: $modelData.logits,
-				temperature: value,
-				sampling: $sampling
-			});
-		});
+  return () => {
+    unsubscribeInputText()
+    unsubscribeTemperature()
+    unsubscribeSmapling()
+  }
+}
 
-		let initialSampling = true; // prevent initial redundant rendering
-		const unsubscribeSmapling = sampling.subscribe((value) => {
-			if (initialSampling) {
-				initialSampling = false;
-				return;
-			}
-			adjustTemperature({
-				tokenizer,
-				logits: $modelData.logits,
-				temperature: $temperature,
-				sampling: value
-			});
-		});
+// visual elements
+let vizHeight = 0
+let titleHeight = rootRem * 5
 
-		return () => {
-			unsubscribeInputText();
-			unsubscribeTemperature();
-			unsubscribeSmapling();
-		};
-	};
+const calculateVectorHeight = () => {
+  const gaps = rootRem * 0.5 * ($tokens.length - 1)
+  const vectorHeightVal = Math.min(
+    Math.max((vizHeight - titleHeight - gaps) / $tokens.length / maxVectorScale, minVectorHeight),
+    maxVectorHeight,
+  )
+  vectorHeight.set(vectorHeightVal)
+  headContentHeight.set(Math.max($tokens.length * vectorHeightVal * 3 + gaps, rootRem * 20))
+}
 
-	// visual elements
-	let vizHeight = 0;
-	let titleHeight = rootRem * 5;
-
-	const calculateVectorHeight = () => {
-		const gaps = rootRem * 0.5 * ($tokens.length - 1);
-		const vectorHeightVal = Math.min(
-			Math.max((vizHeight - titleHeight - gaps) / $tokens.length / maxVectorScale, minVectorHeight),
-			maxVectorHeight
-		);
-		vectorHeight.set(vectorHeightVal);
-		headContentHeight.set(Math.max($tokens.length * vectorHeightVal * 3 + gaps, rootRem * 20));
-	};
-
-	$: if (vizHeight || $tokens.length) {
-		calculateVectorHeight();
-	}
+$: if (vizHeight || $tokens.length) {
+  calculateVectorHeight()
+}
 </script>
 
 <div
@@ -375,7 +366,7 @@
 		flex-direction: column;
 		justify-content: end;
 		grid-row: 1;
-		color: theme('colors.gray.400');
+		color: var(--color-gray-400);
 		white-space: nowrap;
 		padding-bottom: 2rem;
 		overflow: visible;
@@ -384,7 +375,7 @@
 		cursor: default;
 
 		&:hover {
-			color: theme('colors.gray.600');
+			color: var(--color-gray-600);
 		}
 	}
 
@@ -417,7 +408,7 @@
 			transform: translateY(calc(-100% - 1rem));
 			text-align: center;
 			font-size: 0.8rem;
-			color: theme('colors.gray.400');
+			color: var(--color-gray-400);
 			width: 100%;
 			z-index: $COLUMN_TITLE_INDEX;
 		}
@@ -461,7 +452,7 @@
 
 	:global(.label) {
 		font-size: 0.9rem;
-		color: theme('colors.gray.700');
+		color: var(--color-gray-700);
 		z-index: $VECTOR_INDEX;
 		display: inline;
 		max-width: 7rem;
@@ -495,7 +486,7 @@
 		padding: 0.5rem 0;
 		left: 0;
 		height: 100%;
-		border: 2px dashed theme('colors.gray.300');
+		border: 2px dashed var(--color-gray-300);
 		border-radius: 0.5rem;
 		transition: opacity 0.5s;
 		opacity: 0;
@@ -513,13 +504,13 @@
 	:global(.tooltip) {
 		z-index: $TOOLTIP_INDEX;
 		background-color: white !important;
-		color: theme('colors.gray.600') !important;
-		border: 1px solid theme('colors.gray.200') !important;
+		color: var(--color-gray-600) !important;
+		border: 1px solid var(--color-gray-200) !important;
 		padding: 0.2rem 0.5rem !important;
 		font-size: 0.8rem !important;
 		white-space: nowrap;
 		font-weight: 300 !important;
-		border-color: theme('colors.gray.200') !important;
+		border-color: var(--color-gray-200) !important;
 	}
 	.dim {
 		position: absolute;

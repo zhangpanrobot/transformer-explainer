@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { onMount } from 'svelte';
 	import QkvWeightPopover from './popovers/QKVWeightPopover.svelte';
 	import { weightPopover, tooltip } from '~/store';
@@ -210,8 +210,8 @@
 
 		background-color: white;
 		position: fixed;
-		border: 1px solid theme('colors.gray.200');
-		color: theme('colors.gray.600');
+		border: 1px solid var(--color-gray-200);
+		color: var(--color-gray-600);
 		padding: 0.2rem 0.4rem;
 		border-radius: 0.4rem;
 		pointer-events: none;

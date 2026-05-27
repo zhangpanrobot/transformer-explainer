@@ -1,43 +1,41 @@
-<script lang="ts">
-	import HeadStack from '~/components/HeadStack.svelte';
-	import {
-		tokens,
-		modelMeta,
-		headContentHeight,
-		expandedBlock,
-		headGap,
-		hoveredMatrixCell,
-		attentionHeadIdx
-	} from '~/store';
-	import classNames from 'classnames';
-	import AttentionMatrix from '~/components/AttentionMatrix.svelte';
+﻿<script lang="ts">
+import classNames from 'classnames'
+import { Tooltip } from 'flowbite-svelte'
+import { getContext, setContext } from 'svelte'
+import AttentionMatrix from '~/components/AttentionMatrix.svelte'
+import HeadStack from '~/components/HeadStack.svelte'
+import {
+  attentionHeadIdx,
+  expandedBlock,
+  headContentHeight,
+  headGap,
+  hoveredMatrixCell,
+  modelMeta,
+  tokens,
+} from '~/store'
+import TextbookTooltip from './common/TextbookTooltip.svelte'
 
-	import { setContext, getContext } from 'svelte';
-	import { Tooltip } from 'flowbite-svelte';
-	import { onClickReadMore } from '~/utils/event';
-	import TextbookTooltip from './common/TextbookTooltip.svelte';
+export let className: string | undefined = undefined
 
-	export let className: string | undefined = undefined;
+setContext('block-id', 'attention')
+const blockId = getContext('block-id')
+$: isAttentionExpanded = $expandedBlock.id === blockId
 
-	setContext('block-id', 'attention');
-	const blockId = getContext('block-id');
-	$: isAttentionExpanded = $expandedBlock.id === blockId;
+const queryHeadVectorColor = 'bg-blue-300'
+const keyHeadVectorColor = 'bg-red-300'
+const valHeadVectorColor = 'bg-green-300'
 
-	const queryHeadVectorColor = 'bg-blue-300';
-	const keyHeadVectorColor = 'bg-red-300';
-	const valHeadVectorColor = 'bg-green-300';
+const outputVectorColor = 'bg-purple-300'
 
-	const outputVectorColor = 'bg-purple-300';
+let isHovered = false
 
-	let isHovered = false;
+function handleMouseEnter() {
+  isHovered = true
+}
 
-	function handleMouseEnter() {
-		isHovered = true;
-	}
-
-	function handleMouseLeave() {
-		isHovered = false;
-	}
+function handleMouseLeave() {
+  isHovered = false
+}
 </script>
 
 <div
@@ -179,7 +177,7 @@
 		.column {
 			.label {
 				font-size: 0.7rem;
-				color: theme('colors.gray.600');
+				color: var(--color-gray-600);
 			}
 			.title {
 				z-index: $COLUMN_TITLE_INDEX;
@@ -191,16 +189,16 @@
 				transition: none;
 			}
 			&.query .title {
-				color: theme('colors.blue.400');
+				color: var(--color-blue-400);
 			}
 			&.key .title {
-				color: theme('colors.red.400');
+				color: var(--color-red-400);
 			}
 			&.value .title {
-				color: theme('colors.green.400');
+				color: var(--color-green-400);
 			}
 			&.out .title {
-				color: theme('colors.purple.400');
+				color: var(--color-purple-400);
 			}
 		}
 		.content {
@@ -222,8 +220,8 @@
 				&.active {
 					&.query {
 						.label {
-							background-color: theme('colors.blue.100');
-							color: theme('colors.blue.700');
+							background-color: var(--color-blue-100);
+							color: var(--color-blue-700);
 							font-size: 1rem;
 							z-index: 100;
 							padding: 0.2rem;
@@ -231,8 +229,8 @@
 					}
 					&.key {
 						.label {
-							background-color: theme('colors.red.100');
-							color: theme('colors.red.700');
+							background-color: var(--color-red-100);
+							color: var(--color-red-700);
 							font-size: 1rem;
 							z-index: 100;
 							padding: 0.2rem;

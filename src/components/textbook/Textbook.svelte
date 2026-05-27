@@ -1,37 +1,37 @@
-<script lang="ts">
-	import { GradientButton } from 'flowbite-svelte';
-	import { BookOpenSolid } from 'flowbite-svelte-icons';
-	import { fade } from 'svelte/transition';
-	import {
-		textbookCurrentPage,
-		textbookPreviousPage,
-		isTextbookOpen,
-		expandedBlock,
-		textbookCurrentPageId,
-		userId
-	} from '~/store';
-	import { textPages } from '~/utils/textbookPages';
-	import TextbookCard from './TextbookCard.svelte';
+﻿<script lang="ts">
+import { GradientButton } from 'flowbite-svelte'
+import { BookOpenSolid } from 'flowbite-svelte-icons'
+import { fade } from 'svelte/transition'
+import {
+  expandedBlock,
+  isTextbookOpen,
+  textbookCurrentPage,
+  textbookCurrentPageId,
+  textbookPreviousPage,
+  userId,
+} from '~/store'
+import { textPages } from '~/utils/textbookPages'
+import TextbookCard from './TextbookCard.svelte'
 
-	export let showTextCard: boolean = false;
+export let showTextCard: boolean = false
 
-	$: if (showTextCard) {
-		handlePageTransition($textbookCurrentPage, $textbookPreviousPage);
-	} else {
-		if ($textbookPreviousPage >= 0 && textPages[$textbookPreviousPage]?.out) {
-			textPages[$textbookPreviousPage].out();
-		}
-		textbookPreviousPage.set(-1);
-	}
+$: if (showTextCard) {
+  handlePageTransition($textbookCurrentPage, $textbookPreviousPage)
+} else {
+  if ($textbookPreviousPage >= 0 && textPages[$textbookPreviousPage]?.out) {
+    textPages[$textbookPreviousPage].out()
+  }
+  textbookPreviousPage.set(-1)
+}
 
-	function handlePageTransition(newPage: number, oldPage: number) {
-		if (oldPage >= 0 && oldPage !== newPage) {
-			textPages[oldPage]?.out();
-		}
-		setTimeout(() => {
-			textPages[newPage]?.on();
-		}, 0);
-	}
+function handlePageTransition(newPage: number, oldPage: number) {
+  if (oldPage >= 0 && oldPage !== newPage) {
+    textPages[oldPage]?.out()
+  }
+  setTimeout(() => {
+    textPages[newPage]?.on()
+  }, 0)
+}
 </script>
 
 <!-- Floating Book Button -->
@@ -44,12 +44,7 @@
 			on:click={() => {
 				isTextbookOpen.set(true);
 
-				window.dataLayer?.push({
-					event: `open-textbook`,
-					page_id: $textbookCurrentPageId,
-					open_via: 'floating-button',
-					user_id: $userId
-				});
+				
 			}}
 		>
 			<BookOpenSolid class="h-8 w-8" />
@@ -79,7 +74,7 @@
 		}
 	}
 	:root {
-		--textbook-highlight-color: theme('colors.blue.600');
+		--textbook-highlight-color: var(--color-blue-600);
 		--textbook-highlight-background: linear-gradient(
 			to top,
 			rgba(251, 255, 0, 0.5),
@@ -124,7 +119,7 @@
 		color: var(--predicted-color);
 		position: relative;
 		&::after {
-			content: '👆';
+			content: 'ðŸ‘†';
 			display: block;
 			white-space: nowrap;
 			position: absolute;
@@ -142,7 +137,7 @@
 	:global(.input-form .select-button.textbook-highlight) {
 		position: relative;
 		&::after {
-			content: '👆';
+			content: 'ðŸ‘†';
 			display: block;
 			white-space: nowrap;
 			position: absolute;
@@ -217,11 +212,11 @@
 		position: relative;
 		transition: all 0.2s ease-in-out;
 		cursor: pointer;
-		color: theme('colors.gray.600') !important;
+		color: var(--color-gray-600) !important;
 		background: var(--textbook-highlight-background) !important;
 
 		&::after {
-			content: '👈';
+			content: 'ðŸ‘ˆ';
 			display: block;
 			white-space: nowrap;
 			position: absolute;
@@ -237,7 +232,7 @@
 	:global(.qkv-column.textbook-highlight) {
 		&::after {
 			z-index: $BOUNDING_BOX_INDEX;
-			content: '👇';
+			content: 'ðŸ‘‡';
 			display: block;
 			white-space: nowrap;
 			position: absolute;
@@ -269,7 +264,7 @@
 
 		&::after {
 			z-index: $BOUNDING_BOX_INDEX;
-			content: '👈';
+			content: 'ðŸ‘ˆ';
 			display: block;
 			white-space: nowrap;
 			position: absolute;
@@ -285,7 +280,7 @@
 	// page attention
 	:global(.attention-result.textbook-highlight) {
 		&::after {
-			content: '👆';
+			content: 'ðŸ‘†';
 			display: block;
 			white-space: nowrap;
 			position: absolute;
@@ -298,7 +293,7 @@
 		}
 	}
 	:global(.attention-result.textbook-highlight .matrix-label) {
-		color: theme('colors.gray.600') !important;
+		color: var(--color-gray-600) !important;
 		background: var(--textbook-highlight-background) !important;
 	}
 
@@ -307,7 +302,7 @@
 		animation: opacity-blink 1.5s ease-in-out infinite !important;
 		&::after {
 			z-index: $BOUNDING_BOX_INDEX;
-			content: '👈';
+			content: 'ðŸ‘ˆ';
 			display: block;
 			white-space: nowrap;
 			position: absolute;
@@ -323,7 +318,7 @@
 	:global(.column.out.textbook-highlight) {
 		&::after {
 			z-index: $BOUNDING_BOX_INDEX;
-			content: '👈';
+			content: 'ðŸ‘ˆ';
 			display: block;
 			white-space: nowrap;
 			position: absolute;
@@ -356,7 +351,7 @@
 		}
 		&::after {
 			z-index: $BOUNDING_BOX_INDEX;
-			content: '👈';
+			content: 'ðŸ‘ˆ';
 			display: block;
 			white-space: nowrap;
 			position: absolute;
@@ -382,7 +377,7 @@
 	:global(.column.final.textbook-highlight) {
 		&::after {
 			z-index: $BOUNDING_BOX_INDEX;
-			content: '👉';
+			content: 'ðŸ‘‰';
 			display: block;
 			white-space: nowrap;
 			position: absolute;
@@ -400,11 +395,11 @@
 		position: relative;
 		transition: all 0.2s ease-in-out;
 		cursor: pointer;
-		color: theme('colors.gray.600') !important;
+		color: var(--color-gray-600) !important;
 		background: var(--textbook-highlight-background) !important;
 
 		&::after {
-			content: '👈';
+			content: 'ðŸ‘ˆ';
 			display: block;
 			white-space: nowrap;
 			position: absolute;
@@ -419,11 +414,11 @@
 	// page temperature
 	:global(.formula-step.scaled.textbook-highlight) {
 		background: var(--textbook-highlight-background) !important;
-		color: theme('colors.gray.600') !important;
+		color: var(--color-gray-600) !important;
 	}
 
 	:global(.title-box.scaled.textbook-highlight .title-text) {
-		color: theme('colors.gray.600') !important;
+		color: var(--color-gray-600) !important;
 		background: var(--textbook-highlight-background) !important;
 	}
 	:global(.content-box.scaled.textbook-highlight) {
@@ -433,7 +428,7 @@
 	:global(.temperature-input.textbook-highlight) {
 		position: relative;
 		&::after {
-			content: '👆';
+			content: 'ðŸ‘†';
 			display: block;
 			white-space: nowrap;
 			position: absolute;
@@ -453,11 +448,11 @@
 	// page sampling
 	:global(.formula-step.sampling.textbook-highlight) {
 		background: var(--textbook-highlight-background) !important;
-		color: theme('colors.gray.600') !important;
+		color: var(--color-gray-600) !important;
 	}
 
 	:global(.title-box.sampling.textbook-highlight .title-text) {
-		color: theme('colors.gray.600') !important;
+		color: var(--color-gray-600) !important;
 		background: var(--textbook-highlight-background) !important;
 	}
 	:global(.content-box.sampling.textbook-highlight) {
@@ -466,7 +461,7 @@
 	:global(.sampling-input.textbook-highlight) {
 		position: relative;
 		&::after {
-			content: '👆';
+			content: 'ðŸ‘†';
 			display: block;
 			white-space: nowrap;
 			position: absolute;
@@ -488,7 +483,7 @@
 		// pointer-events: none;
 	}
 	:global(.residual-start.textbook-highlight .residual-text) {
-		color: theme('colors.gray.600') !important;
+		color: var(--color-gray-600) !important;
 		background: var(--textbook-highlight-background) !important;
 	}
 
@@ -506,7 +501,7 @@
 		opacity: 1 !important;
 	}
 	:global(.operation-col.textbook-highlight .guide-text) {
-		color: theme('colors.gray.600') !important;
+		color: var(--color-gray-600) !important;
 		background: var(--textbook-highlight-background) !important;
 	}
 
@@ -550,16 +545,16 @@
 
 	@keyframes textbook-button-blink {
 		0% {
-			border: 1px solid theme('colors.gray.300');
-			color: theme('colors.gray.600');
+			border: 1px solid var(--color-gray-300);
+			color: var(--color-gray-600);
 		}
 		50% {
 			border: 1px solid var(--predicted-color);
 			color: var(--predicted-color);
 		}
 		100% {
-			border: 1px solid theme('colors.gray.300');
-			color: theme('colors.gray.600');
+			border: 1px solid var(--color-gray-300);
+			color: var(--color-gray-600);
 		}
 	}
 	@keyframes scale-blink {

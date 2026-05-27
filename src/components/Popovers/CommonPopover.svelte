@@ -17,21 +17,10 @@
 	let startTime;
 	const onShow = (e) => {
 		startTime = e.timeStamp;
-		window.dataLayer?.push({
-			event: 'visibility-show',
-			visible_name: `help-popover-${className}`,
-			start_time: e.timeStamp,
-			user_id: $userId
-		});
+		
 	};
 	const onHide = (e) => {
-		window.dataLayer?.push({
-			event: 'visibility-hide',
-			visible_name: `help-popover-${className}`,
-			end_time: e.timeStamp,
-			visible_duration: e.timeStamp - (startTime || 0),
-			user_id: $userId
-		});
+		
 	};
 </script>
 

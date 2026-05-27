@@ -1,193 +1,178 @@
-<script lang="ts">
-	import { Tooltip } from 'flowbite-svelte';
-	import { setContext, getContext, onMount } from 'svelte';
-	import classNames from 'classnames';
-	import { gsap, Flip } from '~/utils/gsap';
-	import { tick } from 'svelte';
-	import tailwindConfig from '../../tailwind.config';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	import {
-		rootRem,
-		temperature,
-		sampling,
-		isExpandOrCollapseRunning,
-		isTextbookOpen,
-		textbookCurrentPageId,
-		userId
-	} from '~/store';
-	import { expandedBlock, predictedToken, highlightedIndex, modelData } from '~/store';
-	import ProbabilityBars from './ProbabilityBars.svelte';
-	import Katex from '~/utils/Katex.svelte';
-	import { ga } from '~/utils/event';
-	import { EyeOutline, ZoomInOutline } from 'flowbite-svelte-icons';
-	import { fade } from 'svelte/transition';
-	import SoftmaxPopover from './popovers/SoftmaxPopover.svelte';
-	import LogitWeightPopover from './popovers/LogitWeightPopover.svelte';
-	import { textPages } from '~/utils/textbookPages';
-	import TextbookTooltip from '~/components/common/TextbookTooltip.svelte';
+﻿<script lang="ts">
+import classNames from 'classnames'
+import { Tooltip } from 'flowbite-svelte'
+import { EyeOutline, ZoomInOutline } from 'flowbite-svelte-icons'
+import { getContext, onMount, setContext, tick } from 'svelte'
+import { fade } from 'svelte/transition'
+import TextbookTooltip from '~/components/common/TextbookTooltip.svelte'
+import {
+  expandedBlock,
+  highlightedIndex,
+  isExpandOrCollapseRunning,
+  isTextbookOpen,
+  modelData,
+  predictedToken,
+  rootRem,
+  sampling,
+  temperature,
+  textbookCurrentPageId,
+  userId,
+} from '~/store'
+import { Flip, gsap } from '~/utils/gsap'
+import Katex from '~/utils/Katex.svelte'
+import { textPages } from '~/utils/textbookPages'
+import ProbabilityBars from './ProbabilityBars.svelte'
+import LogitWeightPopover from './popovers/LogitWeightPopover.svelte'
+import SoftmaxPopover from './popovers/SoftmaxPopover.svelte'
 
-	export let className: string | undefined = undefined;
+export let className: string | undefined = undefined
 
-	setContext('block-id', 'softmax');
+setContext('block-id', 'softmax')
 
-	const blockId = getContext('block-id');
+const blockId = getContext('block-id')
 
-	let isSoftmaxExpanded = false;
-	let showLogitPopover = false;
+let isSoftmaxExpanded = false
+let showLogitPopover = false
 
-	// event handling
-	$: if ($expandedBlock.id !== blockId && isSoftmaxExpanded) {
-		isSoftmaxExpanded = false;
-		collapseSoftmax();
-	}
-	$: if ($expandedBlock.id === blockId && !isSoftmaxExpanded) {
-		isSoftmaxExpanded = true;
-		expandSoftmax();
-	}
+// event handling
+$: if ($expandedBlock.id !== blockId && isSoftmaxExpanded) {
+  isSoftmaxExpanded = false
+  collapseSoftmax()
+}
+$: if ($expandedBlock.id === blockId && !isSoftmaxExpanded) {
+  isSoftmaxExpanded = true
+  expandSoftmax()
+}
 
-	const onClickSoftmax = () => {
-		if (!isSoftmaxExpanded) {
-			expandedBlock.set({ id: blockId });
-		}
-	};
+const onClickSoftmax = () => {
+  if (!isSoftmaxExpanded) {
+    expandedBlock.set({ id: blockId })
+  }
+}
 
-	const onClickSoftmaxTitle = (e) => {
-		e.stopPropagation();
-		e.preventDefault();
-		textPages.find((page) => page.id === 'output-probabilities')?.out();
+const onClickSoftmaxTitle = (e) => {
+  e.stopPropagation()
+  e.preventDefault()
+  textPages.find((page) => page.id === 'output-probabilities')?.out()
 
-		if (!isSoftmaxExpanded) {
-			expandedBlock.set({ id: blockId });
-			expandSoftmax();
-		} else {
-			expandedBlock.set({ id: null });
-			collapseSoftmax();
-		}
-	};
-	let expandableEl: HTMLDivElement;
+  if (!isSoftmaxExpanded) {
+    expandedBlock.set({ id: blockId })
+    expandSoftmax()
+  } else {
+    expandedBlock.set({ id: null })
+    collapseSoftmax()
+  }
+}
+let expandableEl: HTMLDivElement
 
-	function handleOutsideClick(e) {
-		if (isSoftmaxExpanded && !expandableEl.contains(e.target)) {
-			expandedBlock.set({ id: null });
-		}
-	}
-	onMount(() => {
-		document.querySelector('.main-section').addEventListener('click', handleOutsideClick);
-		return () => {
-			document.querySelector('.main-section').removeEventListener('click', handleOutsideClick);
-		};
-	});
+function handleOutsideClick(e) {
+  if (isSoftmaxExpanded && !expandableEl.contains(e.target)) {
+    expandedBlock.set({ id: null })
+  }
+}
+onMount(() => {
+  document.querySelector('.main-section').addEventListener('click', handleOutsideClick)
+  return () => {
+    document.querySelector('.main-section').removeEventListener('click', handleOutsideClick)
+  }
+})
 
-	// animation
-	let containerState: any;
+// animation
+let containerState: any
 
-	let drawBars: () => void;
+let drawBars: () => void
 
-	// google analytics
-	let startTime = null;
+// google analytics
+let startTime = null
 
-	const expandSoftmax = async () => {
-		containerState = Flip.getState('.softmax .softmax-detail.expandable');
-		isSoftmaxExpanded = true;
-		await tick();
+const expandSoftmax = async () => {
+  containerState = Flip.getState('.softmax .softmax-detail.expandable')
+  isSoftmaxExpanded = true
+  await tick()
 
-		isExpandOrCollapseRunning.set(true);
+  isExpandOrCollapseRunning.set(true)
 
-		gsap.set('.steps', { justifyContent: 'end' });
-		gsap.set('.softmax-detail', { opacity: 0 });
+  gsap.set('.steps', { justifyContent: 'end' })
+  gsap.set('.softmax-detail', { opacity: 0 })
 
-		Flip.from(containerState, {
-			duration: 0.5,
-			ease: 'power2.inOut',
-			onComplete: () => {
-				drawBars?.();
-				isExpandOrCollapseRunning.set(false);
-			}
-		});
-		gsap.to('.softmax-detail', {
-			opacity: 1,
-			duration: 0.2,
-			delay: 0.5
-		});
+  Flip.from(containerState, {
+    duration: 0.5,
+    ease: 'power2.inOut',
+    onComplete: () => {
+      drawBars?.()
+      isExpandOrCollapseRunning.set(false)
+    },
+  })
+  gsap.to('.softmax-detail', {
+    opacity: 1,
+    duration: 0.2,
+    delay: 0.5,
+  })
 
-		startTime = performance.now();
-		window.dataLayer?.push({
-			event: 'visibility-show',
-			visible_name: 'prob-expansion',
-			start_time: startTime,
-			user_id: $userId
-		});
-	};
+  startTime = performance.now()
+  }
 
-	const collapseSoftmax = async () => {
-		let endTime = performance.now();
-		let visibleDuration = endTime - startTime;
+const collapseSoftmax = async () => {
+  let endTime = performance.now()
+  let visibleDuration = endTime - startTime
 
-		window.dataLayer?.push({
-			event: 'visibility-hide',
-			visible_name: 'prob-expansion',
-			end_time: endTime,
-			visible_duration: visibleDuration,
-			user_id: $userId
-		});
+  showLogitPopover = false
 
-		showLogitPopover = false;
+  containerState = Flip.getState('.softmax .softmax-detail.expandable')
+  isSoftmaxExpanded = false
+  await tick()
 
-		containerState = Flip.getState('.softmax .softmax-detail.expandable');
-		isSoftmaxExpanded = false;
-		await tick();
+  isExpandOrCollapseRunning.set(true)
 
-		isExpandOrCollapseRunning.set(true);
+  await Flip.from(containerState, {
+    duration: 0.5,
+    ease: 'power2.inOut',
+    onComplete: () => {
+      drawBars?.()
+      isExpandOrCollapseRunning.set(false)
+    },
+  })
+  gsap.to('.softmax-detail', {
+    opacity: 0,
+    duration: 0.2,
+  })
 
-		await Flip.from(containerState, {
-			duration: 0.5,
-			ease: 'power2.inOut',
-			onComplete: () => {
-				drawBars?.();
-				isExpandOrCollapseRunning.set(false);
-			}
-		});
-		gsap.to('.softmax-detail', {
-			opacity: 0,
-			duration: 0.2
-		});
+  gsap.set('.steps', { justifyContent: 'start' })
+}
 
-		gsap.set('.steps', { justifyContent: 'start' });
-	};
+let rowHeight = rootRem * 1.4
+let rowGap = 0.5 * rootRem
 
-	let rowHeight = rootRem * 1.4;
-	let rowGap = 0.5 * rootRem;
+let hoveredIndex: number | null = null
 
-	let hoveredIndex: number | null = null;
+$: data = $modelData?.probabilities || []
+$: tokenIds = data?.map((d) => d.tokenId)
+$: logits = data?.map((d) => d.logit) || []
+$: scaledLogits = data?.map((d) => d.scaledLogit) || []
 
-	$: data = $modelData?.probabilities || [];
-	$: tokenIds = data?.map((d) => d.tokenId);
-	$: logits = data?.map((d) => d.logit) || [];
-	$: scaledLogits = data?.map((d) => d.scaledLogit) || [];
+// top-k
+$: topKLogits = data?.map((d) => d.topKLogit) || []
 
-	// top-k
-	$: topKLogits = data?.map((d) => d.topKLogit) || [];
+// top-p
+$: topPProbabilities = data?.map((d) => d.topPProbability) || []
+$: cumulativeProbabilities = data?.map((d) => d.cumulativeProbability) || []
+$: cutoffIndex = data?.[0].cutoffIndex
 
-	// top-p
-	$: topPProbabilities = data?.map((d) => d.topPProbability) || [];
-	$: cumulativeProbabilities = data?.map((d) => d.cumulativeProbability) || [];
-	$: cutoffIndex = data?.[0].cutoffIndex;
+let isHovered = false
 
-	let isHovered = false;
+function handleMouseEnter() {
+  isHovered = true
+}
 
-	function handleMouseEnter() {
-		isHovered = true;
-	}
+function handleMouseLeave() {
+  isHovered = false
+}
 
-	function handleMouseLeave() {
-		isHovered = false;
-	}
-
-	const onClickLogits = (e) => {
-		e.stopPropagation();
-		e.preventDefault();
-		showLogitPopover = !showLogitPopover;
-	};
+const onClickLogits = (e) => {
+  e.stopPropagation()
+  e.preventDefault()
+  showLogitPopover = !showLogitPopover
+}
 </script>
 
 <div
@@ -416,7 +401,7 @@
 		.top-k-line {
 			width: 100%;
 			height: 1px;
-			background: theme('colors.purple.500');
+			background: var(--color-purple-500);
 			top: 1.5rem;
 			position: absolute;
 		}
@@ -444,7 +429,7 @@
 				flex-shrink: 0;
 				display: flex;
 				flex-direction: column;
-				color: theme('colors.gray.400');
+				color: var(--color-gray-400);
 				gap: var(--softmax-row-gap);
 
 				span.number {
@@ -466,22 +451,22 @@
 					height: var(--softmax-row-height);
 
 					&.zero {
-						color: theme('colors.gray.300');
+						color: var(--color-gray-300);
 					}
 
 					&.filtered {
-						background-color: theme('colors.purple.100');
-						color: theme('colors.gray.500');
+						background-color: var(--color-purple-100);
+						color: var(--color-gray-500);
 					}
 
 					&.highlight {
-						color: theme('colors.purple.600');
+						color: var(--color-purple-600);
 						transition: background-color 0.2s;
 					}
 
 					&.sample_highlight {
 						color: white;
-						background-color: theme('colors.purple.400');
+						background-color: var(--color-purple-400);
 					}
 
 					&.final_token_highlight {
@@ -495,14 +480,14 @@
 
 						.cutoff-label {
 							position: absolute;
-							color: theme('colors.purple.500');
+							color: var(--color-purple-500);
 							top: 1rem;
 							transform: translate(0, 50%);
 							font-size: 0.9rem;
 							font-weight: 600;
 							font-family: serif;
 							line-height: 1;
-							background-color: theme('colors.gray.50');
+							background-color: var(--color-gray-50);
 						}
 					}
 				}
@@ -514,9 +499,9 @@
 
 			.content-row {
 				.vector-box {
-					background-color: theme('colors.gray.50');
-					border-right: 1px solid theme('colors.gray.200');
-					border-left: 1px solid theme('colors.gray.200');
+					background-color: var(--color-gray-50);
+					border-right: 1px solid var(--color-gray-200);
+					border-left: 1px solid var(--color-gray-200);
 				}
 			}
 
@@ -562,16 +547,16 @@
 						display: flex;
 						align-items: end;
 						gap: 2px;
-						color: theme('colors.gray.400');
+						color: var(--color-gray-400);
 
 						&:hover {
-							background-color: theme('colors.gray.50');
+							background-color: var(--color-gray-50);
 						}
 
 						&.btn {
-							color: theme('colors.gray.500');
+							color: var(--color-gray-500);
 							height: max-content;
-							border: 1px solid theme('colors.gray.300');
+							border: 1px solid var(--color-gray-300);
 							border-radius: 0.3rem;
 							padding: 0.1rem 0.3rem;
 							cursor: pointer;

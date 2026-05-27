@@ -1,140 +1,124 @@
-<script lang="ts">
-	import { Dropdown, DropdownItem, ButtonGroup } from 'flowbite-svelte';
-	import Temperature from './Temperature.svelte';
+﻿<script lang="ts">
+import classNames from 'classnames'
+import { ButtonGroup, Dropdown, DropdownItem } from 'flowbite-svelte'
 
-	import { ChevronDownOutline } from 'flowbite-svelte-icons';
-	import {
-		inputText,
-		isModelRunning,
-		predictedToken,
-		inputTextExample,
-		isFetchingModel,
-		expandedBlock,
-		selectedExampleIdx,
-		isLoaded,
-		isOnAnimation,
-		isMobile,
-		weightPopover,
-		sampling,
-		attentionHeadIdx,
-		blockIdx,
-		temperature,
-		tokenIds,
-		userId
-	} from '~/store';
-	import LoadingDots from './common/LoadingDots.svelte';
-	import classNames from 'classnames';
-	import Sampling from './Sampling.svelte';
-	import { completeCurrentAnimation } from '~/utils/animation';
-	import { textPages } from '~/utils/textbookPages';
+import { ChevronDownOutline } from 'flowbite-svelte-icons'
+import {
+  attentionHeadIdx,
+  blockIdx,
+  expandedBlock,
+  inputText,
+  inputTextExample,
+  isFetchingModel,
+  isLoaded,
+  isMobile,
+  isModelRunning,
+  isOnAnimation,
+  predictedToken,
+  sampling,
+  selectedExampleIdx,
+  temperature,
+  tokenIds,
+  userId,
+  weightPopover,
+} from '~/store'
+import { completeCurrentAnimation } from '~/utils/animation'
+import { textPages } from '~/utils/textbookPages'
+import LoadingDots from './common/LoadingDots.svelte'
+import Sampling from './Sampling.svelte'
+import Temperature from './Temperature.svelte'
 
-	let inputRef: HTMLDivElement;
-	let predictRef: HTMLDivElement;
+let inputRef: HTMLDivElement
+let predictRef: HTMLDivElement
 
-	let useCustomInput = false;
+let useCustomInput = false
 
-	$: inputTextTemp = $inputText || '';
+$: inputTextTemp = $inputText || ''
 
-	$: predictedTokenTemp = $predictedToken?.token || '';
+$: predictedTokenTemp = $predictedToken?.token || ''
 
-	const wordLimit = 12;
-	$: exceedLimit = inputTextTemp.split(' ').length >= wordLimit;
+const wordLimit = 12
+$: exceedLimit = inputTextTemp.split(' ').length >= wordLimit
 
-	// Text input
-	const onFocusInput = (e) => {
-		let formattedString = (inputTextTemp + predictedTokenTemp).replace(/[\s\n]+/g, ' ');
+// Text input
+const onFocusInput = (e) => {
+  let formattedString = (inputTextTemp + predictedTokenTemp).replace(/[\s\n]+/g, ' ')
 
-		inputTextTemp = formattedString;
+  inputTextTemp = formattedString
 
-		// set predicted to empty
-		predictedTokenTemp = '';
-		// set input box text
-		inputRef.innerText = inputTextTemp;
-	};
+  // set predicted to empty
+  predictedTokenTemp = ''
+  // set input box text
+  inputRef.innerText = inputTextTemp
+}
 
-	const onInput = (e) => {
-		inputTextTemp = inputRef.innerText;
-	};
+const onInput = (e) => {
+  inputTextTemp = inputRef.innerText
+}
 
-	const handleSubmit = (e) => {
-		// Complete any running animation before starting new generation
-		completeCurrentAnimation();
+const handleSubmit = (e) => {
+  // Complete any running animation before starting new generation
+  completeCurrentAnimation()
 
-		setTimeout(() => {
-			onFocusInput();
-			textPages.find((page) => page.id === 'how-transformers-work')?.complete();
+  setTimeout(() => {
+    onFocusInput()
+    textPages.find((page) => page.id === 'how-transformers-work')?.complete()
 
-			inputText.set(inputTextTemp);
+    inputText.set(inputTextTemp)
+  }, 0)
+}
 
-			window.dataLayer?.push({
-				event: 'generate-next-token',
-				attn_head_num: $attentionHeadIdx,
-				transformer_block_num: $blockIdx,
-				sampling_type: $sampling.type,
-				sampling_value: $sampling.value,
-				temperature_value: $temperature,
-				current_token_length: $tokenIds.length,
-				input_word_count: inputTextTemp
-					.trim()
-					.split(/\s+/)
-					.filter((word) => word.length > 0).length,
-				use_custom_input: useCustomInput,
-				user_id: $userId
-			});
-		}, 0);
-	};
+const handleKeyDown = (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    if (disabled || exceedLimit) return
+    handleSubmit(e)
+    return
+  }
+  useCustomInput = true
+}
 
-	const handleKeyDown = (e) => {
-		if (e.key === 'Enter') {
-			e.preventDefault();
-			if (disabled || exceedLimit) return;
-			handleSubmit(e);
-			return;
-		}
-		useCustomInput = true;
-	};
+// Example select box
+let dropdownOpen = false
+const onSelectExample = (d, i) => {
+  if ($isFetchingModel) {
+    textPages.find((page) => page.id === 'how-transformers-work')?.complete()
+  }
 
-	// Example select box
-	let dropdownOpen = false;
-	const onSelectExample = (d, i) => {
-		if ($isFetchingModel) {
-			textPages.find((page) => page.id === 'how-transformers-work')?.complete();
-		}
+  dropdownOpen = false
 
-		dropdownOpen = false;
+  selectedExampleIdx.set(i)
+  predictedTokenTemp = ''
 
-		selectedExampleIdx.set(i);
-		predictedTokenTemp = '';
+  inputTextTemp = d
+  inputRef.innerText = inputTextTemp
+  inputText.update((prev) => {
+    if (prev === d.trim()) {
+      return d + ' '
+    }
+    return d.trim()
+  })
+  useCustomInput = false
+}
 
-		inputTextTemp = d;
-		inputRef.innerText = inputTextTemp;
-		inputText.update((prev) => {
-			if (prev === d.trim()) {
-				return d + ' ';
-			}
-			return d.trim();
-		});
-		useCustomInput = false;
-	};
+const moveCursorToEnd = (element) => {
+  const range = document.createRange()
+  const sel = window.getSelection()
+  range.selectNodeContents(element)
+  range.collapse(false)
+  sel.removeAllRanges()
+  sel.addRange(range)
+  element.focus()
+}
 
-	const moveCursorToEnd = (element) => {
-		const range = document.createRange();
-		const sel = window.getSelection();
-		range.selectNodeContents(element);
-		range.collapse(false);
-		sel.removeAllRanges();
-		sel.addRange(range);
-		element.focus();
-	};
-
-	$: isLoading = $isFetchingModel || $isModelRunning;
-	$: disabled =
-		$isFetchingModel ||
-		// $isModelRunning ||
-		$expandedBlock.id !== null ||
-		!!$weightPopover;
-	$: selectDisabled = $isModelRunning || $expandedBlock.id !== null || !!$weightPopover;
-	$: parameterDisabled = !!$weightPopover;
+$: isLoading = $isFetchingModel || $isModelRunning
+$: disabled =
+  $isFetchingModel ||
+  // $isModelRunning ||
+  $expandedBlock.id !== null ||
+  !!$weightPopover
+$: selectDisabled = $isModelRunning || $expandedBlock.id !== null || !!$weightPopover
+$: parameterDisabled = !!$weightPopover
 </script>
 
 <div class="input-area" data-click="input-area">
@@ -274,8 +258,8 @@
 		flex: 1 0 0;
 		align-items: center;
 
-		border: 1px solid theme('colors.gray.300');
-		color: theme('colors.gray.900');
+		border: 1px solid var(--color-gray-300);
+		color: var(--color-gray-900);
 		border-left: none;
 		border-start-end-radius: 0.5rem;
 		border-end-end-radius: 0.5rem;
@@ -328,10 +312,10 @@
 	.select-button {
 		flex-shrink: 0;
 		font-size: 0.9rem;
-		border: 1px solid theme('colors.gray.300');
-		color: theme('colors.gray.900');
+		border: 1px solid var(--color-gray-300);
+		color: var(--color-gray-900);
 		&:hover {
-			background-color: theme('colors.gray.100');
+			background-color: var(--color-gray-100);
 		}
 		&:focus {
 			outline: none;
@@ -342,7 +326,7 @@
 	}
 	:global(.example-dropdown) {
 		:global(.active) {
-			background-color: theme('colors.gray.100') !important;
+			background-color: var(--color-gray-100) !important;
 		}
 	}
 	.helper-text {
@@ -351,13 +335,13 @@
 		right: 0;
 		padding: 0.3rem 0;
 		transform: translate(0, 100%);
-		color: theme('colors.gray.400');
+		color: var(--color-gray-400);
 		font-size: 0.9rem;
 	}
 	:global(.generate-button) {
 		padding: 0.4rem 0.8rem;
-		border: 1px solid theme('colors.gray.300');
-		color: theme('colors.gray.900');
+		border: 1px solid var(--color-gray-300);
+		color: var(--color-gray-900);
 		transition: all 0.2s;
 		flex-shrink: 0;
 	}
@@ -369,8 +353,8 @@
 	}
 	:global(.generate-button.disabled) {
 		opacity: 1;
-		background-color: theme('colors.gray.100');
-		color: theme('colors.gray.400');
+		background-color: var(--color-gray-100);
+		color: var(--color-gray-400);
 		cursor: not-allowed;
 	}
 

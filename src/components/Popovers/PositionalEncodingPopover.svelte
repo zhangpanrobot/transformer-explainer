@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import classNames from 'classnames';
 	import { Popover } from 'flowbite-svelte';
 	import * as d3 from 'd3';
@@ -238,7 +238,7 @@
 <style lang="scss">
 	.highlight {
 		cursor: pointer !important;
-		border: 2px solid theme('colors.gray.500') !important;
+		border: 2px solid var(--color-gray-500) !important;
 		font-weight: bold;
 	}
 
@@ -262,7 +262,7 @@
 			justify-content: center;
 			text-align: center;
 			font-size: 1rem;
-			color: theme('colors.gray.500');
+			color: var(--color-gray-500);
 		}
 
 		.content {
@@ -302,7 +302,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: theme('colors.gray.500');
+		color: var(--color-gray-500);
 	}
 
 	.subcontent {
@@ -325,7 +325,7 @@
 		// width: 600px;
 		height: 80px;
 		border-radius: 4px;
-		border: 1px dashed theme('colors.gray.400');
+		border: 1px dashed var(--color-gray-400);
 	}
 
 	.token-box {
@@ -337,7 +337,7 @@
 		border-radius: 4px;
 
 		&:hover {
-			background-color: theme('colors.gray.100');
+			background-color: var(--color-gray-100);
 			border: 1px solid #e2e8f0;
 		}
 	}
@@ -348,14 +348,14 @@
 		justify-content: center;
 		width: 1.5rem;
 		height: 1.5rem;
-		background-color: theme('colors.gray.100');
+		background-color: var(--color-gray-100);
 		border: 1px solid #e2e8f0;
 		border-radius: 4px;
 		margin: 0.25rem;
 		font-size: 0.9rem;
 
 		&:hover {
-			background-color: theme('colors.gray.100');
+			background-color: var(--color-gray-100);
 			border: 1px solid #e2e8f0;
 		}
 	}
@@ -367,23 +367,23 @@
 
 	.highlight-token-box {
 		cursor: pointer !important;
-		// border: 2px solid theme('colors.gray.500') !important;
+		// border: 2px solid var(--color-gray-500) !important;
 		font-weight: bold;
-		box-shadow: 0 0 0 1.5px theme('colors.gray.500');
+		box-shadow: 0 0 0 1.5px var(--color-gray-500);
 		transition: 0.1s;
 		// box-shadow: 0 0 0 1px black, 0 0 0 3px blue;
 	}
 
 	.barcode-row-highlight {
-		border: 0.2px solid theme('colors.gray.500');
+		border: 0.2px solid var(--color-gray-500);
 		transform: scaleX(12);
 		transition: 0.1s;
 		cursor: pointer;
 	}
 
 	.barcode-bar:hover {
-		// border: 0.5px solid theme('colors.gray.100');
-		box-shadow: 0 0 0 1px theme('colors.gray.500');
+		// border: 0.5px solid var(--color-gray-100);
+		box-shadow: 0 0 0 1px var(--color-gray-500);
 		transform: scaleX(1.5);
 		transition: 0.1s;
 	}
@@ -410,9 +410,9 @@
 		transform: scaleX(5);
 		// padding-left: 0.5px solid white;
 		// padding-right: 0.5px solid white;
-		border-left: 0.1px solid theme('colors.gray.600');
-		border-right: 0.1px solid theme('colors.gray.600');
-		// border: 0.1px solid theme('colors.gray.500');
+		border-left: 0.1px solid var(--color-gray-600);
+		border-right: 0.1px solid var(--color-gray-600);
+		// border: 0.1px solid var(--color-gray-500);
 		transition: 0.1s;
 	}
 
@@ -423,7 +423,7 @@
 		justify-content: space-between;
 		height: 100%;
 		font-size: 0.5rem;
-		color: theme('colors.gray.500');
+		color: var(--color-gray-500);
 	}
 
 	.embed-dim-axis {
@@ -434,7 +434,7 @@
 		width: 400px;
 		justify-content: space-between;
 		font-size: 0.5rem;
-		color: theme('colors.gray.500');
+		color: var(--color-gray-500);
 		transform: translateY(-20px); /* Adjust this value to move the axis above the matrix */
 	}
 
@@ -449,7 +449,7 @@
 		width: 8px;
 		height: 100%;
 		background: linear-gradient(to top, rgb(96, 165, 250), white, rgb(248, 113, 113));
-		border: 1px solid theme('colors.gray.300');
+		border: 1px solid var(--color-gray-300);
 	}
 
 	.legend-labels {
@@ -458,7 +458,7 @@
 		justify-content: space-between;
 		height: 100%;
 		padding-left: 5px;
-		color: theme('colors.gray.500');
+		color: var(--color-gray-500);
 	}
 
 	.legend-labels span {

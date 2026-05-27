@@ -1,18 +1,15 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { modelMeta, tokens, rootRem } from '~/store';
+	import { theme } from '../../utils/tailwind-theme.ts';
 	import * as d3 from 'd3';
 	import { gsap } from '~/utils/gsap';
 	import Matrix from '~/components/common/Matrix.svelte';
 	import { onDestroy, onMount } from 'svelte';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	import tailwindConfig from '../../../tailwind.config';
-	import HelpPopover from '../common/HelpPopover.svelte';
+			import HelpPopover from '../common/HelpPopover.svelte';
 	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
 	import Katex from '~/utils/Katex.svelte';
 
-	const { theme } = resolveConfig(tailwindConfig);
-
-	const tokenGap = 6;
+		const tokenGap = 6;
 
 	// generate data
 	const visibleDimension = 18;
@@ -339,7 +336,7 @@
 		<div class="operator"><div class="symbol mul">&times;</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Q·K·V Weights<HelpPopover id="qkv-weights" 
+				QÂ·KÂ·V Weights<HelpPopover id="qkv-weights" 
 					>{`Transforms embedding vectors into Query, Key, and Value vectors. \nParameters were learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
@@ -362,7 +359,7 @@
 		<div class="operator"><div class="symbol plus">+</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Q·K·V Bias<HelpPopover id="qkv-bias" 
+				QÂ·KÂ·V Bias<HelpPopover id="qkv-bias" 
 					>{`Offsets added after transformation. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
@@ -388,7 +385,7 @@
 			</div>
 		</div>
 		<div class="matrix flex flex-col items-center">
-			<div class="title">Q·K·V</div>
+			<div class="title">QÂ·KÂ·V</div>
 			<div class="flex">
 				<Matrix
 					className="qkv-output"
@@ -413,7 +410,7 @@
 				<Katex
 					displayMode
 					math={`
-	(Embedding_{1,1}×Weights_{1,1} + \\cdots + Embedding_{1,768}×Weights_{768,1})`}
+	(Embedding_{1,1}Ã—Weights_{1,1} + \\cdots + Embedding_{1,768}Ã—Weights_{768,1})`}
 				/>
 			</span>
 			<span class="part2">

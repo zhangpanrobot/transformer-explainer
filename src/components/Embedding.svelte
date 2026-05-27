@@ -1,156 +1,137 @@
-<script lang="ts">
-	import {
-		tokens,
-		expandedBlock,
-		modelMeta,
-		tokenIds,
-		blockIdx,
-		isExpandOrCollapseRunning,
-		textbookCurrentPageId,
-		isTextbookOpen,
-		userId
-	} from '~/store';
-	import classNames from 'classnames';
-	import { gsap, Flip } from '~/utils/gsap';
-	import { tick, setContext, getContext, onMount } from 'svelte';
-	import VectorCanvas from './common/VectorCanvas.svelte';
-	import * as d3 from 'd3';
-	import HelpPopover from './common/HelpPopover.svelte';
-	import tailwindConfig from '../../tailwind.config';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	import { ga } from '~/utils/event';
-	import { Tooltip } from 'flowbite-svelte';
-	import { ZoomInOutline } from 'flowbite-svelte-icons';
+﻿<script lang="ts">
+import classNames from 'classnames'
+import * as d3 from 'd3'
+import { Tooltip } from 'flowbite-svelte'
+import { ZoomInOutline } from 'flowbite-svelte-icons'
+import { getContext, onMount, setContext, tick } from 'svelte'
+import {
+  blockIdx,
+  expandedBlock,
+  isExpandOrCollapseRunning,
+  isTextbookOpen,
+  modelMeta,
+  textbookCurrentPageId,
+  tokenIds,
+  tokens,
+  userId,
+} from '~/store'
+import { ga } from '~/utils/event'
+import { Flip, gsap } from '~/utils/gsap'
+import { theme } from '~/utils/tailwind-theme'
+import { textPages } from '~/utils/textbookPages'
+import TextbookTooltip from './common/TextbookTooltip.svelte'
+import VectorCanvas from './common/VectorCanvas.svelte'
 
-	import TextbookTooltip from './common/TextbookTooltip.svelte';
-	import { textPages } from '~/utils/textbookPages';
+export let className: string | undefined = undefined
 
-	const { theme } = resolveConfig(tailwindConfig);
+setContext('block-id', 'embedding')
 
-	export let className: string | undefined = undefined;
+const blockId = getContext('block-id')
 
-	setContext('block-id', 'embedding');
+let isEmbeddingExpanded = false
 
-	const blockId = getContext('block-id');
+// event handling
+$: if ($expandedBlock.id !== blockId && isEmbeddingExpanded) {
+  isEmbeddingExpanded = false
+  collapseEmbedding()
+}
+$: if ($expandedBlock.id === blockId && !isEmbeddingExpanded) {
+  isEmbeddingExpanded = true
+  expandEmbedding()
+}
 
-	let isEmbeddingExpanded = false;
+const onClickEmbedding = () => {
+  if (!isEmbeddingExpanded) {
+    expandedBlock.set({ id: blockId })
+  }
+}
 
-	// event handling
-	$: if ($expandedBlock.id !== blockId && isEmbeddingExpanded) {
-		isEmbeddingExpanded = false;
-		collapseEmbedding();
-	}
-	$: if ($expandedBlock.id === blockId && !isEmbeddingExpanded) {
-		isEmbeddingExpanded = true;
-		expandEmbedding();
-	}
+const onClickEmbeddingTitle = (e) => {
+  e.stopPropagation()
+  e.preventDefault()
+  textPages.find((page) => page.id === 'embedding')?.complete()
 
-	const onClickEmbedding = () => {
-		if (!isEmbeddingExpanded) {
-			expandedBlock.set({ id: blockId });
-		}
-	};
+  if (!isEmbeddingExpanded) {
+    expandedBlock.set({ id: blockId })
+  } else {
+    expandedBlock.set({ id: null })
+  }
+}
 
-	const onClickEmbeddingTitle = (e) => {
-		e.stopPropagation();
-		e.preventDefault();
-		textPages.find((page) => page.id === 'embedding')?.complete();
+let expandableEl: HTMLDivElement
 
-		if (!isEmbeddingExpanded) {
-			expandedBlock.set({ id: blockId });
-		} else {
-			expandedBlock.set({ id: null });
-		}
-	};
+function handleOutsideClick(e) {
+  if (isEmbeddingExpanded && !expandableEl.contains(e.target)) {
+    expandedBlock.set({ id: null })
+  }
+}
+onMount(() => {
+  document.querySelector('.main-section').addEventListener('click', handleOutsideClick)
+  return () => {
+    document.querySelector('.main-section').removeEventListener('click', handleOutsideClick)
+  }
+})
 
-	let expandableEl: HTMLDivElement;
+// animation
+let containerState: any
 
-	function handleOutsideClick(e) {
-		if (isEmbeddingExpanded && !expandableEl.contains(e.target)) {
-			expandedBlock.set({ id: null });
-		}
-	}
-	onMount(() => {
-		document.querySelector('.main-section').addEventListener('click', handleOutsideClick);
-		return () => {
-			document.querySelector('.main-section').removeEventListener('click', handleOutsideClick);
-		};
-	});
+// google analytics
+let startTime = null
 
-	// animation
-	let containerState: any;
+const expandEmbedding = async () => {
+  containerState = Flip.getState('.embedding .token-column')
+  isEmbeddingExpanded = true
 
-	// google analytics
-	let startTime = null;
+  await tick()
 
-	const expandEmbedding = async () => {
-		containerState = Flip.getState('.embedding .token-column');
-		isEmbeddingExpanded = true;
+  isExpandOrCollapseRunning.set(true)
 
-		await tick();
+  Flip.from(containerState, {
+    duration: 0.5,
+    ease: 'power2.inOut',
+    onComplete: () => {
+      isExpandOrCollapseRunning.set(false)
+    },
+  })
+  gsap.to('.embedding-detail', {
+    opacity: 1,
+    duration: 0.5,
+    delay: 0.5,
+  })
 
-		isExpandOrCollapseRunning.set(true);
+  startTime = performance.now()
+  }
 
-		Flip.from(containerState, {
-			duration: 0.5,
-			ease: 'power2.inOut',
-			onComplete: () => {
-				isExpandOrCollapseRunning.set(false);
-			}
-		});
-		gsap.to('.embedding-detail', {
-			opacity: 1,
-			duration: 0.5,
-			delay: 0.5
-		});
+const collapseEmbedding = async () => {
+  let endTime = performance.now()
+  let visibleDuration = endTime - startTime
 
-		startTime = performance.now();
-		window.dataLayer?.push({
-			event: 'visibility-show',
-			visible_name: 'embedding-expansion',
-			start_time: startTime,
-			user_id: $userId
-		});
-	};
+  containerState = Flip.getState('.embedding .token-column')
+  isEmbeddingExpanded = false
+  await tick()
 
-	const collapseEmbedding = async () => {
-		let endTime = performance.now();
-		let visibleDuration = endTime - startTime;
+  isExpandOrCollapseRunning.set(true)
 
-		window.dataLayer?.push({
-			event: 'visibility-hide',
-			visible_name: 'embedding-expansion',
-			end_time: endTime,
-			visible_duration: visibleDuration,
-			user_id: $userId
-		});
+  Flip.from(containerState, {
+    duration: 0.5,
+    ease: 'power2.inOut',
+    onComplete: () => {
+      isExpandOrCollapseRunning.set(false)
+    },
+  })
+}
 
-		containerState = Flip.getState('.embedding .token-column');
-		isEmbeddingExpanded = false;
-		await tick();
+let isHovered = false
 
-		isExpandOrCollapseRunning.set(true);
+function handleMouseEnter() {
+  isHovered = true
+}
 
-		Flip.from(containerState, {
-			duration: 0.5,
-			ease: 'power2.inOut',
-			onComplete: () => {
-				isExpandOrCollapseRunning.set(false);
-			}
-		});
-	};
+function handleMouseLeave() {
+  isHovered = false
+}
 
-	let isHovered = false;
-
-	function handleMouseEnter() {
-		isHovered = true;
-	}
-
-	function handleMouseLeave() {
-		isHovered = false;
-	}
-
-	const embeddingVectorColor = 'bg-gray-300';
+const embeddingVectorColor = 'bg-gray-300'
 </script>
 
 <div
@@ -345,7 +326,7 @@
 				}
 				.symbol {
 					font-size: 0.8rem;
-					color: theme('colors.gray.400');
+					color: var(--color-gray-400);
 				}
 			}
 
@@ -360,7 +341,7 @@
 				line-height: 1.3;
 			}
 			.index-val .label {
-				color: theme('colors.gray.400');
+				color: var(--color-gray-400);
 				line-height: 1;
 				font-size: 0.8rem;
 			}
@@ -368,7 +349,7 @@
 				width: 4rem;
 				text-align: left;
 				font-size: 0.7rem;
-				color: theme('colors.gray.600');
+				color: var(--color-gray-600);
 				font-family: monospace;
 			}
 

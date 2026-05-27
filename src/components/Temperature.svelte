@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { temperature } from '~/store';
 	import HelpPopover from './common/HelpPopover.svelte';
 	import Slider from './common/Slider.svelte';
@@ -58,6 +58,6 @@
 		flex-shrink: 0;
 		font-size: 0.9rem;
 		line-height: 0;
-		color: theme('colors.gray.600');
+		color: var(--color-gray-600);
 	}
 </style>

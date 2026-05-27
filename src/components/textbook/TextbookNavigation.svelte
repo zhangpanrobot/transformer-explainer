@@ -1,114 +1,100 @@
-<script lang="ts">
-	import { AngleLeftOutline, AngleRightOutline } from 'flowbite-svelte-icons';
-	import {
-		textbookCurrentPage,
-		textbookPreviousPage,
-		textbookCurrentPageId,
-		textbookPreviousPageId,
-		userId
-	} from '~/store';
-	import type { TextbookPage } from '~/utils/textbookPages';
+﻿<script lang="ts">
+import { AngleLeftOutline, AngleRightOutline } from 'flowbite-svelte-icons'
+import {
+  textbookCurrentPage,
+  textbookCurrentPageId,
+  textbookPreviousPage,
+  textbookPreviousPageId,
+  userId,
+} from '~/store'
+import type { TextbookPage } from '~/utils/textbookPages'
 
-	export let textPages: TextbookPage[];
-	export let isMouseInCard: boolean = false;
-	export let isLeftSide: boolean = true;
+export let textPages: TextbookPage[]
+export let isMouseInCard: boolean = false
+export let isLeftSide: boolean = true
 
-	let showPageDropdown = false;
-	let isDragging = false;
-	let progressBarElement: HTMLElement;
-	let previewProgress = 0;
+let showPageDropdown = false
+let isDragging = false
+let progressBarElement: HTMLElement
+let previewProgress = 0
 
-	function updatePageFromPosition(clientX: number, via: string = 'progress-bar') {
-		if (!progressBarElement) return;
+function updatePageFromPosition(clientX: number, via: string = 'progress-bar') {
+  if (!progressBarElement) return
 
-		const rect = progressBarElement.getBoundingClientRect();
-		const clickX = clientX - rect.left;
-		const progressRatio = Math.max(0, Math.min(1, clickX / rect.width));
-		const targetPage = Math.floor(progressRatio * textPages.length);
-		const newPageIndex = Math.max(0, Math.min(targetPage, textPages.length - 1));
+  const rect = progressBarElement.getBoundingClientRect()
+  const clickX = clientX - rect.left
+  const progressRatio = Math.max(0, Math.min(1, clickX / rect.width))
+  const targetPage = Math.floor(progressRatio * textPages.length)
+  const newPageIndex = Math.max(0, Math.min(targetPage, textPages.length - 1))
 
-		if (newPageIndex === $textbookCurrentPage) return;
+  if (newPageIndex === $textbookCurrentPage) return
 
-		textbookPreviousPageId.set($textbookCurrentPageId);
-		textbookPreviousPage.set($textbookCurrentPage);
+  textbookPreviousPageId.set($textbookCurrentPageId)
+  textbookPreviousPage.set($textbookCurrentPage)
 
-		const newPageId = textPages[newPageIndex]?.id || '';
-		textbookCurrentPageId.set(newPageId);
-		textbookCurrentPage.set(newPageIndex);
+  const newPageId = textPages[newPageIndex]?.id || ''
+  textbookCurrentPageId.set(newPageId)
+  textbookCurrentPage.set(newPageIndex)
+}
 
-		window.dataLayer?.push({
-			event: `open-textbook`,
-			page_id: newPageId,
-			open_via: via,
-			user_id: $userId
-		});
-	}
+function handleProgressClick(event: MouseEvent) {
+  event.stopPropagation()
+  event.preventDefault()
+  updatePageFromPosition(event.clientX, 'progress-bar-click')
+}
 
-	function handleProgressClick(event: MouseEvent) {
-		event.stopPropagation();
-		event.preventDefault();
-		updatePageFromPosition(event.clientX, 'progress-bar-click');
-	}
+function handleProgressMouseDown(event: MouseEvent) {
+  event.stopPropagation()
+  event.preventDefault()
+  isDragging = true
+}
 
-	function handleProgressMouseDown(event: MouseEvent) {
-		event.stopPropagation();
-		event.preventDefault();
-		isDragging = true;
-	}
+function handleGlobalMouseMove(event: MouseEvent) {
+  if (isDragging && progressBarElement) {
+    const rect = progressBarElement.getBoundingClientRect()
+    const clickX = event.clientX - rect.left
+    const progressRatio = Math.max(0, Math.min(1, clickX / rect.width))
+    previewProgress = progressRatio
+  }
+}
 
-	function handleGlobalMouseMove(event: MouseEvent) {
-		if (isDragging && progressBarElement) {
-			const rect = progressBarElement.getBoundingClientRect();
-			const clickX = event.clientX - rect.left;
-			const progressRatio = Math.max(0, Math.min(1, clickX / rect.width));
-			previewProgress = progressRatio;
-		}
-	}
+function handleGlobalMouseUp(event: MouseEvent) {
+  if (isDragging) {
+    updatePageFromPosition(event.clientX, 'progress-bar-drag')
+    isDragging = false
+    previewProgress = 0
+  }
+}
 
-	function handleGlobalMouseUp(event: MouseEvent) {
-		if (isDragging) {
-			updatePageFromPosition(event.clientX, 'progress-bar-drag');
-			isDragging = false;
-			previewProgress = 0;
-		}
-	}
+function navigatePage(direction: 'prev' | 'next') {
+  textbookPreviousPage.set($textbookCurrentPage)
+  textbookPreviousPageId.set($textbookCurrentPageId)
 
-	function navigatePage(direction: 'prev' | 'next') {
-		textbookPreviousPage.set($textbookCurrentPage);
-		textbookPreviousPageId.set($textbookCurrentPageId);
+  let newPageIndex: number
+  if (direction === 'prev') {
+    newPageIndex = $textbookCurrentPage > 0 ? $textbookCurrentPage - 1 : textPages.length - 1
+  } else {
+    newPageIndex = $textbookCurrentPage < textPages.length - 1 ? $textbookCurrentPage + 1 : 0
+  }
+  const newPageId = textPages[newPageIndex]?.id || ''
+  textbookCurrentPageId.set(newPageId)
+  textbookCurrentPage.set(newPageIndex)
+}
 
-		let newPageIndex: number;
-		if (direction === 'prev') {
-			newPageIndex = $textbookCurrentPage > 0 ? $textbookCurrentPage - 1 : textPages.length - 1;
-		} else {
-			newPageIndex = $textbookCurrentPage < textPages.length - 1 ? $textbookCurrentPage + 1 : 0;
-		}
-		const newPageId = textPages[newPageIndex]?.id || '';
-		textbookCurrentPageId.set(newPageId);
-		textbookCurrentPage.set(newPageIndex);
+function handleLeftClick(event: MouseEvent) {
+  event.stopPropagation()
+  event.preventDefault()
+  navigatePage('prev')
+}
 
-		window.dataLayer?.push({
-			event: `open-textbook`,
-			page_id: newPageId,
-			open_via: 'nvigation-arrow',
-			user_id: $userId
-		});
-	}
+function handleRightClick(event: MouseEvent) {
+  event.stopPropagation()
+  event.preventDefault()
+  navigatePage('next')
+}
 
-	function handleLeftClick(event: MouseEvent) {
-		event.stopPropagation();
-		event.preventDefault();
-		navigatePage('prev');
-	}
-
-	function handleRightClick(event: MouseEvent) {
-		event.stopPropagation();
-		event.preventDefault();
-		navigatePage('next');
-	}
-
-	$: showLeftArrow = true;
-	$: showRightArrow = true;
+$: showLeftArrow = true
+$: showRightArrow = true
 </script>
 
 <svelte:window on:mousemove={handleGlobalMouseMove} on:mouseup={handleGlobalMouseUp} />
@@ -168,12 +154,7 @@
 								textbookCurrentPage.set(index);
 								showPageDropdown = false;
 
-								window.dataLayer?.push({
-									event: `open-textbook`,
-									page_id: newPageId,
-									open_via: 'dropdown',
-									user_id: $userId
-								});
+								
 							}}
 						>
 							{index + 1}. {page.title}
@@ -223,7 +204,7 @@
 				.progress-bar {
 					width: 6rem;
 					height: 4px;
-					background: theme('colors.gray.200');
+					background: var(--color-gray-200);
 					border-radius: 2px;
 					cursor: pointer;
 					transition: all 0.2s ease;
@@ -231,7 +212,7 @@
 					user-select: none;
 
 					&:hover {
-						background: theme('colors.gray.300');
+						background: var(--color-gray-300);
 					}
 
 					&:active {
@@ -240,7 +221,7 @@
 
 					.progress-fill {
 						height: 100%;
-						background: theme('colors.blue.500');
+						background: var(--color-blue-500);
 						border-radius: 2px;
 						transition: width 0.3s ease;
 
@@ -256,9 +237,9 @@
 					.page-counter {
 						width: 3.4rem;
 						white-space: nowrap;
-						background: theme('colors.blue.50');
-						color: theme('colors.blue.600');
-						border: 1px solid theme('colors.blue.200');
+						background: var(--color-blue-50);
+						color: var(--color-blue-600);
+						border: 1px solid var(--color-blue-200);
 						border-radius: 12px;
 						padding: 0.25rem 0.3rem;
 						font-size: 0.75rem;
@@ -267,8 +248,8 @@
 						transition: all 0.2s ease;
 
 						&:hover {
-							background: theme('colors.blue.100');
-							border-color: theme('colors.blue.200');
+							background: var(--color-blue-100);
+							border-color: var(--color-blue-200);
 						}
 					}
 
@@ -299,13 +280,13 @@
 							transition: all 0.2s ease;
 
 							&:hover {
-								background: theme('colors.blue.50');
-								color: theme('colors.blue.600');
+								background: var(--color-blue-50);
+								color: var(--color-blue-600);
 							}
 
 							&.active {
-								background: theme('colors.blue.50');
-								color: theme('colors.blue.600');
+								background: var(--color-blue-50);
+								color: var(--color-blue-600);
 								font-weight: 600;
 							}
 
@@ -333,7 +314,7 @@
 					height: 1.8rem;
 					border-radius: 50%;
 					background: rgba(59, 130, 246, 0.08);
-					color: theme('colors.blue.500');
+					color: var(--color-blue-500);
 					display: flex;
 					align-items: center;
 					justify-content: center;
@@ -342,7 +323,7 @@
 
 					&:hover {
 						background: rgba(59, 130, 246, 0.12);
-						color: theme('colors.blue.600');
+						color: var(--color-blue-600);
 						border-color: rgba(59, 130, 246, 0.25);
 					}
 

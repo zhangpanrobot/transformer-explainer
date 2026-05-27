@@ -22,12 +22,7 @@
 			textbookCurrentPageId.set(id);
 		}
 
-		window.dataLayer?.push({
-			event: `open-textbook`,
-			page_id: id,
-			open_via: 'tooltip',
-			user_id: $userId
-		});
+		
 	}
 </script>
 

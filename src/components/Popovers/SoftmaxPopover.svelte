@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { Card } from 'flowbite-svelte';
 	import { modelData, sampling, predictedToken, temperature } from '~/store';
 	import Katex from '~/utils/Katex.svelte';
@@ -11,8 +11,8 @@
 	$: data = $modelData?.probabilities || [];
 
 	function getStringNumber(num?: number, decimal = 2) {
-		if (num === -Infinity) return '-∞';
-		if (num === Infinity) return '∞';
+		if (num === -Infinity) return '-âˆž';
+		if (num === Infinity) return 'âˆž';
 		else return num?.toFixed(decimal);
 	}
 
@@ -77,7 +77,7 @@
 										</span>
 									{/each}
 
-									<span class:highlight={selected?.rank >= 5}>•••</span>
+									<span class:highlight={selected?.rank >= 5}>â€¢â€¢â€¢</span>
 								</div>
 							</div>
 						</div>
@@ -120,7 +120,7 @@
 							<div class="cases">
 								<div class="case-row">
 									<span class="condition text">
-										If cumulative prob ≤ {$sampling.value}
+										If cumulative prob â‰¤ {$sampling.value}
 									</span>
 									<span class="number" class:highlight={selected?.rank <= selected?.cutoffIndex}
 										>{getStringNumber(selected?.topPProbability)}</span
@@ -175,7 +175,7 @@
 									</span>
 								{/each}
 
-								<span class:highlight={selected?.rank >= 4}>•••</span>
+								<span class:highlight={selected?.rank >= 4}>â€¢â€¢â€¢</span>
 							</div>
 						</div>
 					</div>
@@ -212,7 +212,7 @@
 										{/if}
 									{/each}
 									{#if 4 <= selected?.cutoffIndex}
-										<div class:highlight={selected?.rank >= 5}>•••</div>
+										<div class:highlight={selected?.rank >= 5}>â€¢â€¢â€¢</div>
 									{/if}
 								</div>
 							</div>
@@ -244,7 +244,7 @@
 		gap: 1rem;
 
 		:global(.step-arrow) {
-			color: theme('colors.gray.400');
+			color: var(--color-gray-400);
 		}
 
 		.norm-step {
@@ -276,7 +276,7 @@
 			.sub-title {
 				width: 100%;
 				font-size: 0.8rem;
-				color: theme('colors.gray.400');
+				color: var(--color-gray-400);
 				position: absolute;
 				text-align: center;
 				bottom: -1.1rem;
@@ -298,7 +298,7 @@
 			gap: 0.1rem;
 			position: absolute;
 			font-size: 0.75rem;
-			color: theme('colors.gray.400');
+			color: var(--color-gray-400);
 			line-height: 0;
 			left: 50%;
 			transform: translateX(-50%);
@@ -319,14 +319,14 @@
 			font-family: monospace;
 		}
 		.filtered {
-			background-color: theme('colors.purple.100');
+			background-color: var(--color-purple-100);
 		}
 		.text {
 			font-size: 0.9rem;
 			font-weight: 300;
 		}
 		.highlight {
-			color: theme('colors.purple.500');
+			color: var(--color-purple-500);
 			font-weight: 600;
 		}
 
@@ -380,7 +380,7 @@
 
 	.softmax-popover-title {
 		.highlight {
-			color: theme('colors.purple.700');
+			color: var(--color-purple-700);
 			font-weight: 800;
 		}
 	}
@@ -395,7 +395,7 @@
 
 		.desc {
 			// font-style: italic;
-			color: theme('colors.gray.400');
+			color: var(--color-gray-400);
 			font-weight: 300;
 		}
 	}

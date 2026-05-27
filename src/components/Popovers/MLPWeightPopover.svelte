@@ -1,18 +1,15 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { modelMeta, tokens, rootRem } from '~/store';
+	import { theme } from '../../utils/tailwind-theme.ts';
 	import * as d3 from 'd3';
 	import { gsap } from '~/utils/gsap';
 	import Matrix from '~/components/common/Matrix.svelte';
 	import { onDestroy, onMount } from 'svelte';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	import tailwindConfig from '../../../tailwind.config';
-	import HelpPopover from '../common/HelpPopover.svelte';
+			import HelpPopover from '../common/HelpPopover.svelte';
 	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
 	import Katex from '~/utils/Katex.svelte';
 
-	const { theme } = resolveConfig(tailwindConfig);
-
-	const tokenGap = 6;
+		const tokenGap = 6;
 
 	// generate data
 	const visibleDimension = 15;
@@ -417,7 +414,7 @@
 				<Katex
 					displayMode
 					math={`
-	(Emb_{1,1}×W_{1,1} + \\cdots + Emb_{1,768}×W_{768,1})`}
+	(Emb_{1,1}Ã—W_{1,1} + \\cdots + Emb_{1,768}Ã—W_{768,1})`}
 				/>
 			</span>
 			<span class="part2">

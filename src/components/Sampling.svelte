@@ -1,16 +1,16 @@
-<script lang="ts">
-	import { Radio } from 'flowbite-svelte';
-	import { sampling, userId } from '~/store';
-	import HelpPopover from './common/HelpPopover.svelte';
-	import Slider from './common/Slider.svelte';
-	import TextbookTooltip from './common/TextbookTooltip.svelte';
-	import { textPages } from '~/utils/textbookPages';
+﻿<script lang="ts">
+import { Radio } from 'flowbite-svelte'
+import { sampling, userId } from '~/store'
+import { textPages } from '~/utils/textbookPages'
+import HelpPopover from './common/HelpPopover.svelte'
+import Slider from './common/Slider.svelte'
+import TextbookTooltip from './common/TextbookTooltip.svelte'
 
-	export let disabled: boolean = false;
+export let disabled: boolean = false
 
-	$: samplingValMax = $sampling.type === 'top-k' ? 50 : 1;
-	$: samplingValMin = $sampling.type === 'top-k' ? 1 : 0.1;
-	$: samplingValStep = $sampling.type === 'top-k' ? 1 : 0.1;
+$: samplingValMax = $sampling.type === 'top-k' ? 50 : 1
+$: samplingValMin = $sampling.type === 'top-k' ? 1 : 0.1
+$: samplingValStep = $sampling.type === 'top-k' ? 1 : 0.1
 </script>
 
 <div class="sampling-input" data-click="input-sampling">
@@ -51,11 +51,7 @@
 					}}
 					on:change={(e) => {
 						e.target.checked && sampling.set({ type: 'top-k', value: 5 });
-						window.dataLayer?.push({
-							event: 'sampling-selected',
-							sampling_type: 'top-k',
-							user_id: $userId
-						});
+						
 					}}
 					checked={$sampling.type === 'top-k'}
 					{disabled}
@@ -72,11 +68,7 @@
 					}}
 					on:change={(e) => {
 						e.target.checked && sampling.set({ type: 'top-p', value: 0.5 });
-						window.dataLayer?.push({
-							event: 'sampling-selected',
-							sampling_type: 'top-p',
-							user_id: $userId
-						});
+						
 					}}
 					{disabled}
 					color="purple">Top-p</Radio
@@ -100,7 +92,7 @@
 	:global(.type-btn) {
 		font-size: 0.9rem;
 		cursor: pointer;
-		color: theme('colors.gray.900');
+		color: var(--color-gray-900);
 		font-weight: 400;
 		line-height: 1.4;
 	}
@@ -141,6 +133,6 @@
 		flex-shrink: 0;
 		font-size: 0.9rem;
 		line-height: 0;
-		color: theme('colors.gray.600');
+		color: var(--color-gray-600);
 	}
 </style>

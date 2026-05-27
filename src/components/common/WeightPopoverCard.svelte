@@ -1,38 +1,27 @@
 <script lang="ts">
-	import { Card } from 'flowbite-svelte';
-	import { CloseOutline } from 'flowbite-svelte-icons';
-	import { onDestroy, onMount } from 'svelte';
-	import { userId, weightPopover } from '~/store';
+	import { Card } from "flowbite-svelte";
+	import { CloseOutline } from "flowbite-svelte-icons";
+	import { onDestroy, onMount } from "svelte";
+	import { weightPopover } from "~/store";
 
 	export let id: string;
 	export let title: string;
 	export let className: string | undefined = undefined;
 	export let isAnimationActive: boolean = false;
-	export let timeline;
+	export let timeline: GSAPTimeline;
 	export let isOpen: boolean = true;
 
-	let startTime;
+	let startTime: number;
 
 	onMount(() => {
 		startTime = performance.now();
-		window.dataLayer?.push({
-			event: 'visibility-show',
-			visible_name: `weight-popover-${id}`,
-			start_time: startTime,
-			user_id: $userId
-		});
+		
 	});
 	onDestroy(() => {
 		let endTime = performance.now();
 		let visibleDuration = endTime - startTime;
 
-		window.dataLayer?.push({
-			event: 'visibility-hide',
-			visible_name: `weight-popover-${id}`,
-			end_time: endTime,
-			visible_duration: visibleDuration,
-			user_id: $userId
-		});
+		
 	});
 </script>
 
@@ -172,7 +161,7 @@
 			font-size: 0.8rem;
 			line-height: 1;
 			text-align: right;
-			color: theme('colors.gray.500');
+			color: var(--colors-gray-500);
 		}
 
 		:global(.matrix) {
@@ -182,7 +171,7 @@
 
 			:global(.title),
 			:global(.size) {
-				color: theme('colors.gray.900');
+				color: var(--colors-gray-900);
 				font-size: 0.8rem;
 				white-space: nowrap;
 				position: absolute;

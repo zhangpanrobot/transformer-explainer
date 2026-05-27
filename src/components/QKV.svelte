@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { tokens, modelMeta, attentionHeadIdx, vectorHeight, blockIdx } from '~/store';
 	import classNames from 'classnames';
 	import { onMount } from 'svelte';
@@ -145,13 +145,13 @@
 						opacity: 0.3;
 					}
 					&.query {
-						color: theme('colors.blue.500');
+						color: var(--color-blue-500);
 					}
 					&.key {
-						color: theme('colors.red.500');
+						color: var(--color-red-500);
 					}
 					&.value {
-						color: theme('colors.green.500');
+						color: var(--color-green-500);
 					}
 
 					.head-rest {

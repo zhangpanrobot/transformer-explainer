@@ -1,25 +1,23 @@
-<script lang="ts">
-	import classNames from 'classnames';
-	import { Popover } from 'flowbite-svelte';
-	import { vectorHeight, expandedBlock } from '~/store';
-	import { onMount } from 'svelte';
+﻿<script lang="ts">
+import classNames from 'classnames'
+import { onMount } from 'svelte'
+import { vectorHeight } from '~/store'
 
-	export let id: string | undefined = undefined;
-	export let className: string | undefined = undefined;
-	export let type: string | undefined = undefined;
-	export let head: boolean = false;
-	export let tail: boolean = false;
-	export let active: boolean = false;
+export let id: string | undefined = undefined
+export let className: string | undefined = undefined
+export let type: string | undefined = undefined
+export let head: boolean = false
+export let tail: boolean = false
+export let active: boolean = false
 
-	let width = 50;
-	let textElement: SVGTextElement;
-	let textBBox: DOMRect;
+let textElement: SVGTextElement
+let textBBox: DOMRect
 
-	onMount(() => {
-		if (textElement) {
-			textBBox = textElement.getBBox();
-		}
-	});
+onMount(() => {
+  if (textElement) {
+    textBBox = textElement.getBBox()
+  }
+})
 </script>
 
 {#if type === 'activation'}
@@ -133,7 +131,7 @@
 			transform: translateX(50%);
 		}
 		svg .icon {
-			fill: theme('colors.gray.300');
+			fill: var(--color-gray-300);
 			opacity: 0.6;
 		}
 		.icon {
@@ -160,7 +158,7 @@
 
 	.dropout {
 		path {
-			stroke: theme('colors.gray.400');
+			stroke: var(--color-gray-400);
 			stroke-dasharray: 2, 2;
 			fill: none;
 			stroke-width: 2;
@@ -170,12 +168,12 @@
 		width: 0.5rem;
 
 		path {
-			stroke: theme('colors.gray.400');
+			stroke: var(--color-gray-400);
 			fill: none;
 			stroke-width: 1;
 		}
 		.head {
-			stroke: theme('colors.gray.400');
+			stroke: var(--color-gray-400);
 		}
 		.residual-text {
 			position: absolute;
@@ -183,20 +181,20 @@
 			left: 4rem;
 			transform: translateX(-50%);
 			font-size: 0.9rem;
-			color: theme('colors.gray.400');
+			color: var(--color-gray-400);
 			white-space: nowrap;
 		}
 	}
 	.ln {
 		path {
-			stroke: theme('colors.gray.400');
+			stroke: var(--color-gray-400);
 			fill: none;
 			stroke-width: 1;
 		}
 	}
 	.activation {
 		path {
-			stroke: theme('colors.gray.400');
+			stroke: var(--color-gray-400);
 			fill: none;
 			stroke-dasharray: 2, 4;
 			fill: none;
@@ -236,12 +234,12 @@
 			left: 50%;
 			transform: translateX(-50%);
 			font-size: 0.9rem;
-			color: theme('colors.gray.400');
+			color: var(--color-gray-400);
 			white-space: nowrap;
 		}
 
 		path {
-			stroke: theme('colors.gray.400');
+			stroke: var(--color-gray-400);
 			fill: none;
 			stroke-width: 1;
 			stroke-dasharray: none;

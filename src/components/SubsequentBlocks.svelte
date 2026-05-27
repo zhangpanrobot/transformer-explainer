@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { tokens, modelMeta, isBoundingBoxActive, expandedBlock, blockIdx } from '~/store';
 	import classNames from 'classnames';
 	import { Tooltip } from 'flowbite-svelte';
@@ -84,7 +84,7 @@
 			top: 0;
 			left: calc(-50% - 0.5rem);
 			transform: translateY(-100%);
-			color: theme('colors.gray.400');
+			color: var(--color-gray-400);
 
 			.text {
 				transition: opacity 0.5s;
@@ -98,7 +98,7 @@
 				&.highlight {
 					.strong {
 						transition: all 0.5s;
-						color: theme('colors.blue.500');
+						color: var(--color-blue-500);
 						font-weight: 600;
 					}
 				}

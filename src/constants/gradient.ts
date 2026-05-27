@@ -1,6 +1,4 @@
-import resolveConfig from 'tailwindcss/resolveConfig';
-import tailwindConfig from '../../tailwind.config';
-const { theme } = resolveConfig(tailwindConfig);
+﻿import { theme } from '../utils/tailwind-theme';
 
 const defaultGradientBrightness = 200;
 export const gradientMap = {
@@ -68,7 +66,6 @@ export const gradientMap = {
 	},
 	'transparent-purple': {
 		0: { color: theme.colors.purple[100], opacity: 0 },
-		// 70: { color: theme.colors.purple[100], opacity: 0.5 },
 		100: { color: theme.colors.purple[200], opacity: 1 }
 	},
 	'transparent-purple2': {

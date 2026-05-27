@@ -1,32 +1,11 @@
 <script lang="ts">
 	import { Popover } from 'flowbite-svelte';
-	import { userId } from '~/store';
 	import { onClickReadMore } from '~/utils/event';
 
 	export let id: string;
 	export let placement: string = 'bottom';
 	export let goTo: string | undefined = undefined;
 	export let textbook: string | undefined = undefined;
-
-	let startTime;
-	const onShow = (e) => {
-		startTime = e.timeStamp;
-		window.dataLayer?.push({
-			event: 'visibility-show',
-			visible_name: `help-popover-${id}`,
-			start_time: e.timeStamp,
-			user_id: $userId
-		});
-	};
-	const onHide = (e) => {
-		window.dataLayer?.push({
-			event: 'visibility-hide',
-			visible_name: `help-popover-${id}`,
-			end_time: e.timeStamp,
-			visible_duration: e.timeStamp - (startTime || 0),
-			user_id: $userId
-		});
-	};
 </script>
 
 <div {id} class="help" data-click={`help-icon`}>
@@ -45,13 +24,6 @@
 	{placement}
 	class="help popover"
 	data-click={`help-popover-${id}`}
-	on:show={(e) => {
-		if (e.detail) {
-			onShow(e);
-		} else {
-			onHide(e);
-		}
-	}}
 	><div class="help-content">
 		<slot />
 		{#if textbook}
