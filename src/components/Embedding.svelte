@@ -1,8 +1,8 @@
 ﻿<script lang="ts">
+import { ZoomIn } from '@lucide/svelte'
 import classNames from 'classnames'
 import * as d3 from 'd3'
 import { Tooltip } from 'flowbite-svelte'
-import { ZoomInOutline } from 'flowbite-svelte-icons'
 import { getContext, onMount, setContext, tick } from 'svelte'
 import {
   blockIdx,
@@ -15,7 +15,6 @@ import {
   tokens,
   userId,
 } from '~/store'
-import { ga } from '~/utils/event'
 import { Flip, gsap } from '~/utils/gsap'
 import { theme } from '~/utils/tailwind-theme'
 import { textPages } from '~/utils/textbookPages'
@@ -100,7 +99,7 @@ const expandEmbedding = async () => {
   })
 
   startTime = performance.now()
-  }
+}
 
 const collapseEmbedding = async () => {
   let endTime = performance.now()
@@ -141,22 +140,22 @@ const embeddingVectorColor = 'bg-gray-300'
 	})}
 	bind:this={expandableEl}
 	role="none"
-	on:click={onClickEmbedding}
-	on:keydown={onClickEmbedding}
+	onclick={onClickEmbedding}
+	onkeydown={onClickEmbedding}
 	data-click="embedding-step"
 >
 	<div
 		class="title expandable"
 		role="none"
-		on:click={onClickEmbeddingTitle}
-		on:keydown={onClickEmbeddingTitle}
-		on:mouseenter={handleMouseEnter}
-		on:mouseleave={handleMouseLeave}
+		onclick={onClickEmbeddingTitle}
+		onkeydown={onClickEmbeddingTitle}
+		onmouseenter={handleMouseEnter}
+		onmouseleave={handleMouseLeave}
 		data-click="embedding-step-title"
 	>
 		<div class="title-text flex w-max items-center gap-1">
 			Embedding
-			<ZoomInOutline></ZoomInOutline>
+			<ZoomIn></ZoomIn>
 		</div>
 	</div>
 	<div class="content relative">
@@ -240,9 +239,9 @@ const embeddingVectorColor = 'bg-gray-300'
 									active
 									colorScale={(d, i) => {
 										return d3
-											.scaleDiverging()
+											.scaleDiverging<string>()
 											.domain([0, 0.5, 1])
-											.range([theme.colors['red'][400], 'white', theme.colors['blue'][400]])(d);
+											.range([theme.colors.red[400], 'white', theme.colors.blue[400]])(d);
 									}}
 								/>
 							</div>

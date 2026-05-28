@@ -1,48 +1,52 @@
-<script lang="ts">
-	import classNames from 'classnames';
-	import MatrixSvg from './MatrixSvg.svelte';
+﻿<script lang="ts">
+	import classNames from "classnames";
+	import MatrixSvg from "./MatrixSvg.svelte";
 
-	export let data: number[][];
+	type Data = (number | null)[][];
+	export let data: Data;
 	export let showSize: boolean | undefined | string = true;
-	export let cellHeight: number;
-	export let cellWidth: number;
+	export let cellHeight: number = 24;
+	export let cellWidth: number = 24;
 	export let rowGap: number = 2;
 	export let colGap: number = 0;
-	export let cellGap: number = 0;
 
-	export let groupBy: 'row' | 'col' = 'row';
-	export let shape: 'circle' | 'rect' = 'rect';
-	export let colorScale: string | ((t: number) => any) | undefined = undefined;
+	export let groupBy: "row" | "col" = "row";
+	export let shape: "circle" | "rect" = "rect";
+	export let colorScale: string | ((t: number, i?: number) => any) | undefined =
+		undefined;
 
 	export let className: string | undefined = undefined;
 	export let title: string | undefined = undefined;
-	export let titlePos: 't' | 'b' | undefined = 't';
+	export let titlePos: "t" | "b" | undefined = "t";
 
 	export let transpose: boolean = false;
 
-	export let onMouseOverCell: (
-		event: Event,
-		data: any,
-		el?: SVGRectElement | d3.BaseType
-	) => void | undefined;
-	export let onMouseOutCell: (
-		event: Event,
-		data: any,
-		el?: SVGRectElement | d3.BaseType
-	) => void | undefined;
-	export let onMouseOutSvg: (
-		event: Event,
-		data: any,
-		el?: SVGRectElement | d3.BaseType
-	) => void | undefined;
-	export let showTooltip: (
-		event: Event,
-		data: any,
-		el: SVGRectElement | d3.BaseType
-	) => string | undefined;
+	export let onMouseOverCell:
+		| ((
+				data: Cell,
+				el?: SVGRectElement | d3.BaseType,
+		  ) => void)
+		| undefined = undefined;
+	export let onMouseOutCell:
+		| ((
+				data: Cell,
+				el?: SVGRectElement | d3.BaseType,
+		  ) => void)
+		| undefined = undefined;
+	export let onMouseOutSvg:
+		| ((
+				data: Data,
+				el?: SVGRectElement | d3.BaseType,
+		  ) => void)
+		| undefined = undefined;
+	export let showTooltip:
+		| ((
+				data: number,
+		  ) => string | undefined)
+		| undefined = undefined;
 
-	export let highlightRow: number | undefined;
-	export let highlightCol: number | undefined;
+	export let highlightRow: number | undefined = undefined;
+	export let highlightCol: number | undefined = undefined;
 
 	let rowLen: number = 0;
 	let dimension: number = 0;
@@ -61,7 +65,6 @@
 		rowGap,
 		colGap,
 		transpose,
-		// showValue,
 		groupBy,
 		shape,
 		colorScale,
@@ -70,7 +73,7 @@
 		onMouseOutSvg,
 		showTooltip,
 		highlightRow,
-		highlightCol
+		highlightCol,
 	};
 
 	$: isDataReady = data.length > 0;
@@ -78,12 +81,15 @@
 
 <div
 	data-id="matrix"
-	class={classNames(className, 'matrix-container flex flex-col items-center gap-1 leading-none')}
+	class={classNames(
+		className,
+		"matrix-container flex flex-col items-center gap-1 leading-none",
+	)}
 >
-	{#if title && titlePos === 't'}
+	{#if title && titlePos === "t"}
 		<div class="leading-none">{title}</div>
 	{/if}
-	<div class={classNames('matrix inline-block  align-top')}>
+	<div class={classNames("matrix inline-block  align-top")}>
 		<slot name="inner-title" />
 		{#if isDataReady}
 			<MatrixSvg {...props} />
@@ -91,11 +97,13 @@
 	</div>
 	{#if title || showSize}
 		<div class="flex flex-col items-center gap-0.5">
-			{#if title && titlePos === 'b'}
-				<div class="whitespace-nowrap leading-none text-gray-500">{title}</div>
+			{#if title && titlePos === "b"}
+				<div class="whitespace-nowrap leading-none text-gray-500">
+					{title}
+				</div>
 			{/if}
 			{#if showSize}
-				{#if typeof showSize === 'string'}
+				{#if typeof showSize === "string"}
 					<div class="whitespace-nowrap leading-none text-gray-500">
 						{showSize}
 					</div>{:else}

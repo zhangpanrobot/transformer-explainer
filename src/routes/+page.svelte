@@ -1,10 +1,10 @@
-﻿<script lang="ts">
-import { AutoTokenizer, PreTrainedTokenizer } from '@xenova/transformers'
+<script lang="ts">
+import { AutoTokenizer, PreTrainedTokenizer } from '@huggingface/transformers'
 import classNames from 'classnames'
 import * as ort from 'onnxruntime-web'
 import { onMount } from 'svelte'
 import { fade } from 'svelte/transition'
-import { base } from '$app/paths'
+import { asset } from '$app/paths'
 import Attention from '~/components/Attention.svelte'
 import BlockTransition from '~/components/BlockTransition.svelte'
 import Embedding from '~/components/Embedding.svelte'
@@ -22,7 +22,6 @@ import {
   headContentHeight,
   inputText,
   isFetchingModel,
-  isMobile,
   isOnBlockTransition,
   isTextbookOpen,
   maxVectorHeight,
@@ -35,30 +34,31 @@ import {
   selectedExampleIdx,
   temperature,
   tokens,
-  userId,
   vectorHeight,
 } from '~/store'
 import { adjustTemperature, fakeRunWithCachedData, runModel } from '~/utils/data'
 import { fetchAndMergeChunks } from '~/utils/fetchChunks'
 
-ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.0/dist/'
+ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0/dist/'
 ort.env.logLevel = 'error'
 
 let active = false
 let appStartTime = Date.now()
 
 // fetch model
-onMount(async () => {
-  const gpt2Tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2')
-  active = true
+onMount(() => {
+  let unsubscribe: (() => void) | undefined
 
-  const unsubscribe = subscribeInputs(gpt2Tokenizer)
+  void (async () => {
+    const gpt2Tokenizer = await AutoTokenizer.from_pretrained('gpt2')
+    active = true
 
-  if (!$isMobile) {
-    await fetchModel()
-  }
+    unsubscribe = subscribeInputs(gpt2Tokenizer)
 
-  return unsubscribe
+	await fetchModel()
+  })()
+
+  return () => unsubscribe?.()
 })
 
 // Fetch model onnx
@@ -66,7 +66,7 @@ const fetchModel = async () => {
   const chunkNum = 63 //TODO: move to model meta
   const chunkUrls = Array(chunkNum)
     .fill(0)
-    .map((d, i) => `${base}/model-v2/gpt2.onnx.part${i}`)
+    .map((_, i: number) => asset(`/model-v2/gpt2.onnx.part${i}`))
 
   // Fetch from cache
   const { hasCache, mergedArray } = await fetchAndMergeChunks(chunkUrls)
@@ -113,7 +113,7 @@ const subscribeInputs = (tokenizer: PreTrainedTokenizer) => {
     })
   }
 
-  const unsubscribeInputText = inputText.subscribe((value) => {
+  const unsubscribeInputText = inputText.subscribe(() => {
     runModelOrCache()
   })
 
@@ -218,9 +218,7 @@ $: if (vizHeight || $tokens.length) {
 		</div>
 		<WeightPopovers />
 		<BlockTransition />
-		{#if !$isMobile}
-			<Textbook showTextCard={$isTextbookOpen} />
-		{/if}
+ 		<Textbook showTextCard={$isTextbookOpen} />
 	</div>
 </div>
 

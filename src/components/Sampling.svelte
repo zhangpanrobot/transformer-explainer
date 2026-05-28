@@ -46,10 +46,10 @@ $: samplingValStep = $sampling.type === 'top-k' ? 1 : 0.1
 					inline
 					name="sampling-type"
 					value="top-k"
-					on:click={(e) => {
+					onclick={(e) => {
 						e.stopPropagation();
 					}}
-					on:change={(e) => {
+					onchange={(e) => {
 						e.target.checked && sampling.set({ type: 'top-k', value: 5 });
 						
 					}}
@@ -63,10 +63,10 @@ $: samplingValStep = $sampling.type === 'top-k' ? 1 : 0.1
 					name="sampling-type"
 					value="top-p"
 					checked={$sampling.type === 'top-p'}
-					on:click={(e) => {
+					onclick={(e) => {
 						e.stopPropagation();
 					}}
-					on:change={(e) => {
+					onchange={(e) => {
 						e.target.checked && sampling.set({ type: 'top-p', value: 0.5 });
 						
 					}}

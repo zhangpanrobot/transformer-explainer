@@ -13,6 +13,12 @@ type Flow = {
 
 type MatrixData = number[][];
 
+type Cell = {
+	rowIndex: number;
+	colIndex: number;
+	cell: number;
+};
+
 type ModelMetaData = {
 	layer_num: number;
 	attention_head_num: number;

@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-import { AngleLeftOutline, AngleRightOutline } from 'flowbite-svelte-icons'
+import { ChevronLeft, ChevronRight } from '@lucide/svelte'
 import { onMount } from 'svelte'
 import {
   attentionHeadIdx,
@@ -7,7 +7,6 @@ import {
   headGap,
   isOnAnimation,
   modelMeta,
-  userId,
 } from '~/store'
 import { gsap, Power1 } from '~/utils/gsap'
 import { textPages } from '~/utils/textbookPages'
@@ -82,15 +81,15 @@ attentionHeadIdxTemp.subscribe((newIdx) => {
   }
 })
 
-let container
-let heads = []
+let container: HTMLDivElement
+let heads: HTMLDivElement[] = []
 let disablePagination = false
 
 onMount(() => {
-  heads = Array.from(container.children)
+  heads = Array.from(container.children) as HTMLDivElement[]
 })
 
-let tl
+let tl: GSAPTimeline
 
 const animateForwardTransition = () => {
   if (tl) {
@@ -110,7 +109,7 @@ const animateForwardTransition = () => {
     },
     onComplete: () => {
       container.appendChild(firstHead)
-      heads.push(heads.shift())
+      heads.push(heads.shift() as HTMLDivElement)
       disablePagination = false
     },
   })
@@ -200,7 +199,7 @@ const animateBackwardTransition = () => {
     },
     onComplete: () => {
       container.prepend(lastHead)
-      heads.unshift(heads.pop())
+      heads.unshift(heads.pop() as HTMLDivElement)
       disablePagination = false
     },
   })
@@ -233,12 +232,6 @@ const animateBackwardTransition = () => {
     '<',
   )
 
-  // hide content
-  // tl.set(headContent, {
-  // 	opacity: 0
-  // });
-  // tl.set('.sankey-top', { zIndex: $modelMeta.attention_head_num - 1 });
-
   // show last card at the first
   const firstStyle = headStyles[0]
 
@@ -252,18 +245,11 @@ const animateBackwardTransition = () => {
     zIndex: firstStyle.zIndex,
   })
   tl.to(lastHead, {
-    // x: firstStyle.x,
-    // y: firstStyle.y,
     opacity: firstStyle.opacity,
     scale: firstStyle.scale,
     duration: shiftTime,
   })
 
-  // show content
-  // tl.set('.sankey-top', { zIndex: $modelMeta.attention_head_num });
-  // tl.set(headContent, {
-  // 	opacity: 1
-  // });
 
   tl.set(restHeads, {
     zIndex: (i) => headStyles[i + 1].zIndex,
@@ -273,14 +259,14 @@ const animateBackwardTransition = () => {
 }
 
 const onClickNext = () => {
-  textPages.find((page) => page.id === 'multi-head')?.complete()
+  textPages.find((page) => page.id === 'multi-head')?.complete?.()
 
   $attentionHeadIdxTemp =
     $attentionHeadIdxTemp < $modelMeta.attention_head_num - 1 ? $attentionHeadIdxTemp + 1 : 0
 }
 
 const onClickPrev = () => {
-  textPages.find((page) => page.id === 'multi-head')?.complete()
+  textPages.find((page) => page.id === 'multi-head')?.complete?.()
 
   $attentionHeadIdxTemp =
     $attentionHeadIdxTemp > 0 ? $attentionHeadIdxTemp - 1 : $modelMeta.attention_head_num - 1
@@ -295,14 +281,14 @@ const onClickPrev = () => {
 			></TextbookTooltip
 		>
 		<button
-			on:click={onClickPrev}
+			onclick={onClickPrev}
 			disabled={$isOnAnimation || disablePagination}
-			data-click="attention-head-prev-btn"><AngleLeftOutline size="sm"></AngleLeftOutline></button
+			data-click="attention-head-prev-btn"><ChevronLeft size="sm"></ChevronLeft></button
 		>
 		<button
-			on:click={onClickNext}
+			onclick={onClickNext}
 			disabled={$isOnAnimation || disablePagination}
-			data-click="attention-head-next-btn"><AngleRightOutline size="sm"></AngleRightOutline></button
+			data-click="attention-head-next-btn"><ChevronRight size="sm"></ChevronRight></button
 		>
 	</div>
 	<div class={'head-content'} bind:this={headContent}>
@@ -354,10 +340,6 @@ const onClickPrev = () => {
 	}
 	.head-content {
 		width: 100%;
-
-		.contents {
-			width: 100%;
-		}
 	}
 
 	.head-card-container {

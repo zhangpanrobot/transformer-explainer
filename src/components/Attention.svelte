@@ -46,8 +46,8 @@ function handleMouseLeave() {
 >
 	<div
 		class="title"
-		on:mouseenter={handleMouseEnter}
-		on:mouseleave={handleMouseLeave}
+		onmouseenter={handleMouseEnter}
+		onmouseleave={handleMouseLeave}
 		role="group"
 		data-click="attention-step-title"
 	>

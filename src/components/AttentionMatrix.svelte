@@ -1,8 +1,8 @@
 ﻿<script lang="ts">
+import { ZoomIn } from '@lucide/svelte'
 import classNames from 'classnames'
 import * as d3 from 'd3'
 import { Tooltip } from 'flowbite-svelte'
-import { ZoomInOutline } from 'flowbite-svelte-icons'
 import { getContext, onMount } from 'svelte'
 import Matrix from '~/components/common/Matrix.svelte'
 import TextbookTooltip from '~/components/common/TextbookTooltip.svelte'
@@ -16,10 +16,8 @@ import {
   modelData,
   rootRem,
   tokens,
-  userId,
 } from '~/store'
 import { maskArray } from '~/utils/array'
-import { ga } from '~/utils/event'
 import { gsap } from '~/utils/gsap'
 import Katex from '~/utils/Katex.svelte'
 import { theme } from '~/utils/tailwind-theme'
@@ -28,7 +26,7 @@ import { textPages } from '~/utils/textbookPages'
 
 $: placeHolderData = Array($tokens.length)
   .fill(0)
-  .map((col) => Array($tokens.length).fill(-Infinity))
+  .map(() => Array($tokens.length).fill(-Infinity))
 $: queryKey =
   $modelData?.outputs?.[`block_${$blockIdx}_attn_head_${$attentionHeadIdx}_attn`]?.data ||
   placeHolderData
@@ -69,27 +67,31 @@ $: if ($expandedBlock.id === blockId && !isAttentionExpanded) {
   expandAttention()
 }
 
-const onClickAttention = (e) => {
+const onClickAttention = (e: MouseEvent | KeyboardEvent) => {
   e.stopPropagation()
   e.preventDefault()
-  textPages.find((page) => page.id === 'masked-self-attention')?.complete()
+  textPages.find((page) => page.id === 'masked-self-attention')?.complete?.()
 
   if (!isAttentionExpanded) {
-    expandedBlock.set({ id: blockId })
+    expandedBlock.set({ id: blockId as string })
   }
 }
 
 let expandableEl: HTMLDivElement
 
-function handleOutsideClick(e) {
-  if (isAttentionExpanded && !expandableEl.contains(e.target)) {
+function handleOutsideClick(e: MouseEvent) {
+  if (isAttentionExpanded && !expandableEl.contains(e.target as Node)) {
     expandedBlock.set({ id: null })
   }
 }
 onMount(() => {
-  document.querySelector('.main-section').addEventListener('click', handleOutsideClick)
+  document
+    .querySelector('.main-section')
+    ?.addEventListener('click', handleOutsideClick as EventListener)
   return () => {
-    document.querySelector('.main-section').removeEventListener('click', handleOutsideClick)
+    document
+      .querySelector('.main-section')
+      ?.removeEventListener('click', handleOutsideClick as EventListener)
   }
 })
 
@@ -100,7 +102,7 @@ let collapseTl = gsap.timeline()
 // google analytics
 let startTime = null
 
-const expandAttention = () => {
+function expandAttention() {
   highlightAttentionPath()
 
   isAttentionExpanded = true
@@ -111,10 +113,10 @@ const expandAttention = () => {
   const queryPaths = document.querySelectorAll('div.sankey g.attention path.query-to-attention')
   const outPaths = document.querySelectorAll('div.sankey g.attention path.to-attention-out')
 
-  ;[...keyPaths, ...queryPaths].forEach((path) => {
+  ;([...keyPaths, ...queryPaths] as SVGPathElement[]).forEach((path) => {
     const length = path.getTotalLength()
-    path.style.strokeDasharray = length
-    path.style.strokeDashoffset = length
+    path.style.strokeDasharray = length.toString()
+    path.style.strokeDashoffset = length.toString()
   })
 
   const QKDuration = 1.2
@@ -151,7 +153,6 @@ const expandAttention = () => {
       stagger,
       duration: QKDuration,
       ease: 'power2.out',
-      // ease: 'back.out(1.7)'
     })
     .to(
       queryPaths,
@@ -159,7 +160,6 @@ const expandAttention = () => {
         strokeDashoffset: 0,
         stagger,
         duration: QKDuration,
-        // ease: 'back.out(1.7)'
         ease: 'power2.out',
       },
       '<',
@@ -173,7 +173,6 @@ const expandAttention = () => {
         delay: QKDuration / $tokens.length,
         stagger: Number((QKDuration / $tokens.length ** 2).toFixed(2)),
         ease: 'power2.out',
-        // ease: 'back.out(1.7)',
         duration: QKDuration,
       },
       '<',
@@ -233,13 +232,10 @@ const expandAttention = () => {
   })
 
   startTime = performance.now()
-  }
+}
 
-const collapseAttention = () => {
+function collapseAttention() {
   removeAttentionPathHighlight()
-  let endTime = performance.now()
-  let visibleDuration = endTime - startTime
-
   isAttentionExpanded = false
   isExpandOrCollapseRunning.set(true)
   expandTl.progress(1)
@@ -266,34 +262,38 @@ const collapseAttention = () => {
 
 // color scale
 $: qkColorScaleDomain = d3.extent(queryKey.flat())
-$: qkColorScale = (d, i) => {
-  return d3.scaleLinear().domain(qkColorScaleDomain).range(['white', theme.colors['purple'][700]])(
-    d,
-  )
-}
-const maskedColorScale = (d, i) => {
-  return d3.scaleLinear().domain([-3, 3]).range(['white', theme.colors['purple'][700]])(d)
-}
-const softmaxColorScale = (d, i) => {
-  return d3.interpolate('white', theme.colors['purple'][700])(d)
+$: qkColorScale = (d: number) => {
+  return d3
+    .scaleLinear<string>()
+    .domain(qkColorScaleDomain as [number, number])
+    .range(['white', theme.colors.purple[700]])(d)
 }
 
-const onMouseOverCell = (e, d, el) => {
+const maskedColorScale = (d: number) => {
+  return d3.scaleLinear<string>().domain([-3, 3]).range(['white', theme.colors.purple[700]])(d)
+}
+
+const softmaxColorScale = (d: number) => {
+  return d3.interpolate('white', theme.colors.purple[700])(d)
+}
+
+const onMouseOverCell = (d: Cell, el?: SVGRectElement | d3.BaseType) => {
   const rowIdx = d.rowIndex
   const colIdx = d.colIndex
   hoveredMatrixCell.set({ row: rowIdx, col: colIdx })
-  if (Number.isFinite(d.cell)) {
+  if (el && Number.isFinite(d.cell)) {
     d3.select(el).attr('stroke', theme.colors.gray[400])
   }
 }
-const onMouseOutCell = (e, d, el) => {
+
+const onMouseOutCell = (d: Cell, el?: SVGRectElement | d3.BaseType) => {
   hoveredMatrixCell.set({ row: null, col: null })
-  if (Number.isFinite(d.cell)) {
+  if (el && Number.isFinite(d.cell)) {
     d3.select(el).attr('stroke', !Number.isFinite(d.cell) ? 'none' : theme.colors.gray[200])
   }
 }
 
-const showTooltip = (e, d) => {
+const showTooltip = (d: number) => {
   if (!Number.isFinite(d)) return
   return d.toFixed(2)
 }
@@ -311,8 +311,8 @@ const showTooltip = (e, d) => {
 			active: isAttentionExpanded
 		})}
 		bind:this={expandableEl}
-		on:click={onClickAttention}
-		on:keydown={onClickAttention}
+		onclick={onClickAttention}
+		onkeydown={onClickAttention}
 	>
 		<div
 			class={classNames('attention-matrix attention-qk flex flex-col items-center', {
@@ -347,7 +347,6 @@ const showTooltip = (e, d) => {
 				<span class="val">{qkColorScaleDomain[1]?.toFixed(1)}</span>
 			</div>
 		</div>
-		<!-- Scaling Â· Mask -->
 		<div
 			class="attention-matrix attention-mask flex flex-col items-center"
 			bind:this={attentionMask}
@@ -401,7 +400,7 @@ const showTooltip = (e, d) => {
 				/>
 			</div>
 			<TextbookTooltip id="masked-self-attention">
-				<div class="matrix-label">Scaling Â· Mask</div>
+				<div class="matrix-label">Scaling · Mask</div>
 			</TextbookTooltip>
 
 			<Tooltip class="popover tooltip">
@@ -505,7 +504,7 @@ const showTooltip = (e, d) => {
 			/>
 
 			<div class="matrix-label flex items-center gap-1">
-				Attention <ZoomInOutline></ZoomInOutline>
+				Attention <ZoomIn />
 			</div>
 		</div>
 	</div>

@@ -1,61 +1,60 @@
 ﻿<script lang="ts">
-	import classNames from 'classnames';
-	import { Popover } from 'flowbite-svelte';
-	import * as d3 from 'd3';
-	import { onMount } from 'svelte';
-	import { writable } from 'svelte/store';
-	import { tokens } from '~/store';
+import classNames from 'classnames'
+import * as d3 from 'd3'
+import { Popover } from 'flowbite-svelte'
+import type { PopoverProps } from 'flowbite-svelte/Popover.svelte'
+import { onMount } from 'svelte'
+import { writable } from 'svelte/store'
+import { tokens } from '~/store'
 
-	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
+export let offset: PopoverProps['offset'] = undefined
+export let className: PopoverProps['class'] = undefined
+export let triggeredBy: PopoverProps['triggeredBy'] = undefined
+export let trigger: PopoverProps['trigger'] = 'hover'
+export let placement: PopoverProps['placement'] = 'right'
+export let open: PopoverProps['open'] = false
 
-	export let offset: PopoverProps['offset'] = undefined;
-	export let className: PopoverProps['class'] = undefined;
-	export let triggeredBy: PopoverProps['triggeredBy'] = undefined;
-	export let trigger: PopoverProps['trigger'] = 'hover';
-	export let placement: PopoverProps['placement'] = 'right';
-	export let open: PopoverProps['open'] = false;
+const numPositions = 40
+const fullEmbeddingDim = 768 // Compute 768 dimensions
+const visualEmbeddingDim = 100 // Truncate to 100 dimensions for visualization
 
-	const numPositions = 40;
-	const fullEmbeddingDim = 768; // Compute 768 dimensions
-	const visualEmbeddingDim = 100; // Truncate to 100 dimensions for visualization
+let numBarcodeLines = 21
 
-	let numBarcodeLines = 21;
+function computePositionalEncodings(numPositions, fullEmbeddingDim, visualEmbeddingDim) {
+  const posEncodings = Array(visualEmbeddingDim)
+    .fill()
+    .map(() => Array(numPositions).fill(0))
 
-	function computePositionalEncodings(numPositions, fullEmbeddingDim, visualEmbeddingDim) {
-		const posEncodings = Array(visualEmbeddingDim)
-			.fill()
-			.map(() => Array(numPositions).fill(0));
+  for (let pos = 0; pos < numPositions; pos++) {
+    for (let i = 0; i < visualEmbeddingDim; i++) {
+      const value =
+        i % 2 === 0
+          ? Math.sin(pos / 10000 ** (i / fullEmbeddingDim))
+          : Math.cos(pos / 10000 ** ((i - 1) / fullEmbeddingDim))
 
-		for (let pos = 0; pos < numPositions; pos++) {
-			for (let i = 0; i < visualEmbeddingDim; i++) {
-				const value =
-					i % 2 === 0
-						? Math.sin(pos / Math.pow(10000, i / fullEmbeddingDim))
-						: Math.cos(pos / Math.pow(10000, (i - 1) / fullEmbeddingDim));
+      posEncodings[pos][i] = value
+    }
+  }
+  return posEncodings
+}
 
-				posEncodings[pos][i] = value;
-			}
-		}
-		return posEncodings;
-	}
+let posEncodings = []
+const hoveredRow = writable(null)
+const hoveredCol = writable(null)
 
-	let posEncodings = [];
-	const hoveredRow = writable(null);
-	const hoveredCol = writable(null);
+// Create a linear color scale
+const colorScale = d3
+  .scaleLinear()
+  .domain([-1, 0, 1])
+  .range(['rgb(248, 113, 113)', 'rgb(255, 255, 255)', 'rgb(96, 165, 250)'])
+  .interpolate(d3.interpolateRgb)
 
-	// Create a linear color scale
-	const colorScale = d3
-		.scaleLinear()
-		.domain([-1, 0, 1])
-		.range(['rgb(248, 113, 113)', 'rgb(255, 255, 255)', 'rgb(96, 165, 250)'])
-		.interpolate(d3.interpolateRgb);
+// Function to get the gradient color using D3
+function getGradientColor(value) {
+  return colorScale(value)
+}
 
-	// Function to get the gradient color using D3
-	function getGradientColor(value) {
-		return colorScale(value);
-	}
-
-	posEncodings = computePositionalEncodings(numPositions, fullEmbeddingDim, visualEmbeddingDim);
+posEncodings = computePositionalEncodings(numPositions, fullEmbeddingDim, visualEmbeddingDim)
 </script>
 
 <!-- <Popover
@@ -79,8 +78,8 @@
 						<div
 							class="token-box"
 							role="group"
-							on:mouseenter={() => hoveredCol.set(token_idx)}
-							on:mouseleave={() => hoveredCol.set(null)}
+							onmouseenter={() => hoveredCol.set(token_idx)}
+							onmouseleave={() => hoveredCol.set(null)}
 							class:highlight-token-box={token_idx === $hoveredCol}
 						>
 							<span class="text-ellipsis text-center text-gray-900">{token}</span>
@@ -95,8 +94,8 @@
 						<div
 							class="position-box"
 							role="group"
-							on:mouseenter={() => hoveredCol.set(token_idx)}
-							on:mouseleave={() => hoveredCol.set(null)}
+							onmouseenter={() => hoveredCol.set(token_idx)}
+							onmouseleave={() => hoveredCol.set(null)}
 							class:highlight-token-box={token_idx === $hoveredCol}
 						>
 							<span class="text-ellipsis text-center text-gray-900">{token_idx}</span>
@@ -111,16 +110,16 @@
 						<div
 							class="barcode-box flex flex-col justify-between"
 							role="group"
-							on:mouseenter={() => hoveredCol.set(token_idx)}
-							on:mouseleave={() => hoveredCol.set(null)}
+							onmouseenter={() => hoveredCol.set(token_idx)}
+							onmouseleave={() => hoveredCol.set(null)}
 							class:highlight-token-box={token_idx === $hoveredCol}
 						>
 							{#each Array(numBarcodeLines) as _, barcode_idx}
 								<div
 									class="barcode-bar h-full w-full"
 									role="group"
-									on:mouseenter={() => hoveredRow.set(barcode_idx)}
-									on:mouseleave={() => hoveredRow.set(null)}
+									onmouseenter={() => hoveredRow.set(barcode_idx)}
+									onmouseleave={() => hoveredRow.set(null)}
 									style="background-color: {getGradientColor(
 										posEncodings[barcode_idx][token_idx]
 									)};"
@@ -159,11 +158,11 @@
 											$hoveredCol === rowIndex}
 										style="background-color: {getGradientColor(value)};"
 										role="group"
-										on:mouseenter={() => {
+										onmouseenter={() => {
 											hoveredRow.set(colIndex);
 											hoveredCol.set(rowIndex);
 										}}
-										on:mouseleave={() => {
+										onmouseleave={() => {
 											hoveredRow.set(null);
 											hoveredCol.set(null);
 										}}

@@ -42,7 +42,7 @@
 			<div
 				data-click={`read-more-btn-${id}`}
 				class="more-btn mt-1 text-blue-600 hover:underline"
-				on:click={(e) => onClickReadMore(e, goTo, { value: id })}
+				onclick={(e) => onClickReadMore(e, goTo, { value: id })}
 			>
 				Read more
 			</div>

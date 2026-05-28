@@ -1,123 +1,122 @@
 ﻿<script lang="ts">
-	import { onMount } from 'svelte';
-	import QkvWeightPopover from './popovers/QKVWeightPopover.svelte';
-	import { weightPopover, tooltip } from '~/store';
-	import { fade } from 'svelte/transition';
-	import AttentionWeightPopover from './popovers/AttentionWeightPopover.svelte';
-	import MLPWeightPopover from './popovers/MLPWeightPopover.svelte';
-	import MLPDownWeightPopover from './popovers/MLPDownWeightPopover.svelte';
+import { Maximize2 } from '@lucide/svelte'
+import { onMount } from 'svelte'
+import { fade } from 'svelte/transition'
+import { tooltip, weightPopover } from '~/store'
+import {
+  highlightAttentionPath,
+  highlightLogitPath,
+  highlightPath,
+  removeAttentionPathHighlight,
+  removePathHighlight,
+} from '~/utils/textbook'
+import AttentionWeightPopover from './popovers/AttentionWeightPopover.svelte'
+import LogitWeightPopover from './popovers/LogitWeightPopover.svelte'
+import MLPDownWeightPopover from './popovers/MLPDownWeightPopover.svelte'
+import MLPWeightPopover from './popovers/MLPWeightPopover.svelte'
+import QkvWeightPopover from './popovers/QKVWeightPopover.svelte'
 
-	import LogitWeightPopover from './popovers/LogitWeightPopover.svelte';
-	import { ArrowUpRightDownLeftOutline } from 'flowbite-svelte-icons';
-	import {
-		highlightAttentionPath,
-		highlightLogitPath,
-		highlightPath,
-		removeAttentionPathHighlight,
-		removePathHighlight
-	} from '~/utils/textbook';
+let resizeObserver: ResizeObserver
+let qkvPos = { left: 0, top: 0 }
+let mlpPos = { left: 0, top: 0 }
+let mlpDownPos = { left: 0, top: 0 }
+let attentionPos = { left: 0, top: 0 }
+let softmaxPos = { left: 0, top: 0 }
 
-	let resizeObserver: ResizeObserver;
-	let qkvPos = { left: 0, top: 0 };
-	let mlpPos = { left: 0, top: 0 };
-	let mlpDownPos = { left: 0, top: 0 };
-	let attentionPos = { left: 0, top: 0 };
-	let softmaxPos = { left: 0, top: 0 };
+let popoverEl: HTMLElement = null
 
-	let popoverEl: HTMLElement = null;
+function handleOutsideClick(e) {
+  if ($weightPopover && !popoverEl.contains(e.target)) {
+    weightPopover.set(null)
+  }
+}
+// add global event
+onMount(() => {
+  document.querySelector('.main-section').addEventListener('click', handleOutsideClick)
 
-	function handleOutsideClick(e) {
-		if (!!$weightPopover && !popoverEl.contains(e.target)) {
-			weightPopover.set(null);
-		}
-	}
-	// add global event
-	onMount(() => {
-		document.querySelector('.main-section').addEventListener('click', handleOutsideClick);
+  return () => {
+    document.querySelector('.main-section').removeEventListener('click', handleOutsideClick)
+  }
+})
 
-		return () => {
-			document.querySelector('.main-section').removeEventListener('click', handleOutsideClick);
-		};
-	});
+//set popover pos
+onMount(() => {
+  const setPosition = () => {
+    const scrollLeft = window.scrollX
+    const topbarHeight = document.querySelector('.top-bar')?.offsetHeight
 
-	//set popover pos
-	onMount(() => {
-		const setPosition = () => {
-			const scrollLeft = window.scrollX;
-			const topbarHeight = document.querySelector('.top-bar')?.offsetHeight;
+    const embedding = document.querySelector('.step.qkv .content')
+    const mlp = document.querySelector('.step.mlp .content')
+    const mlpDown = document.querySelector('.step.mlp .second-layer')
+    const attention = document.querySelector('.step.attention .content .multi-head')
+    const softmax = document.querySelector('.step.transformer-blocks .content')
 
-			const embedding = document.querySelector('.step.qkv .content');
-			const mlp = document.querySelector('.step.mlp .content');
-			const mlpDown = document.querySelector('.step.mlp .second-layer');
-			const attention = document.querySelector('.step.attention .content .multi-head');
-			const softmax = document.querySelector('.step.transformer-blocks .content');
+    const embeddingRect = embedding?.getBoundingClientRect()
+    const mlpRect = mlp?.getBoundingClientRect()
+    const mlpDownRect = mlpDown?.getBoundingClientRect()
+    const attentionRect = attention?.getBoundingClientRect()
+    const softmaxRect = softmax?.getBoundingClientRect()
 
-			const embeddingRect = embedding?.getBoundingClientRect();
-			const mlpRect = mlp?.getBoundingClientRect();
-			const mlpDownRect = mlpDown?.getBoundingClientRect();
-			const attentionRect = attention?.getBoundingClientRect();
-			const softmaxRect = softmax?.getBoundingClientRect();
+    qkvPos = { left: embeddingRect?.right + scrollLeft, top: embeddingRect?.top - topbarHeight }
+    mlpPos = { left: mlpRect?.left + scrollLeft, top: mlpRect?.top - topbarHeight }
+    mlpDownPos = { left: mlpDownRect?.left + scrollLeft, top: mlpDownRect?.top - topbarHeight }
+    attentionPos = {
+      left: attentionRect?.right + scrollLeft,
+      top: attentionRect?.top + attentionRect?.height / 2 - topbarHeight,
+    }
+    softmaxPos = {
+      left: softmaxRect?.left + scrollLeft,
+      top: softmaxRect?.top - topbarHeight,
+    }
+  }
 
-			qkvPos = { left: embeddingRect?.right + scrollLeft, top: embeddingRect?.top - topbarHeight };
-			mlpPos = { left: mlpRect?.left + scrollLeft, top: mlpRect?.top - topbarHeight };
-			mlpDownPos = { left: mlpDownRect?.left + scrollLeft, top: mlpDownRect?.top - topbarHeight };
-			attentionPos = {
-				left: attentionRect?.right + scrollLeft,
-				top: attentionRect?.top + attentionRect?.height / 2 - topbarHeight
-			};
-			softmaxPos = {
-				left: softmaxRect?.left + scrollLeft,
-				top: softmaxRect?.top - topbarHeight
-			};
-		};
+  setPosition()
 
-		setPosition();
+  resizeObserver = new ResizeObserver((entries) => {
+    setPosition()
+  })
+  const elements = document?.querySelectorAll('.resize-watch')
+  elements.forEach((el) => resizeObserver.observe(el))
 
-		resizeObserver = new ResizeObserver((entries) => {
-			setPosition();
-		});
-		const elements = document?.querySelectorAll('.resize-watch');
-		elements.forEach((el) => resizeObserver.observe(el));
+  return () => {
+    document.querySelector('.main-section').removeEventListener('click', handleOutsideClick)
+  }
+})
 
-		return () => {
-			document.querySelector('.main-section').removeEventListener('click', handleOutsideClick);
-		};
-	});
+//tooltip
+$: isVisible = !!$tooltip && !$weightPopover
 
-	//tooltip
-	$: isVisible = !!$tooltip && !$weightPopover;
+let x = 0
+let y = 0
 
-	let x = 0;
-	let y = 0;
+function handleMouseMove(e) {
+  x = e.clientX + 10
+  y = e.clientY + 10
+}
 
-	function handleMouseMove(e) {
-		x = e.clientX + 10;
-		y = e.clientY + 10;
-	}
+onMount(() => {
+  window.addEventListener('mousemove', handleMouseMove)
 
-	onMount(() => {
-		window.addEventListener('mousemove', handleMouseMove);
+  const unsubscribe = weightPopover.subscribe((value) => {
+    if (!value) {
+      removePathHighlight()
+      removeAttentionPathHighlight()
+      return
+    }
 
-		const unsubscribe = weightPopover.subscribe((value) => {
-			if (!value) {
-				removePathHighlight();
-				removeAttentionPathHighlight();
-				return;
-			}
-
-			if (value === 'attention') {
-				highlightAttentionPath();
-			} else if (value === 'softmax') {
-				highlightLogitPath();
-			} else {
-				highlightPath(value);
-			}
-		});
-		return () => {
-			window.removeEventListener('mousemove', handleMouseMove);
-			unsubscribe();
-		};
-	});
+    if (value === 'attention') {
+      highlightAttentionPath()
+    } else if (value === 'softmax') {
+      highlightLogitPath()
+    } else {
+      highlightPath(value)
+    }
+  })
+  return () => {
+    window.removeEventListener('mousemove', handleMouseMove)
+    unsubscribe()
+  }
+})
 </script>
 
 {#if isVisible}
@@ -127,7 +126,7 @@
 		in:fade={{ duration: 100 }}
 	>
 		{$tooltip}
-		<ArrowUpRightDownLeftOutline size="sm" />
+		<Maximize2 size="sm" />
 	</div>
 {/if}
 

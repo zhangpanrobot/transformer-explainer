@@ -1,63 +1,63 @@
 <script lang="ts">
-	import classNames from 'classnames';
-	import Operation from './Operation.svelte';
-	import DropoutPopover from './popovers/DropoutPopover.svelte';
-	import { tokens } from '~/store';
-	import LayerNormPopover from './popovers/LayerNormPopover.svelte';
-	import ActivationPopover from './popovers/ActivationPopover.svelte';
-	import ResidualPopover from './popovers/ResidualPopover.svelte';
-	import { onClickReadMore } from '~/utils/event';
-	import { drawResidualLine } from '~/utils/animation';
-	import {
-		isTextbookOpen,
-		textbookCurrentPage,
-		textbookCurrentPageId,
-		textbookPreviousPage
-	} from '~/store';
-	import { textPages } from '~/utils/textbookPages';
+import classNames from 'classnames'
+import {
+  isTextbookOpen,
+  textbookCurrentPage,
+  textbookCurrentPageId,
+  textbookPreviousPage,
+  tokens,
+} from '~/store'
+import { drawResidualLine } from '~/utils/animation'
+import { onClickReadMore } from '~/utils/event'
+import { textPages } from '~/utils/textbookPages'
+import Operation from './Operation.svelte'
+import ActivationPopover from './popovers/ActivationPopover.svelte'
+import DropoutPopover from './popovers/DropoutPopover.svelte'
+import LayerNormPopover from './popovers/LayerNormPopover.svelte'
+import ResidualPopover from './popovers/ResidualPopover.svelte'
 
-	export let id: string;
-	export let className: string | undefined = undefined;
-	export let type: string | undefined = undefined;
+export let id: string
+export let className: string | undefined = undefined
+export let type: string | undefined = undefined
 
-	const { drawLine, removeLine } = drawResidualLine(id);
-	let isHovered = false;
-	let containerElement;
+const { drawLine, removeLine } = drawResidualLine(id)
+let isHovered = false
+let containerElement
 
-	const onMouseOver = () => {
-		if ($isTextbookOpen && $textbookCurrentPageId === 'residual') return;
-		isHovered = true;
-		drawLine();
-	};
-	const onMouseOut = () => {
-		if ($isTextbookOpen && $textbookCurrentPageId === 'residual') return;
-		isHovered = false;
-		removeLine();
-	};
+const onMouseOver = () => {
+  if ($isTextbookOpen && $textbookCurrentPageId === 'residual') return
+  isHovered = true
+  drawLine()
+}
+const onMouseOut = () => {
+  if ($isTextbookOpen && $textbookCurrentPageId === 'residual') return
+  isHovered = false
+  removeLine()
+}
 
-	const typeToPageIdMap = {
-		activation: 'mlp',
-		dropout: 'dropout',
-		ln: 'layer-normalization',
-		'residual-start': 'residual',
-		'residual-end': 'residual'
-	};
+const typeToPageIdMap = {
+  activation: 'mlp',
+  dropout: 'dropout',
+  ln: 'layer-normalization',
+  'residual-start': 'residual',
+  'residual-end': 'residual',
+}
 
-	function openTextbookPage(e) {
-		e.preventDefault();
-		e.stopPropagation();
+function openTextbookPage(e) {
+  e.preventDefault()
+  e.stopPropagation()
 
-		const pageId = typeToPageIdMap[type];
-		if (!pageId) return;
+  const pageId = typeToPageIdMap[type]
+  if (!pageId) return
 
-		const pageIndex = textPages.findIndex((page) => page.id === pageId);
-		if (pageIndex !== -1) {
-			textbookPreviousPage.set($textbookCurrentPage);
-			isTextbookOpen.set(true);
-			textbookCurrentPage.set(pageIndex);
-			textbookCurrentPageId.set(pageId);
-		}
-	}
+  const pageIndex = textPages.findIndex((page) => page.id === pageId)
+  if (pageIndex !== -1) {
+    textbookPreviousPage.set($textbookCurrentPage)
+    isTextbookOpen.set(true)
+    textbookCurrentPage.set(pageIndex)
+    textbookCurrentPageId.set(pageId)
+  }
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -70,13 +70,13 @@
 		role="group"
 		class:active={isHovered}
 		bind:this={containerElement}
-		on:mouseenter={() => {
+		onmouseenter={() => {
 			isHovered = true;
 		}}
-		on:mouseleave={() => {
+		onmouseleave={() => {
 			isHovered = false;
 		}}
-		on:click={openTextbookPage}
+		onclick={openTextbookPage}
 	>
 		{#each $tokens as token, index}
 			<Operation
@@ -99,13 +99,13 @@
 		role="group"
 		class:active={isHovered}
 		bind:this={containerElement}
-		on:mouseenter={() => {
+		onmouseenter={() => {
 			isHovered = true;
 		}}
-		on:mouseleave={() => {
+		onmouseleave={() => {
 			isHovered = false;
 		}}
-		on:click={openTextbookPage}
+		onclick={openTextbookPage}
 	>
 		{#each $tokens as token, index}
 			<Operation
@@ -127,13 +127,13 @@
 		role="group"
 		class:active={isHovered}
 		bind:this={containerElement}
-		on:mouseenter={() => {
+		onmouseenter={() => {
 			isHovered = true;
 		}}
-		on:mouseleave={() => {
+		onmouseleave={() => {
 			isHovered = false;
 		}}
-		on:click={openTextbookPage}
+		onclick={openTextbookPage}
 	>
 		{#each $tokens as token, index}
 			<Operation
@@ -155,9 +155,9 @@
 		role="group"
 		class:active={isHovered}
 		bind:this={containerElement}
-		on:mouseenter={onMouseOver}
-		on:mouseleave={onMouseOut}
-		on:click={openTextbookPage}
+		onmouseenter={onMouseOver}
+		onmouseleave={onMouseOut}
+		onclick={openTextbookPage}
 	>
 		{#each $tokens as token, index}
 			<Operation
@@ -180,9 +180,9 @@
 		role="group"
 		class:active={isHovered}
 		bind:this={containerElement}
-		on:mouseenter={onMouseOver}
-		on:mouseleave={onMouseOut}
-		on:click={openTextbookPage}
+		onmouseenter={onMouseOver}
+		onmouseleave={onMouseOut}
+		onclick={openTextbookPage}
 	>
 		{#each $tokens as token, index}
 			<Operation

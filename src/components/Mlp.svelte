@@ -46,8 +46,8 @@ onMount(() => {
 <div class={classNames('mlp', 'mlpUp', 'mlpDown', className)} data-click="mlp-step">
 	<div
 		class="title"
-		on:mouseenter={handleMouseEnter}
-		on:mouseleave={handleMouseLeave}
+		onmouseenter={handleMouseEnter}
+		onmouseleave={handleMouseLeave}
 		role="group"
 		data-click="mlp-step-title"
 	>
@@ -64,10 +64,10 @@ onMount(() => {
 					<div
 						class="cell"
 						class:last={index === $tokens.length - 1}
-						on:mouseenter={() => {
+						onmouseenter={() => {
 							vectorHoverIdx = index;
 						}}
-						on:mouseleave={() => {
+						onmouseleave={() => {
 							vectorHoverIdx = null;
 						}}
 						role="group"

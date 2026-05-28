@@ -1,241 +1,239 @@
 ﻿<script lang="ts">
-	import { Button } from 'flowbite-svelte';
-	import { fade } from 'svelte/transition';
-	import { textbookCurrentPage } from '~/store';
-	import { textPages } from '~/utils/textbookPages';
-	import TextbookNavigation from './TextbookNavigation.svelte';
+import { Button } from 'flowbite-svelte'
+import { fade } from 'svelte/transition'
+import { textbookCurrentPage } from '~/store'
+import { textPages } from '~/utils/textbookPages'
+import TextbookNavigation from './TextbookNavigation.svelte'
 
-	export let onClose: () => void;
+export let onClose: () => void
 
-	let isMouseInCard = false;
-	let mousePosition = { x: 0, y: 0 };
-	let cardElement: HTMLDivElement;
+let isMouseInCard = false
+let mousePosition = { x: 0, y: 0 }
+let cardElement: HTMLDivElement
 
-	// Draggable state
-	let isDragging = false;
-	let position = { x: window.innerWidth - 540 - 32, y: window.innerHeight - 300 - 32 };
-	let dragStart = { x: 0, y: 0 };
+// Draggable state
+let isDragging = false
+let position = { x: window.innerWidth - 540 - 32, y: window.innerHeight - 300 - 32 }
+let dragStart = { x: 0, y: 0 }
 
-	// Resizable state
-	let isResizing = false;
-	let resizeDirection = '';
-	let size = { width: 540, height: 300 };
-	let resizeStart = { x: 0, y: 0, width: 0, height: 0, posX: 0, posY: 0 };
+// Resizable state
+let isResizing = false
+let resizeDirection = ''
+let size = { width: 540, height: 300 }
+let resizeStart = { x: 0, y: 0, width: 0, height: 0, posX: 0, posY: 0 }
 
-	const MIN_WIDTH = 400;
-	const MIN_HEIGHT = 250;
-	const RESIZE_HANDLE_SIZE = 10;
-	const EDGE_MARGIN = 32; // 2rem
-	const SNAP_DISTANCE = 100; // pixels from corner to trigger snap
+const MIN_WIDTH = 400
+const MIN_HEIGHT = 250
+const RESIZE_HANDLE_SIZE = 10
+const EDGE_MARGIN = 32 // 2rem
+const SNAP_DISTANCE = 100 // pixels from corner to trigger snap
 
-	function handleClose() {
-		// Execute current page's out callback before closing
-		const currentPage = textPages[$textbookCurrentPage];
-		if (currentPage?.out) {
-			currentPage.out();
-		}
-		onClose();
-	}
+function handleClose() {
+  // Execute current page's out callback before closing
+  const currentPage = textPages[$textbookCurrentPage]
+  if (currentPage?.out) {
+    currentPage.out()
+  }
+  onClose()
+}
 
-	function handleMouseMove(event: MouseEvent) {
-		if (!cardElement) return;
-		const rect = cardElement.getBoundingClientRect();
-		mousePosition = {
-			x: event.clientX - rect.left,
-			y: event.clientY - rect.top
-		};
-	}
+function handleMouseMove(event: MouseEvent) {
+  if (!cardElement) return
+  const rect = cardElement.getBoundingClientRect()
+  mousePosition = {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top,
+  }
+}
 
-	function handleMouseEnter() {
-		isMouseInCard = true;
-	}
+function handleMouseEnter() {
+  isMouseInCard = true
+}
 
-	function handleMouseLeave() {
-		isMouseInCard = false;
-	}
+function handleMouseLeave() {
+  isMouseInCard = false
+}
 
-	// Drag functions
-	function handleCardMouseDown(event: MouseEvent) {
-		if ((event.target as HTMLElement).closest('.close-btn')) return;
+// Drag functions
+function handleCardMouseDown(event: MouseEvent) {
+  if ((event.target as HTMLElement).closest('.close-btn')) return
 
-		// Check if in resize zone
-		const direction = getResizeDirection(event);
-		if (direction) {
-			startResize(event, direction);
-			return;
-		}
+  // Check if in resize zone
+  const direction = getResizeDirection(event)
+  if (direction) {
+    startResize(event, direction)
+    return
+  }
 
-		isDragging = true;
-		dragStart = {
-			x: event.clientX - position.x,
-			y: event.clientY - position.y
-		};
-	}
+  isDragging = true
+  dragStart = {
+    x: event.clientX - position.x,
+    y: event.clientY - position.y,
+  }
+}
 
-	function handleGlobalMouseMove(event: MouseEvent) {
-		if (isDragging) {
-			position = {
-				x: event.clientX - dragStart.x,
-				y: event.clientY - dragStart.y
-			};
-		} else if (isResizing) {
-			handleResize(event);
-		}
-	}
+function handleGlobalMouseMove(event: MouseEvent) {
+  if (isDragging) {
+    position = {
+      x: event.clientX - dragStart.x,
+      y: event.clientY - dragStart.y,
+    }
+  } else if (isResizing) {
+    handleResize(event)
+  }
+}
 
-	function snapToCorner() {
-		const corners = [
-			{ x: EDGE_MARGIN, y: EDGE_MARGIN }, // top-left
-			{ x: window.innerWidth - size.width - EDGE_MARGIN, y: EDGE_MARGIN }, // top-right
-			{ x: EDGE_MARGIN, y: window.innerHeight - size.height - EDGE_MARGIN }, // bottom-left
-			{
-				x: window.innerWidth - size.width - EDGE_MARGIN,
-				y: window.innerHeight - size.height - EDGE_MARGIN
-			} // bottom-right
-		];
+function snapToCorner() {
+  const corners = [
+    { x: EDGE_MARGIN, y: EDGE_MARGIN }, // top-left
+    { x: window.innerWidth - size.width - EDGE_MARGIN, y: EDGE_MARGIN }, // top-right
+    { x: EDGE_MARGIN, y: window.innerHeight - size.height - EDGE_MARGIN }, // bottom-left
+    {
+      x: window.innerWidth - size.width - EDGE_MARGIN,
+      y: window.innerHeight - size.height - EDGE_MARGIN,
+    }, // bottom-right
+  ]
 
-		let minDistance = Infinity;
-		let closestCorner = null;
+  let minDistance = Infinity
+  let closestCorner = null
 
-		for (const corner of corners) {
-			const distance = Math.sqrt(
-				Math.pow(position.x - corner.x, 2) + Math.pow(position.y - corner.y, 2)
-			);
-			if (distance < minDistance) {
-				minDistance = distance;
-				closestCorner = corner;
-			}
-		}
+  for (const corner of corners) {
+    const distance = Math.sqrt((position.x - corner.x) ** 2 + (position.y - corner.y) ** 2)
+    if (distance < minDistance) {
+      minDistance = distance
+      closestCorner = corner
+    }
+  }
 
-		if (minDistance < SNAP_DISTANCE && closestCorner) {
-			position = { x: closestCorner.x, y: closestCorner.y };
-		}
-	}
+  if (minDistance < SNAP_DISTANCE && closestCorner) {
+    position = { x: closestCorner.x, y: closestCorner.y }
+  }
+}
 
-	function handleGlobalMouseUp() {
-		if (isDragging) {
-			snapToCorner();
-		}
-		isDragging = false;
-		isResizing = false;
-		resizeDirection = '';
-	}
+function handleGlobalMouseUp() {
+  if (isDragging) {
+    snapToCorner()
+  }
+  isDragging = false
+  isResizing = false
+  resizeDirection = ''
+}
 
-	// Resize functions
-	function getResizeDirection(event: MouseEvent): string {
-		if (!cardElement || isDragging || isResizing) return '';
+// Resize functions
+function getResizeDirection(event: MouseEvent): string {
+  if (!cardElement || isDragging || isResizing) return ''
 
-		const rect = cardElement.getBoundingClientRect();
-		const x = event.clientX - rect.left;
-		const y = event.clientY - rect.top;
+  const rect = cardElement.getBoundingClientRect()
+  const x = event.clientX - rect.left
+  const y = event.clientY - rect.top
 
-		const nearRight = rect.width - x <= RESIZE_HANDLE_SIZE;
-		const nearBottom = rect.height - y <= RESIZE_HANDLE_SIZE;
-		const nearLeft = x <= RESIZE_HANDLE_SIZE;
-		const nearTop = y <= RESIZE_HANDLE_SIZE;
+  const nearRight = rect.width - x <= RESIZE_HANDLE_SIZE
+  const nearBottom = rect.height - y <= RESIZE_HANDLE_SIZE
+  const nearLeft = x <= RESIZE_HANDLE_SIZE
+  const nearTop = y <= RESIZE_HANDLE_SIZE
 
-		if (nearRight && nearBottom) return 'se';
-		if (nearLeft && nearBottom) return 'sw';
-		if (nearRight && nearTop) return 'ne';
-		if (nearLeft && nearTop) return 'nw';
-		if (nearRight) return 'e';
-		if (nearBottom) return 's';
-		if (nearLeft) return 'w';
-		if (nearTop) return 'n';
+  if (nearRight && nearBottom) return 'se'
+  if (nearLeft && nearBottom) return 'sw'
+  if (nearRight && nearTop) return 'ne'
+  if (nearLeft && nearTop) return 'nw'
+  if (nearRight) return 'e'
+  if (nearBottom) return 's'
+  if (nearLeft) return 'w'
+  if (nearTop) return 'n'
 
-		return '';
-	}
+  return ''
+}
 
-	function handleCardMouseMove(event: MouseEvent) {
-		if (!isResizing && !isDragging) {
-			const direction = getResizeDirection(event);
-			resizeDirection = direction;
+function handleCardMouseMove(event: MouseEvent) {
+  if (!isResizing && !isDragging) {
+    const direction = getResizeDirection(event)
+    resizeDirection = direction
 
-			// Update CSS variable for cursor
-			if (cardElement) {
-				const cursor = direction ? getCursorForDirection(direction) : 'grab';
-				cardElement.style.setProperty('--card-cursor', cursor);
-			}
-		} else if (isDragging) {
-			if (cardElement) {
-				cardElement.style.setProperty('--card-cursor', 'grabbing');
-			}
-		}
-		handleMouseMove(event);
-	}
+    // Update CSS variable for cursor
+    if (cardElement) {
+      const cursor = direction ? getCursorForDirection(direction) : 'grab'
+      cardElement.style.setProperty('--card-cursor', cursor)
+    }
+  } else if (isDragging) {
+    if (cardElement) {
+      cardElement.style.setProperty('--card-cursor', 'grabbing')
+    }
+  }
+  handleMouseMove(event)
+}
 
-	function startResize(event: MouseEvent, direction: string) {
-		isResizing = true;
-		resizeDirection = direction;
-		resizeStart = {
-			x: event.clientX,
-			y: event.clientY,
-			width: size.width,
-			height: size.height,
-			posX: position.x,
-			posY: position.y
-		};
-		event.preventDefault();
-	}
+function startResize(event: MouseEvent, direction: string) {
+  isResizing = true
+  resizeDirection = direction
+  resizeStart = {
+    x: event.clientX,
+    y: event.clientY,
+    width: size.width,
+    height: size.height,
+    posX: position.x,
+    posY: position.y,
+  }
+  event.preventDefault()
+}
 
-	function handleResize(event: MouseEvent) {
-		const dx = event.clientX - resizeStart.x;
-		const dy = event.clientY - resizeStart.y;
+function handleResize(event: MouseEvent) {
+  const dx = event.clientX - resizeStart.x
+  const dy = event.clientY - resizeStart.y
 
-		let newWidth = resizeStart.width;
-		let newHeight = resizeStart.height;
-		let newX = resizeStart.posX;
-		let newY = resizeStart.posY;
+  let newWidth = resizeStart.width
+  let newHeight = resizeStart.height
+  let newX = resizeStart.posX
+  let newY = resizeStart.posY
 
-		if (resizeDirection.includes('e')) {
-			newWidth = Math.max(MIN_WIDTH, resizeStart.width + dx);
-		}
-		if (resizeDirection.includes('w')) {
-			const calculatedWidth = resizeStart.width - dx;
-			if (calculatedWidth >= MIN_WIDTH) {
-				newWidth = calculatedWidth;
-				newX = resizeStart.posX + dx;
-			} else {
-				newWidth = MIN_WIDTH;
-				newX = resizeStart.posX + (resizeStart.width - MIN_WIDTH);
-			}
-		}
-		if (resizeDirection.includes('s')) {
-			newHeight = Math.max(MIN_HEIGHT, resizeStart.height + dy);
-		}
-		if (resizeDirection.includes('n')) {
-			const calculatedHeight = resizeStart.height - dy;
-			if (calculatedHeight >= MIN_HEIGHT) {
-				newHeight = calculatedHeight;
-				newY = resizeStart.posY + dy;
-			} else {
-				newHeight = MIN_HEIGHT;
-				newY = resizeStart.posY + (resizeStart.height - MIN_HEIGHT);
-			}
-		}
+  if (resizeDirection.includes('e')) {
+    newWidth = Math.max(MIN_WIDTH, resizeStart.width + dx)
+  }
+  if (resizeDirection.includes('w')) {
+    const calculatedWidth = resizeStart.width - dx
+    if (calculatedWidth >= MIN_WIDTH) {
+      newWidth = calculatedWidth
+      newX = resizeStart.posX + dx
+    } else {
+      newWidth = MIN_WIDTH
+      newX = resizeStart.posX + (resizeStart.width - MIN_WIDTH)
+    }
+  }
+  if (resizeDirection.includes('s')) {
+    newHeight = Math.max(MIN_HEIGHT, resizeStart.height + dy)
+  }
+  if (resizeDirection.includes('n')) {
+    const calculatedHeight = resizeStart.height - dy
+    if (calculatedHeight >= MIN_HEIGHT) {
+      newHeight = calculatedHeight
+      newY = resizeStart.posY + dy
+    } else {
+      newHeight = MIN_HEIGHT
+      newY = resizeStart.posY + (resizeStart.height - MIN_HEIGHT)
+    }
+  }
 
-		size = { width: newWidth, height: newHeight };
-		position = { x: newX, y: newY };
-	}
+  size = { width: newWidth, height: newHeight }
+  position = { x: newX, y: newY }
+}
 
-	function getCursorForDirection(direction: string): string {
-		const cursorMap: Record<string, string> = {
-			n: 'ns-resize',
-			s: 'ns-resize',
-			e: 'ew-resize',
-			w: 'ew-resize',
-			ne: 'nesw-resize',
-			sw: 'nesw-resize',
-			nw: 'nwse-resize',
-			se: 'nwse-resize'
-		};
-		return cursorMap[direction] || 'default';
-	}
+function getCursorForDirection(direction: string): string {
+  const cursorMap: Record<string, string> = {
+    n: 'ns-resize',
+    s: 'ns-resize',
+    e: 'ew-resize',
+    w: 'ew-resize',
+    ne: 'nesw-resize',
+    sw: 'nesw-resize',
+    nw: 'nwse-resize',
+    se: 'nwse-resize',
+  }
+  return cursorMap[direction] || 'default'
+}
 
-	$: isLeftSide = cardElement ? mousePosition.x < cardElement.offsetWidth / 2 : true;
+$: isLeftSide = cardElement ? mousePosition.x < cardElement.offsetWidth / 2 : true
 </script>
 
-<svelte:window on:mousemove={handleGlobalMouseMove} on:mouseup={handleGlobalMouseUp} />
+<svelte:window onmousemove={handleGlobalMouseMove} onmouseup={handleGlobalMouseUp} />
 
 <div
 	class="floating-container"
@@ -245,11 +243,12 @@
 	<div
 		class="text-card"
 		bind:this={cardElement}
-		on:mousemove={handleCardMouseMove}
-		on:mousedown={handleCardMouseDown}
-		on:mouseenter={handleMouseEnter}
-		on:mouseleave={handleMouseLeave}
+		onmousemove={handleCardMouseMove}
+		onmousedown={handleCardMouseDown}
+		onmouseenter={handleMouseEnter}
+		onmouseleave={handleMouseLeave}
 		role="dialog"
+		tabindex="0"
 		aria-label="Textbook"
 		style="width: {size.width}px; height: {size.height}px;"
 	>
@@ -258,7 +257,7 @@
 				<h3 class="text-lg font-semibold text-gray-900">
 					{textPages[$textbookCurrentPage].title}
 				</h3>
-				<Button color="light" size="xs" class="close-btn" on:click={handleClose}>âœ•</Button>
+				<Button color="light" size="xs" class="close-btn cursor-pointer" onclick={handleClose}>✕</Button>
 			</div>
 		</div>
 		<div class="card-body">

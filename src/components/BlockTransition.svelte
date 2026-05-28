@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-import { AngleLeftOutline, AngleRightOutline } from 'flowbite-svelte-icons'
+import { ChevronLeft, ChevronRight } from '@lucide/svelte'
 import { onMount, tick } from 'svelte'
 import {
   blockIdx,
@@ -10,7 +10,6 @@ import {
   isOnBlockTransition,
   modelMeta,
   rootRem,
-  userId,
   weightPopover,
 } from '~/store'
 import { textPages } from '~/utils/textbookPages'
@@ -34,13 +33,13 @@ const animateForwardTransition = async ({ asyncTime } = {}) => {
   isOnBlockTransition.set(true)
   await tick()
 
-  container.classList.add('animate-forward')
+  container?.classList.add('animate-forward')
   await tick()
 
   asyncUpdateBlockIdx(asyncTime)
 
   setTimeout(() => {
-    container.classList.remove('animate-forward')
+    container?.classList.remove('animate-forward')
     isOnBlockTransition.set(false)
   }, duration)
 }
@@ -52,13 +51,13 @@ const animateBackwardTransition = async ({ asyncTime } = {}) => {
   isOnBlockTransition.set(true)
   await tick()
 
-  container.classList.add('animate-backward')
+  container?.classList.add('animate-backward')
   await tick()
 
   asyncUpdateBlockIdx(asyncTime)
 
   setTimeout(() => {
-    container.classList.remove('animate-backward')
+    container?.classList.remove('animate-backward')
     isOnBlockTransition.set(false)
   }, duration)
 }
@@ -119,9 +118,10 @@ onMount(() => {
         ? document.querySelector('.step.transformer-blocks .content .column.final')
         : document.querySelector('.step.transformer-blocks .content')
 
-    const embeddingRect = embedding.getBoundingClientRect()
-    const blockRect = block.getBoundingClientRect()
+    const embeddingRect = embedding?.getBoundingClientRect()
+    const blockRect = block?.getBoundingClientRect()
 
+    if (!embeddingRect || !blockRect) return
     boundingPos = {
       left: embeddingRect.left + scrollLeft + rootRem,
       top: embeddingRect.top - topbarHeight,
@@ -130,22 +130,25 @@ onMount(() => {
   }
   setPosition()
 
-  resizeObserver = new ResizeObserver((entries) => {
+  resizeObserver = new ResizeObserver(() => {
     setPosition()
   })
+  
   const elements = document?.querySelectorAll('.resize-watch')
-  elements.forEach((el) => resizeObserver.observe(el))
+  elements.forEach((el) => {
+    resizeObserver.observe(el)
+  })
 })
 
-const onClickNext = (e) => {
+const onClickNext = (e: MouseEvent) => {
   e.stopPropagation()
-  textPages.find((page) => page.id === 'blocks')?.complete()
+  textPages.find((page) => page.id === 'blocks')?.complete?.()
 
   $blockIdxTemp = $blockIdxTemp < $modelMeta.layer_num - 1 ? $blockIdxTemp + 1 : 0
 }
-const onClickPrev = (e) => {
+const onClickPrev = (e: MouseEvent) => {
   e.stopPropagation()
-  textPages.find((page) => page.id === 'blocks')?.complete()
+  textPages.find((page) => page.id === 'blocks')?.complete?.()
 
   $blockIdxTemp = $blockIdxTemp > 0 ? $blockIdxTemp - 1 : $modelMeta.layer_num - 1
 }
@@ -162,10 +165,10 @@ const onClickPrev = (e) => {
 	data-click="transformer-bounding-title"
 	class:deactive={!!$weightPopover}
 	class:hide={!!$expandedBlock.id}
-	on:mouseenter={() => {
+	onmouseenter={() => {
 		isBoundingBoxActive.set(true);
 	}}
-	on:mouseleave={() => {
+	onmouseleave={() => {
 		isBoundingBoxActive.set(false);
 	}}
 	style={`top:${boundingPos.top - rootRem * 3.5}px;`}
@@ -176,15 +179,15 @@ const onClickPrev = (e) => {
 	</TextbookTooltip>
 	<button
 		data-click="transformer-block-prev-btn"
-		on:click={onClickPrev}
+		onclick={onClickPrev}
 		disabled={$isOnAnimation || $isOnBlockTransition || $blockIdxTemp === 0}
-		><AngleLeftOutline size="sm" /></button
+		><ChevronLeft size="sm" /></button
 	>
 	<button
 		data-click="transformer-block-next-btn"
-		on:click={onClickNext}
+		onclick={onClickNext}
 		disabled={$isOnAnimation || $isOnBlockTransition || $blockIdxTemp === $modelMeta.layer_num - 1}
-		><AngleRightOutline size="sm" /></button
+		><ChevronRight size="sm" /></button
 	>
 </div>
 

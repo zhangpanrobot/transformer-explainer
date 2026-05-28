@@ -101,18 +101,12 @@ export const predictedColor = theme.colors.purple[600]
 
 // Interactivity
 export const hoveredPath = writable()
-export const hoveredMatrixCell = writable({ row: null, col: null })
+
+type WritableCell = { row: number | null, col: number | null }
+const cell: WritableCell = { row: null, col: null }
+export const hoveredMatrixCell = writable(cell)
 export const weightPopover = writable()
 export const tooltip = writable()
-
-export const isMobile = readable(false, (set) => {
-  if (typeof window !== 'undefined') {
-    // Only run in browser environment
-    const userAgent = navigator.userAgent.toLowerCase()
-    set(/android|iphone|ipad|ipod/i.test(userAgent))
-  }
-  return () => {} // Cleanup function
-})
 
 // User identification
 export const userId = writable<string | null>(null)

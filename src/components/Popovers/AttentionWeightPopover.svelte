@@ -39,16 +39,16 @@ $: outData = Array(tokenLen)
   )
 
 // color scale
-const valueColorScale = (d, i) => {
-  return d3.interpolate(theme.colors['green'][100], theme.colors['green'][400])(d)
+const valueColorScale = (d: number) => {
+  return d3.interpolate(theme.colors.green[100], theme.colors.green[400])(d)
 }
 
-const outColorScale = (d, i) => {
-  return d3.interpolate(theme.colors['purple'][100], theme.colors['purple'][400])(d)
+const outColorScale = (d: number) => {
+  return d3.interpolate(theme.colors.purple[100], theme.colors.purple[400])(d)
 }
 
-const softmaxColorScale = (d, i) => {
-  return d3.interpolate('white', theme.colors['purple'][700])(d)
+const softmaxColorScale = (d: number) => {
+  return d3.interpolate('white', theme.colors.purple[700])(d)
 }
 
 // animation
@@ -241,7 +241,7 @@ const draw = () => {
 let highlightCol: number | undefined
 let highlightRow: number | undefined
 
-const onMouseOverCell = (e, d) => {
+const onMouseOverCell = (d: Cell) => {
   if (isAnimationActive) return
   highlightRow = d.rowIndex
   highlightCol = d.colIndex

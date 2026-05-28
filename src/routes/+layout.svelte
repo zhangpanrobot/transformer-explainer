@@ -1,7 +1,6 @@
 <script lang="ts">
 import '~/styles/app.css'
 import '~/styles/global.scss'
-import { Spinner } from 'flowbite-svelte'
 import { onMount } from 'svelte'
 import { page } from '$app/stores'
 import Article from '~/components/article/Article.svelte'
@@ -41,11 +40,9 @@ onMount(() => {
   if (target) {
     intersectionObserver.observe(target)
   }
-  window.addEventListener('scroll', handleMobileScrollX)
 
   return () => {
     intersectionObserver.disconnect()
-    window.removeEventListener('scroll', handleMobileScrollX)
   }
 })
 
@@ -57,10 +54,6 @@ function handleIntersection(entries: any[]) {
       tobBarActive = false
     }
   })
-}
-
-const handleMobileScrollX = () => {
-  scrollLeft = window.scrollX || document.documentElement.scrollLeft
 }
 </script>
 
@@ -76,7 +69,9 @@ const handleMobileScrollX = () => {
 			{#if $isLoaded}
 				<slot />
 			{:else}
-				<div class="flex h-full w-full items-center justify-center"><Spinner color="purple" /></div>
+				<div class="flex h-full w-full items-center justify-center">
+					<span class="loading loading-spinner loading-xl text-purple"></span>
+				</div>
 			{/if}
 		</main>
 	</div>
@@ -86,13 +81,6 @@ const handleMobileScrollX = () => {
 </div>
 
 <style lang="scss">
-	.alert {
-		position: fixed;
-		bottom: 1rem;
-		left: 1rem;
-		z-index: 9999;
-	}
-
 	#app {
 		height: 100vh;
 		min-width: 900px;

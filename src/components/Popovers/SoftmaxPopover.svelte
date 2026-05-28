@@ -1,27 +1,27 @@
 ﻿<script lang="ts">
-	import { Card } from 'flowbite-svelte';
-	import { modelData, sampling, predictedToken, temperature } from '~/store';
-	import Katex from '~/utils/Katex.svelte';
-	import { ArrowRightOutline } from 'flowbite-svelte-icons';
-	import Arrow from '../common/Arrow.svelte';
-	import TextbookTooltip from '../common/TextbookTooltip.svelte';
+import { ChevronRight } from '@lucide/svelte'
+import { Card } from 'flowbite-svelte'
+import { modelData, predictedToken, sampling, temperature } from '~/store'
+import Katex from '~/utils/Katex.svelte'
+import Arrow from '../common/Arrow.svelte'
+import TextbookTooltip from '../common/TextbookTooltip.svelte'
 
-	export let hoveredIndex: number | null = null;
+export let hoveredIndex: number | null = null
 
-	$: data = $modelData?.probabilities || [];
+$: data = $modelData?.probabilities || []
 
-	function getStringNumber(num?: number, decimal = 2) {
-		if (num === -Infinity) return '-âˆž';
-		if (num === Infinity) return 'âˆž';
-		else return num?.toFixed(decimal);
-	}
+function getStringNumber(num?: number, decimal = 2) {
+  if (num === -Infinity) return '-âˆž'
+  if (num === Infinity) return 'âˆž'
+  else return num?.toFixed(decimal)
+}
 
-	$: selected =
-		hoveredIndex !== null
-			? data[hoveredIndex]
-			: !!$predictedToken
-				? data[$predictedToken?.rank]
-				: data[0];
+$: selected =
+  hoveredIndex !== null
+    ? data[hoveredIndex]
+    : $predictedToken
+      ? data[$predictedToken?.rank]
+      : data[0]
 </script>
 
 <Card class={'softmax-popover popover bg-white text-sm'}>
@@ -52,7 +52,7 @@
 					</div>
 				</div>
 			</div>
-			<ArrowRightOutline class="step-arrow" />
+			<ChevronRight class="step-arrow" />
 			{#if $sampling.type === 'top-p'}
 				<div class="formula-step">
 					<div class="step-title">
@@ -83,7 +83,7 @@
 						</div>
 					</div>
 				</div>
-				<ArrowRightOutline class="step-arrow" />
+				<ChevronRight class="step-arrow" />
 			{/if}
 			<div class="formula-step sampling">
 				<TextbookTooltip id="sampling">
@@ -139,7 +139,7 @@
 					</div>
 				</div>
 			</div>
-			<ArrowRightOutline class="step-arrow" />
+			<ChevronRight class="step-arrow" />
 			{#if $sampling.type === 'top-k'}
 				<div class="formula-step softmax-step">
 					<div class="step-title">Softmax</div>

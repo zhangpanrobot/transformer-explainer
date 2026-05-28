@@ -30,10 +30,10 @@
 	{id}
 	class="textbook-tooltip"
 	data-click={`textbook-tooltip`}
-	on:click={openTextbook}
+	onclick={openTextbook}
 	role="button"
 	tabindex="0"
-	on:keydown={(e) => {
+	onkeydown={(e) => {
 		if (e.key === 'Enter' || e.key === ' ') {
 			openTextbook(e);
 		}

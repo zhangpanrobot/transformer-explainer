@@ -1,5 +1,4 @@
 ﻿<script lang="ts">
-	import { userId } from '~/store';
 	export let className: string | undefined;
 	export let disabled: boolean = false;
 	export let min: number;
@@ -18,7 +17,6 @@
 
 	function handleMouseUp() {
 		endValue = valueText;
-		
 	}
 </script>
 
@@ -35,13 +33,13 @@
 			{max}
 			{step}
 			bind:value
-			on:click={(e) => {
+			onclick={(e) => {
 				e.preventDefault();
 				e.stopPropagation();
 				onClick?.();
 			}}
-			on:mousedown={handleMouseDown}
-			on:mouseup={handleMouseUp}
+			onmousedown={handleMouseDown}
+			onmouseup={handleMouseUp}
 		/>
 		<div class="value">
 			<p>{valueText}</p>

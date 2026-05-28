@@ -1,38 +1,38 @@
 ﻿<script lang="ts">
-	import { tokens, modelMeta, attentionHeadIdx, vectorHeight, blockIdx } from '~/store';
-	import classNames from 'classnames';
-	import { onMount } from 'svelte';
-	import VectorCanvas from './common/VectorCanvas.svelte';
-	import OperationGroup from './OperationGroup.svelte';
-	import { Tooltip } from 'flowbite-svelte';
+import classNames from 'classnames'
+import { Tooltip } from 'flowbite-svelte'
+import { onMount } from 'svelte'
+import { attentionHeadIdx, blockIdx, modelMeta, tokens, vectorHeight } from '~/store'
+import VectorCanvas from './common/VectorCanvas.svelte'
+import OperationGroup from './OperationGroup.svelte'
 
-	export let className: string | undefined = undefined;
+export let className: string | undefined = undefined
 
-	const embeddingVectorColor = 'bg-gray-300';
+const embeddingVectorColor = 'bg-gray-300'
 
-	let vectorHoverIdx: number | null = null;
-	const queryVectorColor = 'bg-blue-200';
-	const keyVectorColor = 'bg-red-200';
-	const valVectorColor = 'bg-green-200';
+let vectorHoverIdx: number | null = null
+const queryVectorColor = 'bg-blue-200'
+const keyVectorColor = 'bg-red-200'
+const valVectorColor = 'bg-green-200'
 
-	const queryHeadVectorColor = 'bg-blue-300';
-	const keyHeadVectorColor = 'bg-red-300';
-	const valHeadVectorColor = 'bg-green-300';
+const queryHeadVectorColor = 'bg-blue-300'
+const keyHeadVectorColor = 'bg-red-300'
+const valHeadVectorColor = 'bg-green-300'
 
-	// attentionHeadIdx subscribe
-	const headCursors = {};
+// attentionHeadIdx subscribe
+const headCursors = {}
 
-	onMount(() => {
-		const unsubscribe = attentionHeadIdx.subscribe(async (newIdx) => {
-			Object.values(headCursors).forEach((el) => {
-				el.style.top = `${($vectorHeight / $modelMeta.attention_head_num) * newIdx}px`;
-			});
-		});
+onMount(() => {
+  const unsubscribe = attentionHeadIdx.subscribe(async (newIdx) => {
+    Object.values(headCursors).forEach((el) => {
+      el.style.top = `${($vectorHeight / $modelMeta.attention_head_num) * newIdx}px`
+    })
+  })
 
-		return () => {
-			unsubscribe();
-		};
-	});
+  return () => {
+    unsubscribe()
+  }
+})
 </script>
 
 <div class={classNames('qkv', className)} role="none" data-click="qkv-step">
@@ -66,10 +66,10 @@
 				<div
 					class="qkv-weighted vector x3 flex flex-col"
 					class:last={index === $tokens.length - 1}
-					on:mouseenter={() => {
+					onmouseenter={() => {
 						vectorHoverIdx = index;
 					}}
-					on:mouseleave={() => {
+					onmouseleave={() => {
 						vectorHoverIdx = null;
 					}}
 					role="group"

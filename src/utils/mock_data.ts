@@ -1,4 +1,4 @@
-import { AutoTokenizer } from '@xenova/transformers';
+import { AutoTokenizer } from '@huggingface/transformers';
 
 export const getTokenization = async(input: string) => {
     const tokenizer = await AutoTokenizer.from_pretrained('gpt2'); // load pre-trained toakenizer

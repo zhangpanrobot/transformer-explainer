@@ -1,8 +1,3 @@
-export const ga = (name: string, params?: any) => {
-	if (typeof gtag === 'undefined') return;
-	gtag('event', name, params);
-};
-
 export function scrollToDiv(e: Event, goTo: string) {
 	e.stopPropagation();
 	if (!goTo) return;
@@ -17,7 +12,6 @@ export function scrollToDiv(e: Event, goTo: string) {
 	}
 }
 
-export function onClickReadMore(e: Event, goTo: string, params?: any) {
+export function onClickReadMore(e: Event, goTo: string) {
 	scrollToDiv(e, goTo);
-	// ga('readmore_btn_click', params);
 }

@@ -1,24 +1,21 @@
 ﻿<script lang="ts">
-import { AngleLeftOutline, AngleRightOutline } from 'flowbite-svelte-icons'
+import { ChevronLeft, ChevronRight } from '@lucide/svelte'
 import {
   textbookCurrentPage,
   textbookCurrentPageId,
   textbookPreviousPage,
   textbookPreviousPageId,
-  userId,
 } from '~/store'
 import type { TextbookPage } from '~/utils/textbookPages'
 
 export let textPages: TextbookPage[]
-export let isMouseInCard: boolean = false
-export let isLeftSide: boolean = true
 
 let showPageDropdown = false
 let isDragging = false
 let progressBarElement: HTMLElement
 let previewProgress = 0
 
-function updatePageFromPosition(clientX: number, via: string = 'progress-bar') {
+function updatePageFromPosition(clientX: number) {
   if (!progressBarElement) return
 
   const rect = progressBarElement.getBoundingClientRect()
@@ -40,7 +37,7 @@ function updatePageFromPosition(clientX: number, via: string = 'progress-bar') {
 function handleProgressClick(event: MouseEvent) {
   event.stopPropagation()
   event.preventDefault()
-  updatePageFromPosition(event.clientX, 'progress-bar-click')
+  updatePageFromPosition(event.clientX)
 }
 
 function handleProgressMouseDown(event: MouseEvent) {
@@ -60,7 +57,7 @@ function handleGlobalMouseMove(event: MouseEvent) {
 
 function handleGlobalMouseUp(event: MouseEvent) {
   if (isDragging) {
-    updatePageFromPosition(event.clientX, 'progress-bar-drag')
+    updatePageFromPosition(event.clientX)
     isDragging = false
     previewProgress = 0
   }
@@ -97,15 +94,15 @@ $: showLeftArrow = true
 $: showRightArrow = true
 </script>
 
-<svelte:window on:mousemove={handleGlobalMouseMove} on:mouseup={handleGlobalMouseUp} />
+<svelte:window onmousemove={handleGlobalMouseMove} onmouseup={handleGlobalMouseUp} />
 
 <!-- Navigation Footer -->
 <div class="navigation-footer">
 	<!-- Left navigation area -->
-	<div class="nav-section left" on:click={handleLeftClick} role="button" tabindex="0">
+	<div class="nav-section left" onclick={handleLeftClick} role="button" tabindex="0">
 		{#if showLeftArrow}
 			<div class="nav-arrow-circle">
-				<AngleLeftOutline size="sm" />
+				<ChevronLeft size="sm" />
 			</div>
 		{/if}
 	</div>
@@ -115,8 +112,8 @@ $: showRightArrow = true
 		<div
 			class="progress-bar"
 			bind:this={progressBarElement}
-			on:click={handleProgressClick}
-			on:mousedown={handleProgressMouseDown}
+			onclick={handleProgressClick}
+			onmousedown={handleProgressMouseDown}
 			role="button"
 			tabindex="0"
 		>
@@ -129,7 +126,7 @@ $: showRightArrow = true
 		<div class="page-counter-container">
 			<button
 				class="page-counter"
-				on:click={(e) => {
+				onclick={(e) => {
 					e.stopPropagation();
 					e.preventDefault();
 					showPageDropdown = !showPageDropdown;
@@ -143,7 +140,7 @@ $: showRightArrow = true
 						<button
 							class="dropdown-item"
 							class:active={$textbookCurrentPage === index}
-							on:click={(e) => {
+							onclick={(e) => {
 								e.stopPropagation();
 								e.preventDefault();
 								textbookPreviousPageId.set($textbookCurrentPageId);
@@ -166,10 +163,10 @@ $: showRightArrow = true
 	</div>
 
 	<!-- Right navigation area -->
-	<div class="nav-section right" on:click={handleRightClick} role="button" tabindex="0">
+	<div class="nav-section right" onclick={handleRightClick} role="button" tabindex="0">
 		{#if showRightArrow}
 			<div class="nav-arrow-circle">
-				<AngleRightOutline size="sm" />
+				<ChevronRight size="sm" />
 			</div>
 		{/if}
 	</div>

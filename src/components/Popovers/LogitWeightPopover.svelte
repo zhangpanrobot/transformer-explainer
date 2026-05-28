@@ -49,20 +49,22 @@ $: logitData = Array(1)
   )
 
 // color scale
-const embeddingColorScale = (d, i) => {
-  return d3.interpolate(theme.colors['blue'][100], theme.colors['blue'][400])(d)
+const embeddingColorScale = (d: number) => {
+  return d3.interpolate(theme.colors.blue[100], theme.colors.blue[400])(d)
 }
-const weightColorScale = (d, i) => {
-  return d3.interpolate(theme.colors['gray'][100], theme.colors['gray'][400])(d)
+
+const weightColorScale = (d: number) => {
+  return d3.interpolate(theme.colors.gray[100], theme.colors.gray[400])(d)
 }
-const logitColorScale = (d, i) => {
-  return d3.interpolate(theme.colors['blue'][100], theme.colors['gray'][400])(d)
+
+const logitColorScale = (d: number) => {
+  return d3.interpolate(theme.colors.blue[100], theme.colors.gray[400])(d)
 }
 
 // animation
 let isAnimationActive = false
 let progress = 0
-let timeline
+let timeline: GSAPTimeline
 
 onMount(() => {
   timeline = gsap.timeline()
@@ -304,11 +306,12 @@ const draw = () => {
 let highlightCol: number | undefined
 let highlightRow: number | undefined
 
-const onMouseOverCell = (e, d) => {
+const onMouseOverCell = (d: Cell) => {
   if (isAnimationActive) return
   highlightRow = d.rowIndex
   highlightCol = d.colIndex
 }
+
 const onMouseOutSvg = () => {
   highlightCol = undefined
   highlightRow = undefined

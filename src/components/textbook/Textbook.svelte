@@ -1,15 +1,8 @@
 ﻿<script lang="ts">
+import { BookOpen } from '@lucide/svelte'
 import { GradientButton } from 'flowbite-svelte'
-import { BookOpenSolid } from 'flowbite-svelte-icons'
 import { fade } from 'svelte/transition'
-import {
-  expandedBlock,
-  isTextbookOpen,
-  textbookCurrentPage,
-  textbookCurrentPageId,
-  textbookPreviousPage,
-  userId,
-} from '~/store'
+import { isTextbookOpen, textbookCurrentPage, textbookPreviousPage } from '~/store'
 import { textPages } from '~/utils/textbookPages'
 import TextbookCard from './TextbookCard.svelte'
 
@@ -41,13 +34,13 @@ function handlePageTransition(newPage: number, oldPage: number) {
 			pill={true}
 			color="purpleToBlue"
 			class="floating-btn h-14 w-14"
-			on:click={() => {
+			onclick={() => {
 				isTextbookOpen.set(true);
 
 				
 			}}
 		>
-			<BookOpenSolid class="h-8 w-8" />
+			<BookOpen class="h-8 w-8" />
 		</GradientButton>
 	</div>
 {/if}
@@ -62,16 +55,6 @@ function handlePageTransition(newPage: number, oldPage: number) {
 		bottom: 2rem;
 		right: 2rem;
 		z-index: $TEXTBOOK_INDEX;
-	}
-
-	.floating-btn {
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-		transition: all 0.2s ease;
-
-		&:hover {
-			transform: translateY(-2px);
-			box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-		}
 	}
 	:root {
 		--textbook-highlight-color: var(--color-blue-600);
@@ -96,13 +79,6 @@ function handlePageTransition(newPage: number, oldPage: number) {
 			&::after {
 				display: none !important;
 			}
-		}
-	}
-
-	// page - transformer
-	:global(.generate-button) {
-		.highlight-text {
-			display: none;
 		}
 	}
 	:global(.input-form.textbook-highlight .input-btn-group) {
@@ -478,18 +454,9 @@ function handlePageTransition(newPage: number, oldPage: number) {
 		background: var(--textbook-highlight-background) !important;
 	}
 
-	// residual
-	:global(.operation-col.residual.textbook-highlight) {
-		// pointer-events: none;
-	}
 	:global(.residual-start.textbook-highlight .residual-text) {
 		color: var(--color-gray-600) !important;
 		background: var(--textbook-highlight-background) !important;
-	}
-
-	// ln, dropout
-	:global(.operation-col.textbook-highlight) {
-		// pointer-events: none;
 	}
 	:global(.operation-col.textbook-highlight .icon) {
 		opacity: 0 !important;

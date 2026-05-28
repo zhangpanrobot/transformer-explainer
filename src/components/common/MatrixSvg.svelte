@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 import * as d3 from 'd3'
 
 import { theme } from '~/utils/tailwind-theme'
@@ -15,30 +15,17 @@ export let dimension: number
 
 export let groupBy: 'row' | 'col' = 'row'
 export let shape: 'circle' | 'rect' = 'rect'
-export let colorScale: string | ((t: number, i: number) => string) | undefined = undefined
+export let colorScale: string | ((t: number, i?: number) => string) | undefined = undefined
 
-export let onMouseOverCell: (
-  event: Event,
-  data: any,
-  el?: SVGRectElement | d3.BaseType,
-) => void | undefined
-export let onMouseOutCell: (
-  event: Event,
-  data: any,
-  el?: SVGRectElement | d3.BaseType,
-) => void | undefined
-export let onMouseOutSvg: (
-  event: Event,
-  data: any,
-  el?: SVGRectElement | d3.BaseType,
-) => void | undefined
-export let showTooltip: (
-  event: Event,
-  data: any,
-  el: SVGRectElement | d3.BaseType,
-) => string | undefined
-export let highlightRow: number | undefined
-export let highlightCol: number | undefined
+export let onMouseOverCell: ((data: Cell, el?: SVGRectElement | d3.BaseType) => void) | undefined =
+  undefined
+export let onMouseOutCell: ((data: Cell, el?: SVGRectElement | d3.BaseType) => void) | undefined =
+  undefined
+export let onMouseOutSvg: ((data: any, el?: SVGRectElement | d3.BaseType) => void) | undefined =
+  undefined
+export let showTooltip: ((data: any) => string | undefined) | undefined = undefined
+export let highlightRow: number | undefined = undefined
+export let highlightCol: number | undefined = undefined
 
 let svgEl: HTMLOrSVGElement
 
@@ -58,20 +45,19 @@ const matrixColorScale =
     : d3.interpolate('white', theme.colors[colorKey][400])
 
 const drawMatrixSvg = () => {
-  const svg = d3.select(svgEl)
+  const svg = d3.select(svgEl as HTMLElement)
 
   if (onSvgOut) svg.on('mouseleave', onSvgOut)
 
   let cells
 
   if (groupBy === 'col') {
-    let cols
-    cols = svg
+    let cols = svg
       .selectAll('g.g-col')
       .data(data)
       .join('g')
-      .attr('class', (d, i) => `g-col g-col-${i} col-${i}`)
-    cols.attr('transform', (d, i) => `translate(${i * cellWidth + i * colGap},0)`)
+      .attr('class', (_, i) => `g-col g-col-${i} col-${i}`)
+    cols.attr('transform', (_, i) => `translate(${i * cellWidth + i * colGap},0)`)
 
     if (shape === 'rect') {
       cells = cols
@@ -111,21 +97,19 @@ const drawMatrixSvg = () => {
         .attr('stroke', theme.colors.gray[500])
         .attr('fill', (d, i) => matrixColorScale(d.cell, i))
         .on('mouseenter', onCellOver)
-        .on('mouseleave', onCellOut)
+        .on('mouseleave', (_, d) => onCellOut(d))
     }
   }
 
   if (groupBy === 'row') {
-    let rows
-
-    rows = svg
+    let rows = svg
       .selectAll('g.g-row')
       .data(data)
       .join('g')
       .attr('class', (d, i) => `g-row g-row-${i} row-${i}`)
 
     if (shape === 'rect') {
-      rows.attr('transform', (d, i) =>
+      rows.attr('transform', (_, i) =>
         transpose
           ? `translate(${i * cellHeight + i * rowGap},0)`
           : `translate(0,${i * cellHeight + i * rowGap})`,
@@ -149,6 +133,8 @@ const drawMatrixSvg = () => {
         .attr('height', transpose ? cellWidth : cellHeight)
         .on('mouseenter', onCellOver)
         .on('mouseleave', onCellOut)
+        .transition()
+        .duration(100)
         .attr('fill', (d, i) => {
           if (!Number.isFinite(d.cell)) return theme.colors.gray[200]
           return matrixColorScale(d.cell, i)
@@ -202,21 +188,21 @@ const drawMatrixSvg = () => {
 }
 
 $: if (data && svgEl) {
-  drawMatrixSvg(data)
+  drawMatrixSvg()
 }
 
 // highlighting
-let animationFrame
+let animationFrame: number
 $: {
   cancelAnimationFrame(animationFrame)
   animationFrame = requestAnimationFrame(() => {
-    d3.select(svgEl)
+    d3.select(svgEl as HTMLElement)
       .selectAll(shape)
       .attr('class', (d) => {
         const rowIdx = d.rowIndex
         const colIdx = d.colIndex
 
-        let classname
+        let classname: string
 
         if (highlightRow !== undefined && highlightCol !== undefined) {
           classname =
@@ -239,31 +225,29 @@ let tooltipVisible = false
 let tooltipX = 0
 let tooltipY = 0
 
-function onCellOver(e, d) {
+function onCellOver(e: MouseEvent, d: Cell) {
   
-  onMouseOverCell?.(e, d, this)
-
-  const tooltipData = showTooltip?.(e, d.cell)
+  onMouseOverCell?.(d, this)
+  const tooltipData = showTooltip?.(d.cell)
   if (tooltipData) visibleTooltip(e, tooltipData)
 }
 
-function onCellOut(e, d) {
-  
-  onMouseOutCell?.(e, d, this)
+function onCellOut(d: Cell) {
+  onMouseOutCell?.(d, this)
   hideTooltip()
 }
 
-function onSvgOut(e, d) {
-  onMouseOutSvg?.(e, d)
+function onSvgOut(d: any) {
+  onMouseOutSvg?.(d)
   hideTooltip()
 }
 
-function visibleTooltip(event, data) {
+function visibleTooltip(e: MouseEvent, data: any) {
   tooltipData = data
   tooltipVisible = true
 
-  const parentBbox = svgEl?.getBoundingClientRect()
-  const bbox = event.target.getBoundingClientRect()
+  const parentBbox = (svgEl as HTMLElement)?.getBoundingClientRect()
+  const bbox = (e.target as HTMLElement)?.getBoundingClientRect()
 
   tooltipX = bbox.left + bbox.width / 2 - parentBbox.left
   tooltipY = bbox.top - parentBbox.top - 10

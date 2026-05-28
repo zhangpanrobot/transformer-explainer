@@ -1,14 +1,14 @@
-<script>
+<script lang="ts">
 	import katex from 'katex';
 
-	export let math;
+	export let math: string;
 	export let displayMode = false;
-	export let style;
+	export let style: Record<string, string> = {};
 
 	const options = {
 		displayMode,
 		throwOnError: false,
-		style
+		style: style
 	};
 
 	$: katexString = katex.renderToString(math, options);

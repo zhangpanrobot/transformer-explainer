@@ -2,7 +2,6 @@
 	import classNames from 'classnames';
 	import { Popover } from 'flowbite-svelte';
 	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
-	import { userId } from '~/store';
 	import { onClickReadMore } from '~/utils/event';
 
 	export let offset: PopoverProps['offset'] = undefined;
@@ -46,7 +45,7 @@
 		{#if goTo}
 			<div
 				class="more-btn mt-1 text-blue-600 hover:underline"
-				on:click={(e) =>
+				onclick={(e) =>
 					onClickReadMore(e, goTo, {
 						value: title
 					})}

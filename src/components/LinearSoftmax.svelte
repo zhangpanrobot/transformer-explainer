@@ -1,8 +1,9 @@
 ﻿<script lang="ts">
+import { Eye, ZoomIn } from '@lucide/svelte'
 import classNames from 'classnames'
 import { Tooltip } from 'flowbite-svelte'
-import { EyeOutline, ZoomInOutline } from 'flowbite-svelte-icons'
 import { getContext, onMount, setContext, tick } from 'svelte'
+import type { KeyboardEventHandler } from 'svelte/elements'
 import { fade } from 'svelte/transition'
 import TextbookTooltip from '~/components/common/TextbookTooltip.svelte'
 import {
@@ -16,7 +17,6 @@ import {
   sampling,
   temperature,
   textbookCurrentPageId,
-  userId,
 } from '~/store'
 import { Flip, gsap } from '~/utils/gsap'
 import Katex from '~/utils/Katex.svelte'
@@ -29,7 +29,7 @@ export let className: string | undefined = undefined
 
 setContext('block-id', 'softmax')
 
-const blockId = getContext('block-id')
+const blockId = getContext('block-id') as string
 
 let isSoftmaxExpanded = false
 let showLogitPopover = false
@@ -50,7 +50,7 @@ const onClickSoftmax = () => {
   }
 }
 
-const onClickSoftmaxTitle = (e) => {
+const onClickSoftmaxTitle = (e: MouseEvent) => {
   e.stopPropagation()
   e.preventDefault()
   textPages.find((page) => page.id === 'output-probabilities')?.out()
@@ -65,15 +65,19 @@ const onClickSoftmaxTitle = (e) => {
 }
 let expandableEl: HTMLDivElement
 
-function handleOutsideClick(e) {
-  if (isSoftmaxExpanded && !expandableEl.contains(e.target)) {
+function handleOutsideClick(e: MouseEvent) {
+  if (isSoftmaxExpanded && !expandableEl.contains(e.target as Node)) {
     expandedBlock.set({ id: null })
   }
 }
 onMount(() => {
-  document.querySelector('.main-section').addEventListener('click', handleOutsideClick)
+  document
+    .querySelector('.main-section')
+    ?.addEventListener('click', handleOutsideClick as EventListener)
   return () => {
-    document.querySelector('.main-section').removeEventListener('click', handleOutsideClick)
+    document
+      .querySelector('.main-section')
+      ?.removeEventListener('click', handleOutsideClick as EventListener)
   }
 })
 
@@ -85,7 +89,7 @@ let drawBars: () => void
 // google analytics
 let startTime = null
 
-const expandSoftmax = async () => {
+async function expandSoftmax() {
   containerState = Flip.getState('.softmax .softmax-detail.expandable')
   isSoftmaxExpanded = true
   await tick()
@@ -110,12 +114,9 @@ const expandSoftmax = async () => {
   })
 
   startTime = performance.now()
-  }
+}
 
-const collapseSoftmax = async () => {
-  let endTime = performance.now()
-  let visibleDuration = endTime - startTime
-
+async function collapseSoftmax() {
   showLogitPopover = false
 
   containerState = Flip.getState('.softmax .softmax-detail.expandable')
@@ -156,7 +157,7 @@ $: topKLogits = data?.map((d) => d.topKLogit) || []
 // top-p
 $: topPProbabilities = data?.map((d) => d.topPProbability) || []
 $: cumulativeProbabilities = data?.map((d) => d.cumulativeProbability) || []
-$: cutoffIndex = data?.[0].cutoffIndex
+$: cutoffIndex = data?.[0].cutoffIndex || 0
 
 let isHovered = false
 
@@ -168,7 +169,7 @@ function handleMouseLeave() {
   isHovered = false
 }
 
-const onClickLogits = (e) => {
+const onClickLogits = (e: MouseEvent) => {
   e.stopPropagation()
   e.preventDefault()
   showLogitPopover = !showLogitPopover
@@ -182,22 +183,22 @@ const onClickLogits = (e) => {
 	})}
 	role="none"
 	bind:this={expandableEl}
-	on:click={onClickSoftmax}
-	on:keydown={onClickSoftmax}
+	onclick={onClickSoftmax}
+	onkeydown={onClickSoftmax}
 	data-click="prob-step"
 >
 	<div
 		class="title expandable"
 		role="none"
-		on:click={onClickSoftmaxTitle}
-		on:keydown={onClickSoftmaxTitle}
-		on:mouseenter={handleMouseEnter}
-		on:mouseleave={handleMouseLeave}
+		onclick={onClickSoftmaxTitle}
+		onkeydown={onClickSoftmaxTitle as unknown as KeyboardEventHandler<HTMLDivElement>}
+		onmouseenter={handleMouseEnter}
+		onmouseleave={handleMouseLeave}
 		data-click="prob-step-title"
 	>
 		<div class="title-text flex w-max items-center gap-1">
 			Probabilities
-			<ZoomInOutline></ZoomInOutline>
+			<ZoomIn></ZoomIn>
 		</div>
 	</div>
 
@@ -212,8 +213,8 @@ const onClickLogits = (e) => {
 					<div
 						role="group"
 						class="text-box"
-						on:mouseenter={() => (hoveredIndex = idx)}
-						on:mouseleave={() => (hoveredIndex = null)}
+						onmouseenter={() => (hoveredIndex = idx)}
+						onmouseleave={() => (hoveredIndex = null)}
 						class:highlight={idx === hoveredIndex}
 						class:sample_highlight={$highlightedIndex === idx}
 						class:final_token_highlight={$predictedToken?.rank === idx}
@@ -231,17 +232,17 @@ const onClickLogits = (e) => {
 		<div class="second-column flex flex-col">
 			{#if isSoftmaxExpanded}
 				<div class="softmax-subtitle softmax-detail flex text-center text-xs opacity-0">
-					<div class="title-box token-string !justify-end">
+					<div class="title-box token-string justify-end!">
 						<div class="title-text">Tokens</div>
 					</div>
 					<div class="title-box logits">
-						<div
+						<button
 							class="title-text btn shadow-sm"
-							on:click={onClickLogits}
+							onclick={onClickLogits}
 							data-click="prob-expansion-logit-btn"
 						>
-							Logits <EyeOutline class="icon text-gray-400" size="sm" />
-						</div>
+							Logits <Eye class="icon text-gray-400" size="sm" />
+					</button>
 					</div>
 					<div class="title-box scaled">
 						<TextbookTooltip id="temperature"
@@ -271,8 +272,8 @@ const onClickLogits = (e) => {
 									<div
 										role="group"
 										class="text-box text-center"
-										on:mouseenter={() => (hoveredIndex = idx)}
-										on:mouseleave={() => (hoveredIndex = null)}
+										onmouseenter={() => (hoveredIndex = idx)}
+										onmouseleave={() => (hoveredIndex = null)}
 										class:highlight={idx === hoveredIndex}
 										class:sample_highlight={$highlightedIndex === idx}
 										class:final_token_highlight={$predictedToken?.rank === idx}
@@ -291,8 +292,8 @@ const onClickLogits = (e) => {
 									<div
 										role="group"
 										class="text-box text-center"
-										on:mouseenter={() => (hoveredIndex = idx)}
-										on:mouseleave={() => (hoveredIndex = null)}
+										onmouseenter={() => (hoveredIndex = idx)}
+										onmouseleave={() => (hoveredIndex = null)}
 										class:highlight={idx === hoveredIndex}
 										class:sample_highlight={$highlightedIndex === idx}
 										class:final_token_highlight={$predictedToken?.rank === idx}
@@ -312,8 +313,8 @@ const onClickLogits = (e) => {
 										<div
 											role="group"
 											class="text-box text-center"
-											on:mouseenter={() => (hoveredIndex = idx)}
-											on:mouseleave={() => (hoveredIndex = null)}
+											onmouseenter={() => (hoveredIndex = idx)}
+											onmouseleave={() => (hoveredIndex = null)}
 											class:highlight={idx === hoveredIndex}
 											class:sample_highlight={$highlightedIndex === idx}
 											class:final_token_highlight={$predictedToken?.rank === idx}
@@ -336,8 +337,8 @@ const onClickLogits = (e) => {
 										<div
 											role="group"
 											class="text-box text-center"
-											on:mouseenter={() => (hoveredIndex = idx)}
-											on:mouseleave={() => (hoveredIndex = null)}
+											onmouseenter={() => (hoveredIndex = idx)}
+											onmouseleave={() => (hoveredIndex = null)}
 											class:highlight={idx === hoveredIndex}
 											class:sample_highlight={$highlightedIndex === idx}
 											class:final_token_highlight={$predictedToken?.rank === idx}

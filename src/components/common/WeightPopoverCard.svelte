@@ -28,7 +28,7 @@
 <Card
 	class={`weight-popover-card popover bg-white text-sm font-light text-gray-500 ${className}`}
 	data-click="weight-popover"
-	on:click={(e) => {
+	onclick={(e) => {
 		e.stopPropagation();
 	}}
 >
@@ -41,7 +41,7 @@
 				<button
 					class="play-control forward"
 					data-click="matrix-calc-forward-btn"
-					on:click={(e) => {
+					onclick={(e) => {
 						e.stopPropagation();
 						timeline.progress(1);
 						isAnimationActive = false;
@@ -66,7 +66,7 @@
 				<button
 					class="play-control restart"
 					data-click="matrix-calc-restart-btn"
-					on:click={(e) => {
+					onclick={(e) => {
 						e.stopPropagation();
 						isAnimationActive = true;
 						timeline.restart();
@@ -94,7 +94,7 @@
 			<button
 				class="close"
 				data-click="matrix-calc-close-btn"
-				on:click={(e) => {
+				onclick={(e) => {
 					e.stopPropagation();
 					weightPopover.set(null);
 					isOpen = false;

@@ -1,25 +1,16 @@
 ﻿<script lang="ts">
+import { ChevronDown } from '@lucide/svelte'
 import classNames from 'classnames'
 import { ButtonGroup, Dropdown, DropdownItem } from 'flowbite-svelte'
-
-import { ChevronDownOutline } from 'flowbite-svelte-icons'
 import {
-  attentionHeadIdx,
-  blockIdx,
   expandedBlock,
   inputText,
   inputTextExample,
   isFetchingModel,
   isLoaded,
-  isMobile,
   isModelRunning,
-  isOnAnimation,
   predictedToken,
-  sampling,
   selectedExampleIdx,
-  temperature,
-  tokenIds,
-  userId,
   weightPopover,
 } from '~/store'
 import { completeCurrentAnimation } from '~/utils/animation'
@@ -41,7 +32,7 @@ const wordLimit = 12
 $: exceedLimit = inputTextTemp.split(' ').length >= wordLimit
 
 // Text input
-const onFocusInput = (e) => {
+const onFocusInput = () => {
   let formattedString = (inputTextTemp + predictedTokenTemp).replace(/[\s\n]+/g, ' ')
 
   inputTextTemp = formattedString
@@ -52,23 +43,23 @@ const onFocusInput = (e) => {
   inputRef.innerText = inputTextTemp
 }
 
-const onInput = (e) => {
+const onInput = () => {
   inputTextTemp = inputRef.innerText
 }
 
-const handleSubmit = (e) => {
+const handleSubmit = () => {
   // Complete any running animation before starting new generation
   completeCurrentAnimation()
 
   setTimeout(() => {
     onFocusInput()
-    textPages.find((page) => page.id === 'how-transformers-work')?.complete()
+    textPages.find((page) => page.id === 'how-transformers-work')?.complete?.()
 
     inputText.set(inputTextTemp)
   }, 0)
 }
 
-const handleKeyDown = (e) => {
+const handleKeyDown = (e: KeyboardEvent) => {
   if (e.key === 'Enter') {
     e.preventDefault()
     if (disabled || exceedLimit) return
@@ -80,9 +71,9 @@ const handleKeyDown = (e) => {
 
 // Example select box
 let dropdownOpen = false
-const onSelectExample = (d, i) => {
+const onSelectExample = (d: string, i: number) => {
   if ($isFetchingModel) {
-    textPages.find((page) => page.id === 'how-transformers-work')?.complete()
+    textPages.find((page) => page.id === 'how-transformers-work')?.complete?.()
   }
 
   dropdownOpen = false
@@ -101,13 +92,13 @@ const onSelectExample = (d, i) => {
   useCustomInput = false
 }
 
-const moveCursorToEnd = (element) => {
+const moveCursorToEnd = (element: HTMLElement) => {
   const range = document.createRange()
   const sel = window.getSelection()
   range.selectNodeContents(element)
   range.collapse(false)
-  sel.removeAllRanges()
-  sel.addRange(range)
+  sel?.removeAllRanges()
+  sel?.addRange(range)
   element.focus()
 }
 
@@ -131,14 +122,14 @@ $: parameterDisabled = !!$weightPopover
 				class:selectDisabled
 				class="select-button inline-flex shrink-0 items-center justify-center border border-s-0 border-gray-200 bg-white px-3 py-2 text-center text-xs font-medium text-gray-900 first:rounded-s-lg first:border-s last:rounded-e-lg"
 			>
-				Examples<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
+				Examples<ChevronDown class="pointer-events-none h-4 w-4 text-gray-500" />
 			</button>
 			<Dropdown bind:open={dropdownOpen} class="example-dropdown">
 				{#each inputTextExample as text, index}
 					<DropdownItem
 						data-click={`dropdown-item-${index}`}
 						class={$selectedExampleIdx === index && 'active'}
-						on:click={() => {
+						onclick={() => {
 							onSelectExample(text, index);
 						}}>{text}</DropdownItem
 					>
@@ -150,11 +141,11 @@ $: parameterDisabled = !!$weightPopover
 				class="input-container"
 				class:disabled
 				role="none"
-				on:keydown={(e) => {
+				onkeydown={(e) => {
 					e.stopPropagation();
 					inputRef.focus();
 				}}
-				on:click={(e) => {
+				onclick={(e) => {
 					e.stopPropagation();
 					inputRef.focus();
 				}}
@@ -165,10 +156,10 @@ $: parameterDisabled = !!$weightPopover
 						contenteditable={!disabled}
 						class="text-box"
 						placeholder="Test your own input text"
-						on:focus={onFocusInput}
-						on:input={onInput}
-						on:keydown={handleKeyDown}
-						on:click={(e) => {
+						onfocus={onFocusInput}
+						oninput={onInput}
+						onkeydown={handleKeyDown}
+						onclick={(e) => {
 							e.stopPropagation();
 						}}
 						role="input"
@@ -180,7 +171,7 @@ $: parameterDisabled = !!$weightPopover
 							bind:this={predictRef}
 							class="predicted"
 							role="none"
-							on:click={(e) => {
+							onclick={(e) => {
 								e.stopPropagation();
 								onFocusInput(e);
 								inputRef.focus();
@@ -194,11 +185,7 @@ $: parameterDisabled = !!$weightPopover
 				{#if $isModelRunning}
 					<div class="loading"><LoadingDots /></div>
 				{/if}
-				{#if $isMobile}
-					<span class="helper-text"
-						>Try the examples. Please use a desktop computer to input GPT-2 prompts directly.</span
-					>
-				{:else if $isLoaded && $isFetchingModel}
+				{#if $isLoaded && $isFetchingModel}
 					<span class="helper-text"
 						>Try the examples while GPT-2 model is being downloaded (600MB)</span
 					>
@@ -215,7 +202,7 @@ $: parameterDisabled = !!$weightPopover
 				active: !(disabled || exceedLimit)
 			})}
 			type="submit"
-			on:click={handleSubmit}
+			onclick={handleSubmit}
 		>
 			Generate
 		</button>

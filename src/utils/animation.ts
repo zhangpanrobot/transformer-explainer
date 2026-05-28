@@ -1,5 +1,7 @@
 ﻿import * as d3 from 'd3'
+
 import { gsap } from 'gsap'
+
 import { get } from 'svelte/store'
 import { blockIdx, isOnAnimation, modelMeta } from '~/store'
 import { theme } from './tailwind-theme'
@@ -10,10 +12,11 @@ const getGradientStops = (className: string, stopIdx = 1) => {
   )
 }
 const generateGradientAnimation = (
-  tl,
+  tl: gsap.core.Timeline,
   gradStop: undefined | SVGStopElement | (SVGStopElement | undefined)[],
   options: GSAPTweenVars = {},
 ) => {
+  if (!gradStop) return
   const {
     color = 'rgba(255,255,255,0)',
     duration = 0.1,
@@ -26,8 +29,8 @@ const generateGradientAnimation = (
   const { from = '0%', to = '100%' } = offset
 
   const initialColor = Array.isArray(gradStop)
-    ? gradStop.map((d) => d.getAttribute('stop-color'))
-    : gradStop.getAttribute('stop-color')
+    ? gradStop.map((d) => d?.getAttribute('stop-color'))
+    : gradStop?.getAttribute('stop-color')
 
   tl.fromTo(
     gradStop,

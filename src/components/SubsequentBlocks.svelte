@@ -1,11 +1,11 @@
 ﻿<script lang="ts">
-	import { tokens, modelMeta, isBoundingBoxActive, expandedBlock, blockIdx } from '~/store';
-	import classNames from 'classnames';
-	import { Tooltip } from 'flowbite-svelte';
-	import VectorCanvas from './common/VectorCanvas.svelte';
-	import TextbookTooltip from './common/TextbookTooltip.svelte';
+import classNames from 'classnames'
+import { Tooltip } from 'flowbite-svelte'
+import { blockIdx, expandedBlock, isBoundingBoxActive, modelMeta, tokens } from '~/store'
+import TextbookTooltip from './common/TextbookTooltip.svelte'
+import VectorCanvas from './common/VectorCanvas.svelte'
 
-	export let className: string | undefined = undefined;
+export let className: string | undefined = undefined
 </script>
 
 <div
@@ -13,10 +13,10 @@
 		expanded: $expandedBlock.id !== null
 	})}
 	role="group"
-	on:mouseenter={() => {
+	onmouseenter={() => {
 		isBoundingBoxActive.set(true);
 	}}
-	on:mouseleave={() => {
+	onmouseleave={() => {
 		isBoundingBoxActive.set(false);
 	}}
 >
