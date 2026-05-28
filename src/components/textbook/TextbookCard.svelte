@@ -1,25 +1,24 @@
 ﻿<script lang="ts">
-import { Button } from 'flowbite-svelte'
 import { fade } from 'svelte/transition'
 import { textbookCurrentPage } from '~/store'
 import { textPages } from '~/utils/textbookPages'
 import TextbookNavigation from './TextbookNavigation.svelte'
 
-export let onClose: () => void
+let { onClose = undefined }: { onClose?: (() => void) | undefined } = $props()
 
-let isMouseInCard = false
+let isMouseInCard = $state(false)
 let mousePosition = { x: 0, y: 0 }
 let cardElement: HTMLDivElement
 
 // Draggable state
 let isDragging = false
-let position = { x: window.innerWidth - 540 - 32, y: window.innerHeight - 300 - 32 }
+let position = $state({ x: window.innerWidth - 540 - 32, y: window.innerHeight - 300 - 32 })
 let dragStart = { x: 0, y: 0 }
 
 // Resizable state
 let isResizing = false
 let resizeDirection = ''
-let size = { width: 540, height: 300 }
+let size = $state({ width: 540, height: 300 })
 let resizeStart = { x: 0, y: 0, width: 0, height: 0, posX: 0, posY: 0 }
 
 const MIN_WIDTH = 400
@@ -34,7 +33,7 @@ function handleClose() {
   if (currentPage?.out) {
     currentPage.out()
   }
-  onClose()
+  onClose?.()
 }
 
 function handleMouseMove(event: MouseEvent) {
@@ -230,7 +229,7 @@ function getCursorForDirection(direction: string): string {
   return cursorMap[direction] || 'default'
 }
 
-$: isLeftSide = cardElement ? mousePosition.x < cardElement.offsetWidth / 2 : true
+let isLeftSide = $derived(cardElement ? mousePosition.x < cardElement.offsetWidth / 2 : true)
 </script>
 
 <svelte:window onmousemove={handleGlobalMouseMove} onmouseup={handleGlobalMouseUp} />
@@ -257,7 +256,7 @@ $: isLeftSide = cardElement ? mousePosition.x < cardElement.offsetWidth / 2 : tr
 				<h3 class="text-lg font-semibold text-gray-900">
 					{textPages[$textbookCurrentPage].title}
 				</h3>
-				<Button color="light" size="xs" class="close-btn cursor-pointer" onclick={handleClose}>✕</Button>
+				<button class="btn btn-xs btn-ghost close-btn cursor-pointer" onclick={handleClose}>✕</button>
 			</div>
 		</div>
 		<div class="card-body">

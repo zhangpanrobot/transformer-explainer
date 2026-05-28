@@ -1,12 +1,13 @@
 <script lang="ts">
-	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
-	import CommonPopover from './CommonPopover.svelte';
+import CommonPopover from './CommonPopover.svelte'
 
-	export let offset: PopoverProps['offset'] = undefined;
-	export let className: PopoverProps['class'] = undefined;
-	export let triggeredBy: PopoverProps['triggeredBy'] = undefined;
-	export let trigger: PopoverProps['trigger'] = undefined;
-	export let placement: PopoverProps['placement'] = undefined;
+let {
+  offset = undefined,
+  className = undefined,
+  triggeredBy = undefined,
+  trigger = 'hover',
+  placement = 'right',
+}: { offset?: any; className?: any; triggeredBy?: any; trigger?: any; placement?: any } = $props()
 </script>
 
 <CommonPopover

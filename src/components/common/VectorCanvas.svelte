@@ -5,24 +5,31 @@ import { vectorHeight } from '~/store'
 
 import { theme } from '~/utils/tailwind-theme'
 
-let visibleDimension = Math.floor($vectorHeight * 3.5) * 4
-export let active: boolean = false
-export let data: number[] = new Array(visibleDimension).fill(0).map((d) => Math.random())
-export let colorScale: string | ((t: number, i: number) => string) | undefined = undefined
+let {
+  active = false,
+  data,
+  colorScale = undefined,
+}: {
+  active?: boolean
+  data?: number[]
+  colorScale?: string | ((t: number, i: number) => string) | undefined
+} = $props()
 
 let canvas: HTMLCanvasElement
 
 const lineHeight = 1
 
-$: colorKey = typeof colorScale === 'string' ? colorScale : 'gray'
-$: color =
+let colorKey = $derived(typeof colorScale === 'string' ? colorScale : 'gray')
+let color = $derived(
   typeof colorScale === 'function'
     ? colorScale
-    : d3.interpolate(theme.colors[colorKey][100], theme.colors[colorKey][400])
+    : d3.interpolate(theme.colors[colorKey][100], theme.colors[colorKey][400]),
+)
 
 function drawCanvas() {
+  if (!data) return
   const ctx = canvas.getContext('2d')
-  if (!ctx) return
+  if (!ctx || !canvas.parentElement) return
 
   const width = canvas.parentElement.clientWidth
   const height = canvas.parentElement.clientHeight
@@ -49,9 +56,12 @@ onMount(() => {
   }
 })
 
-$: if (data && canvas && color) {
-  drawCanvas()
-}
+$effect(() => {
+  console.log(data, 'data')
+  if (data && canvas && color) {
+    drawCanvas()
+  }
+})
 </script>
 
 <canvas class:active bind:this={canvas}></canvas>

@@ -1,7 +1,6 @@
 ﻿<script lang="ts">
 import { ChevronDown } from '@lucide/svelte'
 import classNames from 'classnames'
-import { ButtonGroup, Dropdown, DropdownItem } from 'flowbite-svelte'
 import {
   expandedBlock,
   inputText,
@@ -15,12 +14,12 @@ import {
 } from '~/store'
 import { completeCurrentAnimation } from '~/utils/animation'
 import { textPages } from '~/utils/textbookPages'
-import LoadingDots from './common/LoadingDots.svelte'
 import Sampling from './Sampling.svelte'
 import Temperature from './Temperature.svelte'
 
 let inputRef: HTMLDivElement
 let predictRef: HTMLDivElement
+let dropdownDetails: HTMLDetailsElement
 
 let useCustomInput = false
 
@@ -63,20 +62,19 @@ const handleKeyDown = (e: KeyboardEvent) => {
   if (e.key === 'Enter') {
     e.preventDefault()
     if (disabled || exceedLimit) return
-    handleSubmit(e)
+    handleSubmit()
     return
   }
   useCustomInput = true
 }
 
 // Example select box
-let dropdownOpen = false
 const onSelectExample = (d: string, i: number) => {
   if ($isFetchingModel) {
     textPages.find((page) => page.id === 'how-transformers-work')?.complete?.()
   }
 
-  dropdownOpen = false
+  if (dropdownDetails) dropdownDetails.open = false
 
   selectedExampleIdx.set(i)
   predictedTokenTemp = ''
@@ -114,27 +112,27 @@ $: parameterDisabled = !!$weightPopover
 
 <div class="input-area" data-click="input-area">
 	<form class="input-form" data-click="input-form">
-		<ButtonGroup class="input-btn-group" size="sm">
-			<button
-				data-click="dropdown-btn"
-				type="button"
-				disabled={selectDisabled}
-				class:selectDisabled
-				class="select-button inline-flex shrink-0 items-center justify-center border border-s-0 border-gray-200 bg-white px-3 py-2 text-center text-xs font-medium text-gray-900 first:rounded-s-lg first:border-s last:rounded-e-lg"
-			>
-				Examples<ChevronDown class="pointer-events-none h-4 w-4 text-gray-500" />
-			</button>
-			<Dropdown bind:open={dropdownOpen} class="example-dropdown">
-				{#each inputTextExample as text, index}
-					<DropdownItem
-						data-click={`dropdown-item-${index}`}
-						class={$selectedExampleIdx === index && 'active'}
-						onclick={() => {
-							onSelectExample(text, index);
-						}}>{text}</DropdownItem
-					>
-				{/each}
-			</Dropdown>
+		<div class="join input-btn-group">
+			<details class="dropdown join-item" bind:this={dropdownDetails}>
+				<summary
+					data-click="dropdown-btn"
+					class:selectDisabled
+					class="select-button"
+					aria-disabled={selectDisabled}
+				>
+					Examples<ChevronDown class="pointer-events-none h-4 w-4 text-gray-500" />
+				</summary>
+				<ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
+					{#each inputTextExample as text, index}
+						<li><button
+							data-click={`dropdown-item-${index}`}
+							class={$selectedExampleIdx === index ? 'active' : ''}
+							onclick={() => {
+								onSelectExample(text, index);
+							}}>{text}</button></li>
+					{/each}
+				</ul>
+			</details>
 
 			<div
 				data-click="text-input"
@@ -162,7 +160,6 @@ $: parameterDisabled = !!$weightPopover
 						onclick={(e) => {
 							e.stopPropagation();
 						}}
-						role="input"
 					>
 						{inputTextTemp}
 					</div>
@@ -173,7 +170,7 @@ $: parameterDisabled = !!$weightPopover
 							role="none"
 							onclick={(e) => {
 								e.stopPropagation();
-								onFocusInput(e);
+								onFocusInput();
 								inputRef.focus();
 								moveCursorToEnd(inputRef);
 							}}
@@ -183,7 +180,7 @@ $: parameterDisabled = !!$weightPopover
 					{/if}
 				</div>
 				{#if $isModelRunning}
-					<div class="loading"><LoadingDots /></div>
+					<span class="loading loading-dots loading-xs"></span>
 				{/if}
 				{#if $isLoaded && $isFetchingModel}
 					<span class="helper-text"
@@ -193,7 +190,7 @@ $: parameterDisabled = !!$weightPopover
 					<span class="helper-text">You can enter up to {wordLimit} words.</span>
 				{/if}
 			</div>
-		</ButtonGroup>
+		</div>
 		<button
 			data-click="generate-btn"
 			disabled={disabled || exceedLimit || exceedLimit}
@@ -296,11 +293,22 @@ $: parameterDisabled = !!$weightPopover
 		}
 	}
 
-	.select-button {
+	summary.select-button {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
 		flex-shrink: 0;
 		font-size: 0.9rem;
+		cursor: pointer;
+		list-style: none;
+		padding: 0.5rem 0.75rem;
 		border: 1px solid var(--color-gray-300);
 		color: var(--color-gray-900);
+		&[aria-disabled="true"] {
+			pointer-events: none;
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
 		&:hover {
 			background-color: var(--color-gray-100);
 		}

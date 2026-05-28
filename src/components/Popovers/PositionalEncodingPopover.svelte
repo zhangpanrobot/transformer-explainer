@@ -1,18 +1,25 @@
 ﻿<script lang="ts">
 import classNames from 'classnames'
 import * as d3 from 'd3'
-import { Popover } from 'flowbite-svelte'
-import type { PopoverProps } from 'flowbite-svelte/Popover.svelte'
 import { onMount } from 'svelte'
 import { writable } from 'svelte/store'
 import { tokens } from '~/store'
 
-export let offset: PopoverProps['offset'] = undefined
-export let className: PopoverProps['class'] = undefined
-export let triggeredBy: PopoverProps['triggeredBy'] = undefined
-export let trigger: PopoverProps['trigger'] = 'hover'
-export let placement: PopoverProps['placement'] = 'right'
-export let open: PopoverProps['open'] = false
+let {
+  offset = undefined,
+  className = undefined,
+  triggeredBy = undefined,
+  trigger = 'hover',
+  placement = 'right',
+  open = false,
+}: {
+  offset?: any
+  className?: any
+  triggeredBy?: any
+  trigger?: any
+  placement?: any
+  open?: any
+} = $props()
 
 const numPositions = 40
 const fullEmbeddingDim = 768 // Compute 768 dimensions

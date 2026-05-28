@@ -1,13 +1,14 @@
-<script lang="ts">
+﻿<script lang="ts">
 import '~/styles/app.css'
 import '~/styles/global.scss'
 import { onMount } from 'svelte'
 import { page } from '$app/stores'
 import Article from '~/components/article/Article.svelte'
 import Topbar from '~/components/Topbar.svelte'
-import { isLoaded, predictedColor, rootRem, userId } from '~/store'
+import { isLoaded, predictedColor, rootRem, topbarHeight, userId } from '~/store'
 
 let topBarHeight = 0
+$: topbarHeight.set(topBarHeight)
 let scrollLeft = 0
 
 let minScreenWidth = 1300
@@ -67,6 +68,7 @@ function handleIntersection(entries: any[]) {
 		</header>
 		<main id="main" style={`padding-top:${topBarHeight}px`} bind:this={target}>
 			{#if $isLoaded}
+				<!-- {@render children?.()} -->
 				<slot />
 			{:else}
 				<div class="flex h-full w-full items-center justify-center">
@@ -110,3 +112,4 @@ function handleIntersection(entries: any[]) {
 		padding-top: 2rem;
 	}
 </style>
+

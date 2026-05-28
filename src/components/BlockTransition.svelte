@@ -1,6 +1,7 @@
 ﻿<script lang="ts">
 import { ChevronLeft, ChevronRight } from '@lucide/svelte'
-import { onMount, tick } from 'svelte'
+import { getContext, onMount, tick } from 'svelte'
+import { get } from 'svelte/store'
 import {
   blockIdx,
   blockIdxTemp,
@@ -10,6 +11,7 @@ import {
   isOnBlockTransition,
   modelMeta,
   rootRem,
+  topbarHeight,
   weightPopover,
 } from '~/store'
 import { textPages } from '~/utils/textbookPages'
@@ -20,6 +22,9 @@ let boundingPos = { left: 0, top: 0, width: 0 }
 
 let duration = 800
 
+const blocksEl = getContext<{ current: HTMLElement | null }>('blocks')?.current
+const mainSectionEl = getContext<{ current: HTMLElement | null }>('main-section')?.current
+
 const asyncUpdateBlockIdx = (timeout = duration) => {
   setTimeout(() => {
     $blockIdx = $blockIdxTemp
@@ -27,7 +32,7 @@ const asyncUpdateBlockIdx = (timeout = duration) => {
 }
 
 const animateForwardTransition = async ({ asyncTime } = {}) => {
-  const container = document.querySelector('.steps .blocks')
+  const container = blocksEl
   await tick()
 
   isOnBlockTransition.set(true)
@@ -45,7 +50,7 @@ const animateForwardTransition = async ({ asyncTime } = {}) => {
 }
 
 const animateBackwardTransition = async ({ asyncTime } = {}) => {
-  const container = document.querySelector('.steps .blocks')
+  const container = blocksEl
   await tick()
 
   isOnBlockTransition.set(true)
@@ -108,15 +113,16 @@ blockIdxTemp.subscribe((newIdx) => {
 
 // transformer block bounding
 onMount(() => {
+  const mainSection = mainSectionEl
   const setPosition = () => {
     const scrollLeft = window.scrollX
-    const topbarHeight = document.querySelector('.top-bar')?.offsetHeight
+    const tbh = get(topbarHeight)
 
-    const embedding = document.querySelector('.step.qkv .content .block-start-column')
+    const embedding = mainSection?.querySelector('.step.qkv .content .block-start-column')
     const block =
       $blockIdx === $modelMeta.layer_num - 1
-        ? document.querySelector('.step.transformer-blocks .content .column.final')
-        : document.querySelector('.step.transformer-blocks .content')
+        ? mainSection?.querySelector('.step.transformer-blocks .content .column.final')
+        : mainSection?.querySelector('.step.transformer-blocks .content')
 
     const embeddingRect = embedding?.getBoundingClientRect()
     const blockRect = block?.getBoundingClientRect()
@@ -124,7 +130,7 @@ onMount(() => {
     if (!embeddingRect || !blockRect) return
     boundingPos = {
       left: embeddingRect.left + scrollLeft + rootRem,
-      top: embeddingRect.top - topbarHeight,
+      top: embeddingRect.top - tbh,
       width: blockRect.left - embeddingRect.left - rootRem,
     }
   }
@@ -134,8 +140,8 @@ onMount(() => {
     setPosition()
   })
   
-  const elements = document?.querySelectorAll('.resize-watch')
-  elements.forEach((el) => {
+  const elements = mainSection?.querySelectorAll('.resize-watch')
+  elements?.forEach((el) => {
     resizeObserver.observe(el)
   })
 })
@@ -181,13 +187,13 @@ const onClickPrev = (e: MouseEvent) => {
 		data-click="transformer-block-prev-btn"
 		onclick={onClickPrev}
 		disabled={$isOnAnimation || $isOnBlockTransition || $blockIdxTemp === 0}
-		><ChevronLeft size="sm" /></button
+		><ChevronLeft /></button
 	>
 	<button
 		data-click="transformer-block-next-btn"
 		onclick={onClickNext}
 		disabled={$isOnAnimation || $isOnBlockTransition || $blockIdxTemp === $modelMeta.layer_num - 1}
-		><ChevronRight size="sm" /></button
+		><ChevronRight /></button
 	>
 </div>
 

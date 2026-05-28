@@ -12,7 +12,7 @@ const getGradientStops = (className: string, stopIdx = 1) => {
   )
 }
 const generateGradientAnimation = (
-  tl: gsap.core.Timeline,
+  tl: GSAPTimeline,
   gradStop: undefined | SVGStopElement | (SVGStopElement | undefined)[],
   options: GSAPTweenVars = {},
 ) => {
@@ -34,11 +34,11 @@ const generateGradientAnimation = (
 
   tl.fromTo(
     gradStop,
-    { attr: { offset: from, ['stop-color']: color } },
+    { attr: { offset: from, 'stop-color': color } },
     {
       attr: {
         offset: to,
-        ['stop-color']: color,
+        'stop-color': color,
       },
       duration,
       ease,
@@ -61,7 +61,6 @@ const generateGradientAnimation = (
 }
 
 const fadeOutColor = theme.colors.gray[100]
-const nodeFadeOutOpacity = 0.2
 let flowTimeline: GSAPTimeline
 
 export const completeCurrentAnimation = () => {
@@ -83,7 +82,7 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
       },
       onComplete: () => {
         isOnAnimation.set(false)
-        resolve()
+        resolve(0)
       },
     })
     const duration = 0.02

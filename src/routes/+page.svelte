@@ -1,8 +1,8 @@
-<script lang="ts">
+﻿<script lang="ts">
 import { AutoTokenizer, PreTrainedTokenizer } from '@huggingface/transformers'
 import classNames from 'classnames'
 import * as ort from 'onnxruntime-web'
-import { onMount } from 'svelte'
+import { onMount, setContext } from 'svelte'
 import { fade } from 'svelte/transition'
 import { asset } from '$app/paths'
 import Attention from '~/components/Attention.svelte'
@@ -43,6 +43,10 @@ ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0/di
 ort.env.logLevel = 'error'
 
 let active = false
+const mainSectionCtx: { current: HTMLElement | null } = { current: null }
+setContext('main-section', mainSectionCtx)
+const blocksCtx: { current: HTMLElement | null } = { current: null }
+setContext('blocks', blocksCtx)
 let appStartTime = Date.now()
 
 // fetch model
@@ -69,7 +73,7 @@ const fetchModel = async () => {
     .map((_, i: number) => asset(`/model-v2/gpt2.onnx.part${i}`))
 
   // Fetch from cache
-  const { hasCache, mergedArray } = await fetchAndMergeChunks(chunkUrls)
+  const { mergedArray } = await fetchAndMergeChunks(chunkUrls)
 
   // Create a Blob from the merged array
   const blob = new Blob([mergedArray], { type: 'application/octet-stream' })
@@ -173,6 +177,7 @@ $: if (vizHeight || $tokens.length) {
 
 <div
 	class:active
+	bind:this={mainSectionCtx.current}
 	class="main-section h-full w-full"
 	style={`--vector-height: ${$vectorHeight}px;--title-height: ${titleHeight}px;--content-height:${vizHeight - titleHeight}px;`}
 >
@@ -196,7 +201,7 @@ $: if (vizHeight || $tokens.length) {
 	<div class="nodes resize-watch">
 		<div class="steps" class:expanded={!!$expandedBlock.id} bind:offsetHeight={vizHeight}>
 			<Embedding className="step" />
-			<div class="blocks relative">
+			<div class="blocks relative" bind:this={blocksCtx.current}>
 				<div class="block-steps main" class:initial={$blockIdx === 0}>
 					<QKV className="step" />
 					<Attention className="step" />
@@ -239,7 +244,6 @@ $: if (vizHeight || $tokens.length) {
 		position: relative;
 		width: 100%;
 		height: 100%;
-		position: relative;
 		display: grid;
 		grid-template-columns: auto 3.5fr 0.5fr 0.5fr;
 
@@ -597,3 +601,4 @@ $: if (vizHeight || $tokens.length) {
 		transition: opacity 0.5s;
 	}
 </style>
+

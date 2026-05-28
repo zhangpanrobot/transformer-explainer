@@ -1,11 +1,11 @@
 ﻿<script>
 	import { page } from '$app/stores';
 	import InputForm from '~/components/InputForm.svelte';
+let { isActive } = $props();
 
-	export let isActive;
 
 	// Check if current page is about page
-	$: isAboutPage = $page.url.pathname === '/about';
+	let isAboutPage = $derived($page.url.pathname === '/about');
 </script>
 
 <div class="top-bar flex w-full items-center gap-4 px-10 py-2 pb-3" class:active={isActive}>

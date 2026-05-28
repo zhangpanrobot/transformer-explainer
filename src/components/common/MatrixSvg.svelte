@@ -3,40 +3,56 @@ import * as d3 from 'd3'
 
 import { theme } from '~/utils/tailwind-theme'
 
-export let data: (number | null)[][]
-export let cellHeight: number
-export let cellWidth: number
-export let rowGap: number = 2
-export let colGap: number = 0
-export let transpose: boolean = false
-
-export let rowLen: number
-export let dimension: number
-
-export let groupBy: 'row' | 'col' = 'row'
-export let shape: 'circle' | 'rect' = 'rect'
-export let colorScale: string | ((t: number, i?: number) => string) | undefined = undefined
-
-export let onMouseOverCell: ((data: Cell, el?: SVGRectElement | d3.BaseType) => void) | undefined =
-  undefined
-export let onMouseOutCell: ((data: Cell, el?: SVGRectElement | d3.BaseType) => void) | undefined =
-  undefined
-export let onMouseOutSvg: ((data: any, el?: SVGRectElement | d3.BaseType) => void) | undefined =
-  undefined
-export let showTooltip: ((data: any) => string | undefined) | undefined = undefined
-export let highlightRow: number | undefined = undefined
-export let highlightCol: number | undefined = undefined
+let {
+  data,
+  cellHeight,
+  cellWidth,
+  rowGap = 2,
+  colGap = 0,
+  transpose = false,
+  rowLen,
+  dimension,
+  groupBy = 'row',
+  shape = 'rect',
+  colorScale = undefined,
+  onMouseOverCell = undefined,
+  onMouseOutCell = undefined,
+  onMouseOutSvg = undefined,
+  showTooltip = undefined,
+  highlightRow = undefined,
+  highlightCol = undefined,
+}: {
+  data: (number | null)[][]
+  cellHeight: number
+  cellWidth: number
+  rowGap?: number
+  colGap?: number
+  transpose?: boolean
+  rowLen: number
+  dimension: number
+  groupBy?: 'row' | 'col'
+  shape?: 'circle' | 'rect'
+  colorScale?: string | ((t: number, i?: number) => string) | undefined
+  onMouseOverCell?: ((data: Cell, el?: SVGRectElement | d3.BaseType) => void) | undefined
+  onMouseOutCell?: ((data: Cell, el?: SVGRectElement | d3.BaseType) => void) | undefined
+  onMouseOutSvg?: ((data: any, el?: SVGRectElement | d3.BaseType) => void) | undefined
+  showTooltip?: ((data: any) => string | undefined) | undefined
+  highlightRow?: number | undefined
+  highlightCol?: number | undefined
+} = $props()
 
 let svgEl: HTMLOrSVGElement
 
-$: svgWidth =
+let svgWidth = $derived(
   groupBy === 'col'
     ? rowLen * cellWidth + (rowLen - 1) * colGap
-    : dimension * cellWidth + (dimension - 1) * colGap
-$: svgHeight =
+    : dimension * cellWidth + (dimension - 1) * colGap,
+)
+let svgHeight = $derived(
   groupBy === 'col'
     ? dimension * cellHeight + (dimension - 1) * rowGap
-    : rowLen * cellHeight + (rowLen - 1) * rowGap
+    : rowLen * cellHeight + (rowLen - 1) * rowGap,
+)
 
 const colorKey = typeof colorScale === 'string' ? colorScale : 'blue'
 const matrixColorScale =
@@ -187,13 +203,15 @@ const drawMatrixSvg = () => {
   }
 }
 
-$: if (data && svgEl) {
-  drawMatrixSvg()
-}
+$effect(() => {
+  if (data && svgEl) {
+    drawMatrixSvg()
+  }
+})
 
 // highlighting
 let animationFrame: number
-$: {
+$effect(() => {
   cancelAnimationFrame(animationFrame)
   animationFrame = requestAnimationFrame(() => {
     d3.select(svgEl as HTMLElement)
@@ -217,16 +235,15 @@ $: {
         return classname
       })
   })
-}
+})
 
 // tooltip
-let tooltipData = null
-let tooltipVisible = false
-let tooltipX = 0
-let tooltipY = 0
+let tooltipData = $state(null)
+let tooltipVisible = $state(false)
+let tooltipX = $state(0)
+let tooltipY = $state(0)
 
 function onCellOver(e: MouseEvent, d: Cell) {
-  
   onMouseOverCell?.(d, this)
   const tooltipData = showTooltip?.(d.cell)
   if (tooltipData) visibleTooltip(e, tooltipData)
@@ -274,7 +291,8 @@ function hideTooltip() {
 			{#if typeof tooltipData === 'string'}
 				{tooltipData}
 			{:else}
-				<svelte:component this={tooltipData.component} {...tooltipData?.props} />
+				{@const Component = tooltipData.component}
+				<Component {...tooltipData?.props} />
 			{/if}
 			<div
 				class="arrow pointer-events-none absolute block h-[10px] w-[10px] rotate-45 border-b border-e border-inherit bg-inherit"

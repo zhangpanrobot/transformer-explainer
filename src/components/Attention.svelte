@@ -1,6 +1,5 @@
 ﻿<script lang="ts">
 import classNames from 'classnames'
-import { Tooltip } from 'flowbite-svelte'
 import { getContext, setContext } from 'svelte'
 import AttentionMatrix from '~/components/AttentionMatrix.svelte'
 import HeadStack from '~/components/HeadStack.svelte'
@@ -13,13 +12,14 @@ import {
   modelMeta,
   tokens,
 } from '~/store'
+import DaisyTooltip from './common/DaisyTooltip.svelte'
 import TextbookTooltip from './common/TextbookTooltip.svelte'
 
-export let className: string | undefined = undefined
+let { className = undefined }: { className?: string | undefined } = $props()
 
 setContext('block-id', 'attention')
 const blockId = getContext('block-id')
-$: isAttentionExpanded = $expandedBlock.id === blockId
+let isAttentionExpanded = $derived($expandedBlock.id === blockId)
 
 const queryHeadVectorColor = 'bg-blue-300'
 const keyHeadVectorColor = 'bg-red-300'
@@ -81,9 +81,9 @@ function handleMouseLeave() {
 									<div class={`vector x1-12 ${keyHeadVectorColor}`}></div>
 								</div>
 							{/each}
-							<Tooltip class="popover" triggeredBy={'.step.attention .key .cell'} placement="right"
+							<DaisyTooltip class="popover" triggeredBy={'.step.attention .key .cell'} placement="right"
 								>Key, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
-									$modelMeta.attention_head_num})</Tooltip
+									$modelMeta.attention_head_num})</DaisyTooltip
 							>
 						</div>
 						<div class="column query">
@@ -98,12 +98,12 @@ function handleMouseLeave() {
 									<div class={`vector x1-12  ${queryHeadVectorColor}`}></div>
 								</div>
 							{/each}
-							<Tooltip
+							<DaisyTooltip
 								class="popover"
 								triggeredBy={'.step.attention .query .cell'}
 								placement="right"
 								>Query, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
-									$modelMeta.attention_head_num})</Tooltip
+									$modelMeta.attention_head_num})</DaisyTooltip
 							>
 						</div>
 						<div class="column value">
@@ -114,12 +114,12 @@ function handleMouseLeave() {
 									<div class={`vector x1-12 ${valHeadVectorColor}`}></div>
 								</div>
 							{/each}
-							<Tooltip
+							<DaisyTooltip
 								class="popover"
 								triggeredBy={'.step.attention .value .cell'}
 								placement="right"
 								>Value, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
-									$modelMeta.attention_head_num})</Tooltip
+									$modelMeta.attention_head_num})</DaisyTooltip
 							>
 						</div>
 					</div>
@@ -136,9 +136,9 @@ function handleMouseLeave() {
 									<div class={`vector x1-12 ${outputVectorColor}`}></div>
 								</div>
 							{/each}
-							<Tooltip class="popover" triggeredBy={'.step.attention .out .cell'} placement="right"
+							<DaisyTooltip class="popover" triggeredBy={'.step.attention .out .cell'} placement="right"
 								>Attention Out, Head 1, vector({$modelMeta.dimension /
-									$modelMeta.attention_head_num})</Tooltip
+									$modelMeta.attention_head_num})</DaisyTooltip
 							>
 						</div>
 					</div>

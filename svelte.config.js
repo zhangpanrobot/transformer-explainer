@@ -9,17 +9,12 @@ const config = {
 		warningFilter: (warning) => {
 			const ignoreList = [
 				'a11y_click_events_have_key_events',
+				'a11y_no_static_element_interactions',
 				'css_unused_selector'
 			]
 			return !ignoreList.includes(warning.code)
 		}
 	},
-
-	// 忽略未使用 CSS 选择器的警告（构建时会自动移除）
-	// onwarn: (warning, handler) => {
-	// 	if (warning.code === 'css-unused-selector') return;
-	// 	handler(warning);
-	// },
 
 	kit: {
 		adapter: adapter({

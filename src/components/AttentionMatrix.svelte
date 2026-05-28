@@ -2,8 +2,8 @@
 import { ZoomIn } from '@lucide/svelte'
 import classNames from 'classnames'
 import * as d3 from 'd3'
-import { Tooltip } from 'flowbite-svelte'
 import { getContext, onMount } from 'svelte'
+import DaisyTooltip from '~/components/common/DaisyTooltip.svelte'
 import Matrix from '~/components/common/Matrix.svelte'
 import TextbookTooltip from '~/components/common/TextbookTooltip.svelte'
 import { ATTENTION_OUT } from '~/constants/opacity'
@@ -85,13 +85,10 @@ function handleOutsideClick(e: MouseEvent) {
   }
 }
 onMount(() => {
-  document
-    .querySelector('.main-section')
-    ?.addEventListener('click', handleOutsideClick as EventListener)
+  const mainSection = getContext<{ current: HTMLElement | null }>('main-section')?.current
+  mainSection?.addEventListener('click', handleOutsideClick as EventListener)
   return () => {
-    document
-      .querySelector('.main-section')
-      ?.removeEventListener('click', handleOutsideClick as EventListener)
+    mainSection?.removeEventListener('click', handleOutsideClick as EventListener)
   }
 })
 
@@ -338,9 +335,9 @@ const showTooltip = (d: number) => {
 				<div class="matrix-label">Dot product</div>
 			</TextbookTooltip>
 
-			<Tooltip class="popover tooltip">
+			<DaisyTooltip class="popover tooltip">
 				<Katex math={'Q \\cdot K^T'}></Katex>
-			</Tooltip>
+			</DaisyTooltip>
 			<div class="color-scale">
 				<span class="val">{qkColorScaleDomain[0]?.toFixed(1)}</span>
 				<div class="bar"></div>
@@ -403,9 +400,9 @@ const showTooltip = (d: number) => {
 				<div class="matrix-label">Scaling · Mask</div>
 			</TextbookTooltip>
 
-			<Tooltip class="popover tooltip">
+			<DaisyTooltip class="popover tooltip">
 				<Katex math={'\\frac{QK^T}{\\sqrt{d_k}} + M'}></Katex>
-			</Tooltip>
+			</DaisyTooltip>
 			<div class="color-scale">
 				<span class="val">-3.0</span>
 				<div class="bar"></div>
@@ -471,9 +468,9 @@ const showTooltip = (d: number) => {
 			<TextbookTooltip id="masked-self-attention">
 				<div class="matrix-label">Softmax</div>
 			</TextbookTooltip>
-			<Tooltip class="popover tooltip">
+			<DaisyTooltip class="popover tooltip">
 				<Katex math={'\\text{softmax}(\\frac{QK^T}{\\sqrt{d_k}} + M)'}></Katex>
-			</Tooltip>
+			</DaisyTooltip>
 			<div class="color-scale">
 				<span class="val">0.0</span>
 				<div class="bar"></div>

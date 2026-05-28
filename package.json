@@ -16,8 +16,6 @@
 		"bignumber.js": "^11.1.1",
 		"classnames": "^2.5.1",
 		"d3": "^7.9.0",
-		"flowbite": "^4.0.2",
-		"flowbite-svelte": "^1.33.1",
 		"svelte": "^5.55.9",
 		"svelte-check": "^4.4.8",
 		"tailwindcss": "^4.3.0",

@@ -8,7 +8,7 @@ import {
 } from '~/store'
 import type { TextbookPage } from '~/utils/textbookPages'
 
-export let textPages: TextbookPage[]
+let { textPages }: { textPages: TextbookPage[] } = $props();
 
 let showPageDropdown = false
 let isDragging = false
@@ -90,8 +90,8 @@ function handleRightClick(event: MouseEvent) {
   navigatePage('next')
 }
 
-$: showLeftArrow = true
-$: showRightArrow = true
+let showLeftArrow = $derived(true)
+let showRightArrow = $derived(true)
 </script>
 
 <svelte:window onmousemove={handleGlobalMouseMove} onmouseup={handleGlobalMouseUp} />
@@ -102,7 +102,7 @@ $: showRightArrow = true
 	<div class="nav-section left" onclick={handleLeftClick} role="button" tabindex="0">
 		{#if showLeftArrow}
 			<div class="nav-arrow-circle">
-				<ChevronLeft size="sm" />
+				<ChevronLeft />
 			</div>
 		{/if}
 	</div>
@@ -166,7 +166,7 @@ $: showRightArrow = true
 	<div class="nav-section right" onclick={handleRightClick} role="button" tabindex="0">
 		{#if showRightArrow}
 			<div class="nav-arrow-circle">
-				<ChevronRight size="sm" />
+				<ChevronRight />
 			</div>
 		{/if}
 	</div>

@@ -1,10 +1,10 @@
 ﻿<script lang="ts">
 import { Eye, ZoomIn } from '@lucide/svelte'
 import classNames from 'classnames'
-import { Tooltip } from 'flowbite-svelte'
 import { getContext, onMount, setContext, tick } from 'svelte'
 import type { KeyboardEventHandler } from 'svelte/elements'
 import { fade } from 'svelte/transition'
+import DaisyTooltip from '~/components/common/DaisyTooltip.svelte'
 import TextbookTooltip from '~/components/common/TextbookTooltip.svelte'
 import {
   expandedBlock,
@@ -25,7 +25,7 @@ import ProbabilityBars from './ProbabilityBars.svelte'
 import LogitWeightPopover from './popovers/LogitWeightPopover.svelte'
 import SoftmaxPopover from './popovers/SoftmaxPopover.svelte'
 
-export let className: string | undefined = undefined
+let { className = undefined }: { className?: string | undefined } = $props()
 
 setContext('block-id', 'softmax')
 
@@ -35,14 +35,18 @@ let isSoftmaxExpanded = false
 let showLogitPopover = false
 
 // event handling
-$: if ($expandedBlock.id !== blockId && isSoftmaxExpanded) {
-  isSoftmaxExpanded = false
-  collapseSoftmax()
-}
-$: if ($expandedBlock.id === blockId && !isSoftmaxExpanded) {
-  isSoftmaxExpanded = true
-  expandSoftmax()
-}
+$effect(() => {
+  if ($expandedBlock.id !== blockId && isSoftmaxExpanded) {
+    isSoftmaxExpanded = false
+    collapseSoftmax()
+  }
+})
+$effect(() => {
+  if ($expandedBlock.id === blockId && !isSoftmaxExpanded) {
+    isSoftmaxExpanded = true
+    expandSoftmax()
+  }
+})
 
 const onClickSoftmax = () => {
   if (!isSoftmaxExpanded) {
@@ -71,13 +75,11 @@ function handleOutsideClick(e: MouseEvent) {
   }
 }
 onMount(() => {
-  document
-    .querySelector('.main-section')
-    ?.addEventListener('click', handleOutsideClick as EventListener)
+const mainSection = getContext<{ current: HTMLElement | null }>('main-section')?.current
+  if (!mainSection) return
+  mainSection.addEventListener('click', handleOutsideClick)
   return () => {
-    document
-      .querySelector('.main-section')
-      ?.removeEventListener('click', handleOutsideClick as EventListener)
+    mainSection.removeEventListener('click', handleOutsideClick)
   }
 })
 
@@ -146,18 +148,18 @@ let rowGap = 0.5 * rootRem
 
 let hoveredIndex: number | null = null
 
-$: data = $modelData?.probabilities || []
-$: tokenIds = data?.map((d) => d.tokenId)
-$: logits = data?.map((d) => d.logit) || []
-$: scaledLogits = data?.map((d) => d.scaledLogit) || []
+let data = $derived($modelData?.probabilities || [])
+let tokenIds = $derived(data?.map((d) => d.tokenId))
+let logits = $derived(data?.map((d) => d.logit) || [])
+let scaledLogits = $derived(data?.map((d) => d.scaledLogit) || [])
 
 // top-k
-$: topKLogits = data?.map((d) => d.topKLogit) || []
+let topKLogits = $derived(data?.map((d) => d.topKLogit) || [])
 
 // top-p
-$: topPProbabilities = data?.map((d) => d.topPProbability) || []
-$: cumulativeProbabilities = data?.map((d) => d.cumulativeProbability) || []
-$: cutoffIndex = data?.[0].cutoffIndex || 0
+let topPProbabilities = $derived(data?.map((d) => d.topPProbability) || [])
+let cumulativeProbabilities = $derived(data?.map((d) => d.cumulativeProbability) || [])
+let cutoffIndex = $derived(data?.[0].cutoffIndex || 0)
 
 let isHovered = false
 
@@ -220,9 +222,9 @@ const onClickLogits = (e: MouseEvent) => {
 						class:final_token_highlight={$predictedToken?.rank === idx}
 					>
 						<span>{item.token.trim() === '' ? '\u00A0' : item.token}</span>
-						<Tooltip class="softmax-tooltip" type="light">
+						<DaisyTooltip class="softmax-tooltip" type="light">
 							Token ID: <span class="number">{tokenIds[idx]}</span>
-						</Tooltip>
+						</DaisyTooltip>
 					</div>
 				{/each}
 			</div>
@@ -241,7 +243,7 @@ const onClickLogits = (e: MouseEvent) => {
 							onclick={onClickLogits}
 							data-click="prob-expansion-logit-btn"
 						>
-							Logits <Eye class="icon text-gray-400" size="sm" />
+							Logits <Eye class="icon text-gray-400" />
 					</button>
 					</div>
 					<div class="title-box scaled">
@@ -280,9 +282,9 @@ const onClickLogits = (e: MouseEvent) => {
 									>
 										<span class="number">{logit?.toFixed(2)}</span>
 									</div>
-									<Tooltip class="softmax-tooltip" type="light">
+									<DaisyTooltip class="softmax-tooltip" type="light">
 										<Katex math={`\\text{logit}_{${tokenIds[idx]}}`}></Katex>
-									</Tooltip>
+									</DaisyTooltip>
 								{/if}
 							{/each}
 						</div>
@@ -300,9 +302,9 @@ const onClickLogits = (e: MouseEvent) => {
 									>
 										<span class="number">{logit?.toFixed(2)}</span>
 									</div>
-									<Tooltip class="softmax-tooltip" type="light">
+									<DaisyTooltip class="softmax-tooltip" type="light">
 										<Katex math={`${logits[idx]?.toFixed(2)} / ${$temperature}`}></Katex>
-									</Tooltip>
+									</DaisyTooltip>
 								{/if}
 							{/each}
 						</div>
@@ -353,9 +355,9 @@ const onClickLogits = (e: MouseEvent) => {
 												>
 											{/if}
 										</div>
-										<Tooltip class="softmax-tooltip" type="light">
+										<DaisyTooltip class="softmax-tooltip" type="light">
 											sum=<Katex math={`${cumulativeProbabilities[idx]?.toFixed(2)}`}></Katex>
-										</Tooltip>
+										</DaisyTooltip>
 									{/if}
 								{/each}
 							{/if}

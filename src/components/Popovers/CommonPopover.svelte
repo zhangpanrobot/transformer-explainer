@@ -1,60 +1,51 @@
 <script lang="ts">
-	import classNames from 'classnames';
-	import { Popover } from 'flowbite-svelte';
-	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
-	import { onClickReadMore } from '~/utils/event';
+import classNames from 'classnames'
+import type { Snippet } from 'svelte'
+import { onClickReadMore } from '~/utils/event'
+import DaisyPopover from '../common/DaisyPopover.svelte'
 
-	export let offset: PopoverProps['offset'] = undefined;
-	export let className: PopoverProps['class'] = undefined;
-	export let triggeredBy: PopoverProps['triggeredBy'] = undefined;
-	export let trigger: PopoverProps['trigger'] = 'hover';
-	export let placement: PopoverProps['placement'] = 'right';
-	export let title: PopoverProps['title'] = undefined;
-	export let goTo: string | undefined = undefined;
-	export let reference: PopoverProps['reference'] | undefined = undefined;
+let {
+  className,
+  placement = 'right',
+  title,
+  goTo,
+  reference,
+  children,
+}: {
+  offset?: any
+  className?: any
+  triggeredBy?: any
+  trigger?: string
+  placement?: string
+  title?: any
+  goTo?: any
+  reference?: any
+  children?: Snippet
+} = $props()
 
-	let startTime;
-	const onShow = (e) => {
-		startTime = e.timeStamp;
-		
-	};
-	const onHide = (e) => {
-		
-	};
 </script>
 
 <!-- bug: {triggeredBy} prop triggers show event twice -->
-<Popover
+<DaisyPopover
 	class={classNames('popover text-sm', className)}
 	{title}
 	{placement}
 	{reference}
 	offset={1}
-	arrow={false}
-	data-click={`popover-${className}`}
-	on:show={(e) => {
-		if (e.detail) {
-			onShow(e);
-		} else {
-			onHide(e);
-		}
-	}}
 >
 	<div class="content">
-		<slot></slot>
+		{@render children?.()}
 		{#if goTo}
 			<div
 				class="more-btn mt-1 text-blue-600 hover:underline"
 				onclick={(e) =>
-					onClickReadMore(e, goTo, {
-						value: title
-					})}
+					onClickReadMore(e, goTo)}
 				data-click={`read-more-btn-${className}`}
 			>
 				Read more
 			</div>
 		{/if}
-	</div></Popover
+	</div></DaisyPopover
 >
 
 <style lang="scss">

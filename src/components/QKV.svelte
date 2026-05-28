@@ -1,16 +1,16 @@
 ﻿<script lang="ts">
 import classNames from 'classnames'
-import { Tooltip } from 'flowbite-svelte'
 import { onMount } from 'svelte'
 import { attentionHeadIdx, blockIdx, modelMeta, tokens, vectorHeight } from '~/store'
+import DaisyTooltip from './common/DaisyTooltip.svelte'
 import VectorCanvas from './common/VectorCanvas.svelte'
 import OperationGroup from './OperationGroup.svelte'
 
-export let className: string | undefined = undefined
+let { className = undefined }: { className?: string | undefined } = $props()
 
 const embeddingVectorColor = 'bg-gray-300'
 
-let vectorHoverIdx: number | null = null
+let vectorHoverIdx: number | null = $state(null)
 const queryVectorColor = 'bg-blue-200'
 const keyVectorColor = 'bg-red-200'
 const valVectorColor = 'bg-green-200'
@@ -51,8 +51,8 @@ onMount(() => {
 					</div>
 				{/each}
 			</div>
-			<Tooltip class="popover" triggeredBy={'.qkv .embedding-column .vector'} placement="right"
-				>vector({$modelMeta.dimension})</Tooltip
+			<DaisyTooltip class="popover" triggeredBy={'.qkv .embedding-column .vector'} placement="right"
+				>vector({$modelMeta.dimension})</DaisyTooltip
 			>
 
 			<div class="operations flex">
@@ -106,8 +106,8 @@ onMount(() => {
 					</div>
 				</div>
 			{/each}
-			<Tooltip class="popover" triggeredBy={'.qkv .qkv-column .vector'} placement="right"
-				>vector({$modelMeta.dimension * 3})</Tooltip
+			<DaisyTooltip class="popover" triggeredBy={'.qkv .qkv-column .vector'} placement="right"
+				>vector({$modelMeta.dimension * 3})</DaisyTooltip
 			>
 		</div>
 	</div>

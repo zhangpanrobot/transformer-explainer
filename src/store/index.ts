@@ -1,5 +1,5 @@
 ﻿import type * as ort from 'onnxruntime-web'
-import { derived, readable, writable } from 'svelte/store'
+import { derived, writable } from 'svelte/store'
 import { ex0 } from '~/constants/examples'
 import { theme } from '~/utils/tailwind-theme'
 import { textPages } from '~/utils/textbookPages'
@@ -87,6 +87,7 @@ export const finalTokenIndex = writable(null)
 
 // Visual element style
 export const rootRem = 16
+export const topbarHeight = writable(0)
 export const minVectorHeight = 12
 export const maxVectorHeight = 30
 export const maxVectorScale = 3.4
@@ -110,3 +111,4 @@ export const tooltip = writable()
 
 // User identification
 export const userId = writable<string | null>(null)
+

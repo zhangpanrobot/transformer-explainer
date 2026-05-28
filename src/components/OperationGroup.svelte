@@ -15,10 +15,8 @@ import ActivationPopover from './popovers/ActivationPopover.svelte'
 import DropoutPopover from './popovers/DropoutPopover.svelte'
 import LayerNormPopover from './popovers/LayerNormPopover.svelte'
 import ResidualPopover from './popovers/ResidualPopover.svelte'
+let { id, className = undefined, type = undefined }: { id: string, className?: string | undefined, type?: string | undefined } = $props();
 
-export let id: string
-export let className: string | undefined = undefined
-export let type: string | undefined = undefined
 
 const { drawLine, removeLine } = drawResidualLine(id)
 let isHovered = false

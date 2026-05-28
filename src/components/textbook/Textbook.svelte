@@ -1,21 +1,22 @@
 ﻿<script lang="ts">
 import { BookOpen } from '@lucide/svelte'
-import { GradientButton } from 'flowbite-svelte'
 import { fade } from 'svelte/transition'
 import { isTextbookOpen, textbookCurrentPage, textbookPreviousPage } from '~/store'
 import { textPages } from '~/utils/textbookPages'
 import TextbookCard from './TextbookCard.svelte'
+let { showTextCard = false }: { showTextCard?: boolean } = $props();
 
-export let showTextCard: boolean = false
-
-$: if (showTextCard) {
-  handlePageTransition($textbookCurrentPage, $textbookPreviousPage)
-} else {
-  if ($textbookPreviousPage >= 0 && textPages[$textbookPreviousPage]?.out) {
-    textPages[$textbookPreviousPage].out()
+$effect(() => {
+  if (showTextCard) {
+    handlePageTransition($textbookCurrentPage, $textbookPreviousPage)
+  } else {
+    if ($textbookPreviousPage >= 0 && textPages[$textbookPreviousPage]?.out) {
+      textPages[$textbookPreviousPage].out()
+    }
+    textbookPreviousPage.set(-1)
   }
-  textbookPreviousPage.set(-1)
-}
+  
+});
 
 function handlePageTransition(newPage: number, oldPage: number) {
   if (oldPage >= 0 && oldPage !== newPage) {
@@ -30,10 +31,8 @@ function handlePageTransition(newPage: number, oldPage: number) {
 <!-- Floating Book Button -->
 {#if !showTextCard}
 	<div class="floating-container" transition:fade={{ duration: 150 }}>
-		<GradientButton
-			pill={true}
-			color="purpleToBlue"
-			class="floating-btn h-14 w-14"
+		<button
+			class="btn btn-circle btn-lg floating-btn h-14 w-14 bg-gradient-to-r from-purple-500 to-blue-500 text-white border-none shadow-lg"
 			onclick={() => {
 				isTextbookOpen.set(true);
 
@@ -41,7 +40,7 @@ function handlePageTransition(newPage: number, oldPage: number) {
 			}}
 		>
 			<BookOpen class="h-8 w-8" />
-		</GradientButton>
+		</button>
 	</div>
 {/if}
 

@@ -13,50 +13,58 @@ const tokenGap = 6
 
 // generate data
 const visibleDimension = 18
-$: tokenLen = $tokens.length
-$: embeddingData = Array(tokenLen)
-  .fill(0)
-  .map((col) =>
-    Array(visibleDimension)
-      .fill(0)
-      .map((d) => Math.random()),
-  )
+let tokenLen = $derived($tokens.length)
+let embeddingData = $derived(
+  Array(tokenLen)
+    .fill(0)
+    .map(() =>
+      Array(visibleDimension)
+        .fill(0)
+        .map(() => Math.random()),
+    ),
+)
 
 const qkvWeightData = Array(visibleDimension * 3)
   .fill(0)
-  .map((col) =>
+  .map(() =>
     Array(visibleDimension)
       .fill(0)
-      .map((d) => Math.random()),
+      .map(() => Math.random()),
   )
 const qkvBiasData = Array(1)
   .fill(0)
-  .map((col) =>
+  .map(() =>
     Array(visibleDimension * 3)
       .fill(0)
-      .map((d) => Math.random()),
+      .map(() => Math.random()),
   )
 
-$: qkvOutData = Array(tokenLen)
-  .fill(0)
-  .map((col) =>
-    Array(visibleDimension * 3)
-      .fill(0)
-      .map((d) => Math.random()),
-  )
+let qkvOutData = $derived(
+  Array(tokenLen)
+    .fill(0)
+    .map(() =>
+      Array(visibleDimension * 3)
+        .fill(0)
+        .map(() => Math.random()),
+    ),
+)
 
 // color scale
 const embeddingColorScale = (d:number) => {
   return d3.interpolate(theme.colors.gray[100], theme.colors.gray[400])(d)
 }
 
-const qkvColorScale = (d:number, i: number) => {
-  let color = i < visibleDimension ? 'blue' : i < visibleDimension * 2 ? 'red' : 'green'
+const qkvColorScale = (d: number, i?: number) => {
+  const idx = i ?? 0
+  const color = (idx < visibleDimension ? 'blue' : idx < visibleDimension * 2 ? 'red' : 'green') as
+    | 'blue'
+    | 'red'
+    | 'green'
   return d3.interpolate(theme.colors[color][100], theme.colors[color][400])(d)
 }
 
 // animation
-let isAnimationActive = false
+let isAnimationActive = $state(false)
 let progress = 0
 let timeline = gsap.timeline()
 
@@ -73,10 +81,7 @@ onMount(() => {
 })
 
 onDestroy(() => {
-  if (timeline) {
-    timeline.kill()
-    timeline = null
-  }
+  timeline?.kill()
 })
 
 const draw = () => {
@@ -286,8 +291,8 @@ const draw = () => {
 }
 
 // event
-let highlightCol: number | undefined
-let highlightRow: number | undefined
+let highlightCol = $state<number | undefined>(undefined)
+let highlightRow = $state<number | undefined>(undefined)
 
 const onMouseOverCell = (d: Cell) => {
   if (isAnimationActive) return

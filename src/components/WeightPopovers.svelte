@@ -1,8 +1,9 @@
 ﻿<script lang="ts">
 import { Maximize2 } from '@lucide/svelte'
-import { onMount } from 'svelte'
+import { getContext, onMount } from 'svelte'
+import { get } from 'svelte/store'
 import { fade } from 'svelte/transition'
-import { tooltip, weightPopover } from '~/store'
+import { tooltip, topbarHeight, weightPopover } from '~/store'
 import {
   highlightAttentionPath,
   highlightLogitPath,
@@ -17,74 +18,21 @@ import MLPWeightPopover from './popovers/MLPWeightPopover.svelte'
 import QkvWeightPopover from './popovers/QKVWeightPopover.svelte'
 
 let resizeObserver: ResizeObserver
-let qkvPos = { left: 0, top: 0 }
-let mlpPos = { left: 0, top: 0 }
-let mlpDownPos = { left: 0, top: 0 }
-let attentionPos = { left: 0, top: 0 }
-let softmaxPos = { left: 0, top: 0 }
+let qkvPos = $state({ left: 0, top: 0 })
+let mlpPos = $state({ left: 0, top: 0 })
+let mlpDownPos = $state({ left: 0, top: 0 })
+let attentionPos = $state({ left: 0, top: 0 })
+let softmaxPos = $state({ left: 0, top: 0 })
 
-let popoverEl: HTMLElement = null
+let popoverEl: HTMLElement
 
 function handleOutsideClick(e) {
   if ($weightPopover && !popoverEl.contains(e.target)) {
     weightPopover.set(null)
   }
 }
-// add global event
-onMount(() => {
-  document.querySelector('.main-section').addEventListener('click', handleOutsideClick)
-
-  return () => {
-    document.querySelector('.main-section').removeEventListener('click', handleOutsideClick)
-  }
-})
-
-//set popover pos
-onMount(() => {
-  const setPosition = () => {
-    const scrollLeft = window.scrollX
-    const topbarHeight = document.querySelector('.top-bar')?.offsetHeight
-
-    const embedding = document.querySelector('.step.qkv .content')
-    const mlp = document.querySelector('.step.mlp .content')
-    const mlpDown = document.querySelector('.step.mlp .second-layer')
-    const attention = document.querySelector('.step.attention .content .multi-head')
-    const softmax = document.querySelector('.step.transformer-blocks .content')
-
-    const embeddingRect = embedding?.getBoundingClientRect()
-    const mlpRect = mlp?.getBoundingClientRect()
-    const mlpDownRect = mlpDown?.getBoundingClientRect()
-    const attentionRect = attention?.getBoundingClientRect()
-    const softmaxRect = softmax?.getBoundingClientRect()
-
-    qkvPos = { left: embeddingRect?.right + scrollLeft, top: embeddingRect?.top - topbarHeight }
-    mlpPos = { left: mlpRect?.left + scrollLeft, top: mlpRect?.top - topbarHeight }
-    mlpDownPos = { left: mlpDownRect?.left + scrollLeft, top: mlpDownRect?.top - topbarHeight }
-    attentionPos = {
-      left: attentionRect?.right + scrollLeft,
-      top: attentionRect?.top + attentionRect?.height / 2 - topbarHeight,
-    }
-    softmaxPos = {
-      left: softmaxRect?.left + scrollLeft,
-      top: softmaxRect?.top - topbarHeight,
-    }
-  }
-
-  setPosition()
-
-  resizeObserver = new ResizeObserver((entries) => {
-    setPosition()
-  })
-  const elements = document?.querySelectorAll('.resize-watch')
-  elements.forEach((el) => resizeObserver.observe(el))
-
-  return () => {
-    document.querySelector('.main-section').removeEventListener('click', handleOutsideClick)
-  }
-})
-
-//tooltip
-$: isVisible = !!$tooltip && !$weightPopover
+// tooltip state
+let isVisible = $derived(!!$tooltip && !$weightPopover);
 
 let x = 0
 let y = 0
@@ -95,6 +43,48 @@ function handleMouseMove(e) {
 }
 
 onMount(() => {
+  const mainSection = getContext<{ current: HTMLElement | null }>('main-section')?.current
+  mainSection?.addEventListener('click', handleOutsideClick)
+
+  // set popover positions
+  const embedding = document.querySelector('.step.qkv .content')
+  const mlp = document.querySelector('.step.mlp .content')
+  const mlpDown = document.querySelector('.step.mlp .second-layer')
+  const attention = document.querySelector('.step.attention .content .multi-head')
+  const softmax = document.querySelector('.step.transformer-blocks .content')
+
+  const setPosition = () => {
+    const scrollLeft = window.scrollX
+    const tbh = get(topbarHeight)
+
+    const embeddingRect = embedding?.getBoundingClientRect()
+    const mlpRect = mlp?.getBoundingClientRect()
+    const mlpDownRect = mlpDown?.getBoundingClientRect()
+    const attentionRect = attention?.getBoundingClientRect()
+    const softmaxRect = softmax?.getBoundingClientRect()
+
+    qkvPos = { left: embeddingRect?.right + scrollLeft, top: embeddingRect?.top - tbh }
+    mlpPos = { left: mlpRect?.left + scrollLeft, top: mlpRect?.top - tbh }
+    mlpDownPos = { left: mlpDownRect?.left + scrollLeft, top: mlpDownRect?.top - tbh }
+    attentionPos = {
+      left: attentionRect?.right + scrollLeft,
+      top: attentionRect?.top + attentionRect?.height / 2 - tbh,
+    }
+    softmaxPos = {
+      left: softmaxRect?.left + scrollLeft,
+      top: softmaxRect?.top - tbh,
+    }
+  }
+
+  setPosition()
+
+  resizeObserver = new ResizeObserver(() => {
+    setPosition()
+  })
+  const elements = document?.querySelectorAll('.resize-watch')
+  elements.forEach((el) => resizeObserver.observe(el))
+
+  // tooltip + weight popover highlighting
   window.addEventListener('mousemove', handleMouseMove)
 
   const unsubscribe = weightPopover.subscribe((value) => {
@@ -112,7 +102,9 @@ onMount(() => {
       highlightPath(value)
     }
   })
+
   return () => {
+    mainSection?.removeEventListener('click', handleOutsideClick)
     window.removeEventListener('mousemove', handleMouseMove)
     unsubscribe()
   }
@@ -126,7 +118,7 @@ onMount(() => {
 		in:fade={{ duration: 100 }}
 	>
 		{$tooltip}
-		<Maximize2 size="sm" />
+		<Maximize2 />
 	</div>
 {/if}
 
@@ -238,3 +230,4 @@ onMount(() => {
 		margin: 0 !important;
 	}
 </style>
+

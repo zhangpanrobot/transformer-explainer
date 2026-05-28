@@ -1,13 +1,13 @@
 <script lang="ts">
 import classNames from 'classnames'
-import { Tooltip } from 'flowbite-svelte'
 import { onMount, setContext } from 'svelte'
 import TextbookTooltip from '~/components/common/TextbookTooltip.svelte'
 import { attentionHeadIdx, blockIdx, modelMeta, tokens, vectorHeight } from '~/store'
+import DaisyTooltip from './common/DaisyTooltip.svelte'
 import VectorCanvas from './common/VectorCanvas.svelte'
 import OperationGroup from './OperationGroup.svelte'
 
-export let className: string | undefined = undefined
+let { className = undefined }: { className?: string | undefined } = $props()
 
 setContext('block-id', 'mlp')
 
@@ -15,7 +15,8 @@ const firstLayerlColor = 'bg-purple-200'
 const secondLayerColor = 'bg-indigo-200'
 const outputColor = 'bg-blue-200'
 
-let isHovered = false
+let isHovered = $state(false)
+let vectorHoverIdx: number | null = $state(null)
 
 function handleMouseEnter() {
   isHovered = true
@@ -25,7 +26,6 @@ function handleMouseLeave() {
   isHovered = false
 }
 
-let vectorHoverIdx: number | null = null
 
 // attentionHeadIdx subscribe
 const headCursors = {}
@@ -84,8 +84,8 @@ onMount(() => {
 					</div>
 				{/each}
 			</div>
-			<Tooltip triggeredBy={'.step.mlp .initial .cell'} class="popover" placement="right">
-				vector({$modelMeta.dimension})</Tooltip
+			<DaisyTooltip triggeredBy={'.step.mlp .initial .cell'} class="popover" placement="right">
+				vector({$modelMeta.dimension})</DaisyTooltip
 			>
 			<OperationGroup type="dropout" id={'mlp-first-dropout'} />
 			<OperationGroup type="residual-end" id={'embedding-residual'} />
@@ -106,8 +106,8 @@ onMount(() => {
 				{/each}
 			</div>
 		</div>
-		<Tooltip triggeredBy={'.step.mlp .mlp-mid-column .cell'} class="popover" placement="right">
-			vector({$modelMeta.dimension * 4})</Tooltip
+		<DaisyTooltip triggeredBy={'.step.mlp .mlp-mid-column .cell'} class="popover" placement="right">
+			vector({$modelMeta.dimension * 4})</DaisyTooltip
 		>
 		<div class="layer mlpDown out-layer relative flex justify-between">
 			<div class="activation">
@@ -135,8 +135,8 @@ onMount(() => {
 						</div>
 					{/each}
 				</div>
-				<Tooltip triggeredBy={'.step.mlp .mlp-out-column .cell'} class="popover" placement="right">
-					vector({$modelMeta.dimension})</Tooltip
+				<DaisyTooltip triggeredBy={'.step.mlp .mlp-out-column .cell'} class="popover" placement="right">
+					vector({$modelMeta.dimension})</DaisyTooltip
 				>
 			</div>
 		</div>

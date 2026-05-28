@@ -2,51 +2,53 @@
 import * as d3 from 'd3'
 import { onDestroy, onMount } from 'svelte'
 import Matrix from '~/components/common/Matrix.svelte'
-import { modelMeta, rootRem, tokens } from '~/store'
+import { modelMeta, rootRem } from '~/store'
 import { gsap } from '~/utils/gsap'
 import Katex from '~/utils/Katex.svelte'
+import { theme } from '~/utils/tailwind-theme'
 import HelpPopover from '../common/HelpPopover.svelte'
 import WeightPopoverCard from '../common/WeightPopoverCard.svelte'
 
-export let isOpen = true
-
-import { theme } from '~/utils/tailwind-theme'
+let { isOpen = true }: { isOpen?: any } = $props()
 
 const tokenGap = 6
 
 // generate data
 const visibleDimension = 18
-$: tokenLen = $tokens.length
-$: inputData = Array(1)
-  .fill(0)
-  .map((col) =>
-    Array(visibleDimension)
-      .fill(0)
-      .map((d) => Math.random()),
-  )
+let inputData = $derived(
+  Array(1)
+    .fill(0)
+    .map(() =>
+      Array(visibleDimension)
+        .fill(0)
+        .map(() => Math.random()),
+    ),
+)
 
 const weightData = Array(visibleDimension * 5)
   .fill(0)
-  .map((col) =>
+  .map(() =>
     Array(visibleDimension)
       .fill(0)
-      .map((d) => Math.random()),
+      .map(() => Math.random()),
   )
 const biasData = Array(1)
   .fill(0)
-  .map((col) =>
+  .map(() =>
     Array(visibleDimension * 5)
       .fill(0)
-      .map((d) => Math.random()),
+      .map(() => Math.random()),
   )
 
-$: logitData = Array(1)
-  .fill(0)
-  .map((col) =>
-    Array(visibleDimension * 5)
-      .fill(0)
-      .map((d) => Math.random()),
-  )
+let logitData = $derived(
+  Array(1)
+    .fill(0)
+    .map(() =>
+      Array(visibleDimension * 5)
+        .fill(0)
+        .map(() => Math.random()),
+    ),
+)
 
 // color scale
 const embeddingColorScale = (d: number) => {
@@ -62,13 +64,11 @@ const logitColorScale = (d: number) => {
 }
 
 // animation
-let isAnimationActive = false
+let isAnimationActive = $state(false)
 let progress = 0
-let timeline: GSAPTimeline
+let timeline = $state(gsap.timeline())
 
 onMount(() => {
-  timeline = gsap.timeline()
-
   timeline.eventCallback('onUpdate', () => {
     progress = timeline.progress()
     if (progress === 1) isAnimationActive = false
@@ -83,7 +83,6 @@ onMount(() => {
 onDestroy(() => {
   if (timeline) {
     timeline.kill()
-    timeline = null
   }
 })
 
@@ -303,8 +302,8 @@ const draw = () => {
 }
 
 // event
-let highlightCol: number | undefined
-let highlightRow: number | undefined
+let highlightCol: number | undefined = $state()
+let highlightRow: number | undefined = $state()
 
 const onMouseOverCell = (d: Cell) => {
   if (isAnimationActive) return

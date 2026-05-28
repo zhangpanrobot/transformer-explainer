@@ -1,11 +1,11 @@
 ﻿<script lang="ts">
 import classNames from 'classnames'
-import { Tooltip } from 'flowbite-svelte'
 import { blockIdx, expandedBlock, isBoundingBoxActive, modelMeta, tokens } from '~/store'
+import DaisyTooltip from './common/DaisyTooltip.svelte'
 import TextbookTooltip from './common/TextbookTooltip.svelte'
 import VectorCanvas from './common/VectorCanvas.svelte'
 
-export let className: string | undefined = undefined
+let { className = undefined }: { className?: string | undefined } = $props()
 </script>
 
 <div
@@ -58,8 +58,8 @@ export let className: string | undefined = undefined
 					</div>
 				</div>
 			{/each}
-			<Tooltip class="popover" triggeredBy={'.transformer-blocks .vector'} placement="right"
-				>vector({$modelMeta.dimension})</Tooltip
+			<DaisyTooltip class="popover" triggeredBy={'.transformer-blocks .vector'} placement="right"
+				>vector({$modelMeta.dimension})</DaisyTooltip
 			>
 		</div>
 		<div class="second-column">

@@ -1,16 +1,27 @@
-<script lang="ts">
-	import { Popover } from 'flowbite-svelte';
-	import { onClickReadMore } from '~/utils/event';
+﻿<script lang="ts">
+import type { Snippet } from 'svelte'
+import { onClickReadMore } from '~/utils/event'
+import DaisyPopover from './DaisyPopover.svelte'
 
-	export let id: string;
-	export let placement: string = 'bottom';
-	export let goTo: string | undefined = undefined;
-	export let textbook: string | undefined = undefined;
+let {
+  id,
+  placement = 'bottom',
+  goTo = undefined,
+  textbook = undefined,
+  children,
+}: {
+  id: string
+  placement?: string
+  goTo?: string | undefined
+  textbook?: string | undefined
+  children?: Snippet
+} = $props()
+let triggerEl: SVGElement | undefined = $state(undefined)
 </script>
 
 <div {id} class="help" data-click={`help-icon`}>
 	<svg
-		class="h-4 w-4 text-gray-300"
+		class="h-4 w-4 text-gray-300" bind:this={triggerEl}
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 -960 960 960"
 		fill="currentColor"
@@ -19,13 +30,12 @@
 		/></svg
 	>
 </div>
-<Popover
-	triggeredBy={`#${id}`}
+<DaisyPopover
+	triggerElements={triggerEl ? [triggerEl] : []}
 	{placement}
 	class="help popover"
-	data-click={`help-popover-${id}`}
 	><div class="help-content">
-		<slot />
+		{@render children?.()}
 		{#if textbook}
 			<div class="textbook-link">
 				<a
@@ -42,12 +52,12 @@
 			<div
 				data-click={`read-more-btn-${id}`}
 				class="more-btn mt-1 text-blue-600 hover:underline"
-				onclick={(e) => onClickReadMore(e, goTo, { value: id })}
+				onclick={(e) => onClickReadMore(e, goTo)}
 			>
 				Read more
 			</div>
 		{/if}
-	</div></Popover
+	</div></DaisyPopover
 >
 
 <style lang="scss">
@@ -62,3 +72,4 @@
 		cursor: pointer;
 	}
 </style>
+

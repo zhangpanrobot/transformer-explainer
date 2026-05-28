@@ -2,7 +2,6 @@
 import { ZoomIn } from '@lucide/svelte'
 import classNames from 'classnames'
 import * as d3 from 'd3'
-import { Tooltip } from 'flowbite-svelte'
 import { getContext, onMount, setContext, tick } from 'svelte'
 import {
   blockIdx,
@@ -13,31 +12,35 @@ import {
   textbookCurrentPageId,
   tokenIds,
   tokens,
-  userId,
 } from '~/store'
 import { Flip, gsap } from '~/utils/gsap'
 import { theme } from '~/utils/tailwind-theme'
 import { textPages } from '~/utils/textbookPages'
+import DaisyTooltip from './common/DaisyTooltip.svelte'
 import TextbookTooltip from './common/TextbookTooltip.svelte'
 import VectorCanvas from './common/VectorCanvas.svelte'
 
-export let className: string | undefined = undefined
+let { className }: { className?: string | undefined } = $props()
 
 setContext('block-id', 'embedding')
 
 const blockId = getContext('block-id')
 
-let isEmbeddingExpanded = false
+let isEmbeddingExpanded = $state(false)
 
 // event handling
-$: if ($expandedBlock.id !== blockId && isEmbeddingExpanded) {
-  isEmbeddingExpanded = false
-  collapseEmbedding()
-}
-$: if ($expandedBlock.id === blockId && !isEmbeddingExpanded) {
-  isEmbeddingExpanded = true
-  expandEmbedding()
-}
+$effect(() => {
+  if ($expandedBlock.id !== blockId && isEmbeddingExpanded) {
+    isEmbeddingExpanded = false
+    collapseEmbedding()
+  }
+})
+$effect(() => {
+  if ($expandedBlock.id === blockId && !isEmbeddingExpanded) {
+    isEmbeddingExpanded = true
+    expandEmbedding()
+  }
+})
 
 const onClickEmbedding = () => {
   if (!isEmbeddingExpanded) {
@@ -65,9 +68,11 @@ function handleOutsideClick(e) {
   }
 }
 onMount(() => {
-  document.querySelector('.main-section').addEventListener('click', handleOutsideClick)
+  const mainSection = getContext<{ current: HTMLElement | null }>('main-section')?.current
+  if (!mainSection) return
+  mainSection.addEventListener('click', handleOutsideClick)
   return () => {
-    document.querySelector('.main-section').removeEventListener('click', handleOutsideClick)
+    mainSection.removeEventListener('click', handleOutsideClick)
   }
 })
 
@@ -102,9 +107,6 @@ const expandEmbedding = async () => {
 }
 
 const collapseEmbedding = async () => {
-  let endTime = performance.now()
-  let visibleDuration = endTime - startTime
-
   containerState = Flip.getState('.embedding .token-column')
   isEmbeddingExpanded = false
   await tick()
@@ -120,7 +122,7 @@ const collapseEmbedding = async () => {
   })
 }
 
-let isHovered = false
+let isHovered = $state(false)
 
 function handleMouseEnter() {
   isHovered = true
@@ -259,8 +261,8 @@ const embeddingVectorColor = 'bg-gray-300'
 						<div class="cell">=</div>
 					{/each}
 				</div>
-				<Tooltip triggeredBy=".embedding .vector" class="popover" placement="right"
-					>vector({$modelMeta.dimension})</Tooltip
+				<DaisyTooltip triggeredBy=".embedding .vector" class="popover" placement="right"
+					>vector({$modelMeta.dimension})</DaisyTooltip
 				>
 				<!-- <PositionalEncodingPopover triggeredBy=".position-embedding" /> -->
 			{/if}
@@ -274,8 +276,8 @@ const embeddingVectorColor = 'bg-gray-300'
 					</div>
 				{/each}
 			</div>
-			<Tooltip triggeredBy=".step.embedding .vector" class="popover" placement="right"
-				>vector({$modelMeta.dimension})</Tooltip
+			<DaisyTooltip triggeredBy=".step.embedding .vector" class="popover" placement="right"
+				>vector({$modelMeta.dimension})</DaisyTooltip
 			>
 		</div>
 	</div>
@@ -382,3 +384,4 @@ const embeddingVectorColor = 'bg-gray-300'
 		}
 	}
 </style>
+

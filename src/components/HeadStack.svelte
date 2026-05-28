@@ -283,16 +283,17 @@ const onClickPrev = () => {
 		<button
 			onclick={onClickPrev}
 			disabled={$isOnAnimation || disablePagination}
-			data-click="attention-head-prev-btn"><ChevronLeft size="sm"></ChevronLeft></button
+			data-click="attention-head-prev-btn"><ChevronLeft></ChevronLeft></button
 		>
 		<button
 			onclick={onClickNext}
 			disabled={$isOnAnimation || disablePagination}
-			data-click="attention-head-next-btn"><ChevronRight size="sm"></ChevronRight></button
+			data-click="attention-head-next-btn"><ChevronRight></ChevronRight></button
 		>
 	</div>
 	<div class={'head-content'} bind:this={headContent}>
-		<slot></slot>
+		<!-- {@render children?.()} -->
+    <slot/>
 	</div>
 	<div class="head-card-container absolute" bind:this={container}>
 		{#each headStyles as head, index}

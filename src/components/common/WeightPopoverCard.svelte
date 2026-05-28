@@ -1,31 +1,39 @@
 <script lang="ts">
-	import { Card } from "flowbite-svelte";
-	import { CloseOutline } from "flowbite-svelte-icons";
-	import { onDestroy, onMount } from "svelte";
-	import { weightPopover } from "~/store";
+import type { Snippet } from 'svelte'
+import { CircleX } from '@lucide/svelte'
+import { onDestroy, onMount } from 'svelte'
+import { weightPopover } from '~/store'
 
-	export let id: string;
-	export let title: string;
-	export let className: string | undefined = undefined;
-	export let isAnimationActive: boolean = false;
-	export let timeline: GSAPTimeline;
-	export let isOpen: boolean = true;
+let {
+  id,
+  title,
+  className = undefined,
+  isAnimationActive = $bindable(false),
+  timeline,
+  isOpen = $bindable(true),
+  children,
+}: {
+  id: string
+  title: string
+  className?: string | undefined
+  isAnimationActive?: boolean
+  timeline: GSAPTimeline
+  isOpen?: boolean
+  children?: Snippet
+} = $props()
 
-	let startTime: number;
+let startTime: number
 
-	onMount(() => {
-		startTime = performance.now();
-		
-	});
-	onDestroy(() => {
-		let endTime = performance.now();
-		let visibleDuration = endTime - startTime;
-
-		
-	});
+onMount(() => {
+  startTime = performance.now()
+})
+onDestroy(() => {
+  let endTime = performance.now()
+  let visibleDuration = endTime - startTime
+})
 </script>
 
-<Card
+<div
 	class={`weight-popover-card popover bg-white text-sm font-light text-gray-500 ${className}`}
 	data-click="weight-popover"
 	onclick={(e) => {
@@ -98,14 +106,14 @@
 					e.stopPropagation();
 					weightPopover.set(null);
 					isOpen = false;
-				}}><CloseOutline class="h-5 w-5 text-gray-500" /></button
+				}}><CircleX class="h-5 w-5 text-gray-500" /></button
 			>
 		</div>
 	</div>
 	<div class="content">
-		<slot />
+		{@render children?.()}
 	</div>
-</Card>
+</div>
 
 <style lang="scss">
 	:global(.weight-popover-card) {

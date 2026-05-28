@@ -1,17 +1,13 @@
 <script lang="ts">
 	import katex from 'katex';
-
-	export let math: string;
-	export let displayMode = false;
-	export let style: Record<string, string> = {};
-
-	const options = {
+let { math, displayMode = false, style = {} }: { math: string; displayMode?: boolean; style?: Record<string, string> } = $props();
+const options = {
 		displayMode,
 		throwOnError: false,
 		style: style
 	};
 
-	$: katexString = katex.renderToString(math, options);
+	let katexString = $derived(katex.renderToString(math, options));
 </script>
 
 <svelte:head>

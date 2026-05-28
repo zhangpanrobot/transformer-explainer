@@ -1,81 +1,79 @@
 ﻿<script lang="ts">
-import { Radio } from 'flowbite-svelte'
 import { sampling, userId } from '~/store'
 import { textPages } from '~/utils/textbookPages'
 import HelpPopover from './common/HelpPopover.svelte'
-import Slider from './common/Slider.svelte'
 import TextbookTooltip from './common/TextbookTooltip.svelte'
 
-export let disabled: boolean = false
+let { disabled = false }: { disabled?: boolean } = $props()
 
-$: samplingValMax = $sampling.type === 'top-k' ? 50 : 1
-$: samplingValMin = $sampling.type === 'top-k' ? 1 : 0.1
-$: samplingValStep = $sampling.type === 'top-k' ? 1 : 0.1
+let samplingValMax = $derived($sampling.type === 'top-k' ? 50 : 1)
+let samplingValMin = $derived($sampling.type === 'top-k' ? 1 : 0.1)
+let samplingValStep = $derived($sampling.type === 'top-k' ? 1 : 0.1)
 </script>
 
-<div class="sampling-input" data-click="input-sampling">
-	<Slider
-		{disabled}
-		className="sampling-slider"
-		min={samplingValMin}
-		max={samplingValMax}
-		step={samplingValStep}
-		bind:value={$sampling.value}
-		valueText={`${$sampling.type === 'top-k' ? 'k' : 'p'}=${$sampling.value}`}
-		onClick={() => {
-			textPages.find((page) => page.id === 'sampling')?.complete();
-		}}
-	>
-		<div class="sampling-type">
-			<div class="title flex items-center gap-[2px]">
-				<TextbookTooltip id="sampling">
-					<div>Sampling</div></TextbookTooltip
-				>
-				<!-- <HelpPopover
-					id="sampling-help"
-					
-					goTo="article-sampling"
-					textbook="sampling"
-				>
-					{`Changes how next \ntoken is selected from \nprobability distribution.`}
-				</HelpPopover> -->
-			</div>
-			<div class="sampling-type-input flex">
-				<Radio
-					class={`type-btn ${disabled ? 'disabled' : ''}`}
-					inline
+<div class="sampling-input flex shrink-0 flex-col items-center justify-between h-full" data-click="input-sampling">
+	<div class="sampling-type">
+		<div class="title flex items-center gap-[2px]">
+			<TextbookTooltip id="sampling">
+				<div>Sampling</div></TextbookTooltip
+			>
+		</div>
+		<div class="sampling-type-input flex">
+			<label class={`type-btn ${disabled ? 'disabled' : ''} inline-flex items-center gap-1 cursor-pointer`}>
+				<input
+					type="radio"
+					class="radio radio-xs checked:bg-purple-500"
 					name="sampling-type"
 					value="top-k"
+					checked={$sampling.type === 'top-k'}
+					{disabled}
 					onclick={(e) => {
 						e.stopPropagation();
 					}}
 					onchange={(e) => {
-						e.target.checked && sampling.set({ type: 'top-k', value: 5 });
-						
+						(e.target as HTMLInputElement).checked && sampling.set({ type: 'top-k', value: 5 });
 					}}
-					checked={$sampling.type === 'top-k'}
-					{disabled}
-					color="purple">Top-k</Radio
-				>
-				<Radio
-					class={`type-btn ${disabled ? 'disabled' : ''}`}
-					inline
+				/>
+				Top-k
+			</label>
+			<label class={`type-btn ${disabled ? 'disabled' : ''} inline-flex items-center gap-1 cursor-pointer`}>
+				<input
+					type="radio"
+					class="radio radio-xs checked:bg-purple-500"
 					name="sampling-type"
 					value="top-p"
 					checked={$sampling.type === 'top-p'}
+					{disabled}
 					onclick={(e) => {
 						e.stopPropagation();
 					}}
 					onchange={(e) => {
-						e.target.checked && sampling.set({ type: 'top-p', value: 0.5 });
-						
+						(e.target as HTMLInputElement).checked && sampling.set({ type: 'top-p', value: 0.5 });
 					}}
-					{disabled}
-					color="purple">Top-p</Radio
-				>
-			</div>
+				/>
+				Top-p
+			</label>
 		</div>
-	</Slider>
+	</div>
+	<div class="slider-container flex items-center w-28">
+		<input
+			{disabled}
+			type="range"
+			class="range range-xs"
+			min={samplingValMin}
+			max={samplingValMax}
+			step={samplingValStep}
+			bind:value={$sampling.value}
+			onclick={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				textPages.find((page) => page.id === 'sampling')?.complete?.();
+			}}
+		/>
+		<div class="value">
+			<p>{`${$sampling.type === 'top-k' ? 'k' : 'p'}=${$sampling.value}`}</p>
+		</div>
+	</div>
 </div>
 
 <style lang="scss">
@@ -116,23 +114,21 @@ $: samplingValStep = $sampling.type === 'top-k' ? 1 : 0.1
 			cursor: not-allowed;
 		}
 	}
-	.sampling-input {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: space-between;
-		position: relative;
-
-		:global(.slider-container) {
-			width: 7rem;
-		}
-	}
 	.title {
 		white-space: nowrap;
 		flex-shrink: 0;
 		font-size: 0.9rem;
 		line-height: 0;
 		color: var(--color-gray-600);
+	}
+
+	.value {
+		white-space: nowrap;
+		flex-shrink: 0;
+		font-size: 0.9rem;
+		line-height: 0;
+		font-family: monospace;
+		color: var(--color-gray-800);
+		margin-left: 0.5rem;
 	}
 </style>

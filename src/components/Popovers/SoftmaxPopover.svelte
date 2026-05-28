@@ -1,30 +1,23 @@
-﻿<script lang="ts">
-import { ChevronRight } from '@lucide/svelte'
-import { Card } from 'flowbite-svelte'
+<script lang="ts">
+import { ChevronRight, ChevronUp } from '@lucide/svelte'
 import { modelData, predictedToken, sampling, temperature } from '~/store'
 import Katex from '~/utils/Katex.svelte'
-import Arrow from '../common/Arrow.svelte'
 import TextbookTooltip from '../common/TextbookTooltip.svelte'
 
-export let hoveredIndex: number | null = null
+let { hoveredIndex = null }: { hoveredIndex?: number | null } = $props()
 
-$: data = $modelData?.probabilities || []
+let data = $derived($modelData?.probabilities || [])
 
 function getStringNumber(num?: number, decimal = 2) {
-  if (num === -Infinity) return '-âˆž'
-  if (num === Infinity) return 'âˆž'
+  if (num === -Infinity) return '-∞'
+  if (num === Infinity) return '∞'
   else return num?.toFixed(decimal)
 }
 
-$: selected =
-  hoveredIndex !== null
-    ? data[hoveredIndex]
-    : $predictedToken
-      ? data[$predictedToken?.rank]
-      : data[0]
+let selected = $derived(hoveredIndex !== null ? data[hoveredIndex] : $predictedToken)
 </script>
 
-<Card class={'softmax-popover popover bg-white text-sm'}>
+<div class={'softmax-popover popover bg-white text-sm'}>
 	<div
 		class="softmax-popover-title rounded-t-md border-b border-gray-200 bg-gray-100 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
 	>
@@ -41,13 +34,13 @@ $: selected =
 				<div class="step-content">
 					<div class="fraction">
 						<div class="frac-top relative">
-							<span class="annotation logit"><span>logit</span><Arrow size={16} /></span>
+							<span class="annotation logit"><span>logit</span><ChevronUp size={16} /></span>
 							<span class="highlight number">{getStringNumber(selected.logit)}</span>
 						</div>
 						<div class="frac-line"></div>
 						<div class="frac-bottom relative">
 							<span class="number">{$temperature}</span>
-							<span class="annotation temp"> <Arrow size={16} /><span>temperature</span></span>
+							<span class="annotation temp"> <ChevronUp size={16} /><span>temperature</span></span>
 						</div>
 					</div>
 				</div>
@@ -77,7 +70,7 @@ $: selected =
 										</span>
 									{/each}
 
-									<span class:highlight={selected?.rank >= 5}>â€¢â€¢â€¢</span>
+									<span class:highlight={selected?.rank >= 5}>•••</span>
 								</div>
 							</div>
 						</div>
@@ -120,7 +113,7 @@ $: selected =
 							<div class="cases">
 								<div class="case-row">
 									<span class="condition text">
-										If cumulative prob â‰¤ {$sampling.value}
+										If cumulative prob ≤ {$sampling.value}
 									</span>
 									<span class="number" class:highlight={selected?.rank <= selected?.cutoffIndex}
 										>{getStringNumber(selected?.topPProbability)}</span
@@ -175,7 +168,7 @@ $: selected =
 									</span>
 								{/each}
 
-								<span class:highlight={selected?.rank >= 4}>â€¢â€¢â€¢</span>
+								<span class:highlight={selected?.rank >= 4}>•••</span>
 							</div>
 						</div>
 					</div>
@@ -212,7 +205,7 @@ $: selected =
 										{/if}
 									{/each}
 									{#if 4 <= selected?.cutoffIndex}
-										<div class:highlight={selected?.rank >= 5}>â€¢â€¢â€¢</div>
+										<div class:highlight={selected?.rank >= 5}>•••</div>
 									{/if}
 								</div>
 							</div>
@@ -232,8 +225,8 @@ $: selected =
 				</div>
 			</div>
 		</div>
-	</div></Card
->
+	</div></div>
+
 
 <style lang="scss">
 	.formula-steps {
