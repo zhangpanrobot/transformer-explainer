@@ -1,11 +1,12 @@
 ﻿<script lang="ts">
-import { ZoomIn } from '@lucide/svelte'
+import { MoveRight, ZoomIn } from '@lucide/svelte'
 import classNames from 'classnames'
 import * as d3 from 'd3'
 import { getContext, onMount } from 'svelte'
 import DaisyTooltip from '~/components/common/DaisyTooltip.svelte'
 import Matrix from '~/components/common/Matrix.svelte'
 import TextbookTooltip from '~/components/common/TextbookTooltip.svelte'
+import Katex from '~/components/Katex.svelte'
 import { ATTENTION_OUT } from '~/constants/opacity'
 import {
   attentionHeadIdx,
@@ -19,14 +20,14 @@ import {
 } from '~/store'
 import { maskArray } from '~/utils/array'
 import { gsap } from '~/utils/gsap'
-import Katex from '~/utils/Katex.svelte'
 import { theme } from '~/utils/tailwind-theme'
-import { highlightAttentionPath, removeAttentionPathHighlight } from '~/utils/textbook'
-import { textPages } from '~/utils/textbookPages'
+import { highlightAttentionPath, removeAttentionPathHighlight } from '~/utils/textbook/index'
+import { completePage } from '~/utils/textbook/pages/actions'
 
 $: placeHolderData = Array($tokens.length)
   .fill(0)
   .map(() => Array($tokens.length).fill(-Infinity))
+
 $: queryKey =
   $modelData?.outputs?.[`block_${$blockIdx}_attn_head_${$attentionHeadIdx}_attn`]?.data ||
   placeHolderData
@@ -52,27 +53,30 @@ let attentionResult: HTMLDivElement
 
 let attentionMatrixWidth = 0
 
-let isAttentionExpanded = false
+let isExpanded = false
 
 const blockId = getContext('block-id')
 
-// event handling
+$effect(() => {
+  if ($expandedBlock.id === blockId) {
+    if (!isExpanded) {
+      isExpanded = true
+      expand()
+    }
+  } else {
+    if (isExpanded) {
+      isExpanded = false
+      collapse()
+    }
+  }
+})
 
-$: if ($expandedBlock.id !== blockId && isAttentionExpanded) {
-  isAttentionExpanded = false
-  collapseAttention()
-}
-$: if ($expandedBlock.id === blockId && !isAttentionExpanded) {
-  isAttentionExpanded = true
-  expandAttention()
-}
-
-const onClickAttention = (e: MouseEvent | KeyboardEvent) => {
+const onClick = (e: MouseEvent | KeyboardEvent) => {
   e.stopPropagation()
   e.preventDefault()
-  textPages.find((page) => page.id === 'masked-self-attention')?.complete?.()
+  completePage('masked-self-attention')
 
-  if (!isAttentionExpanded) {
+  if (!isExpanded) {
     expandedBlock.set({ id: blockId as string })
   }
 }
@@ -80,7 +84,7 @@ const onClickAttention = (e: MouseEvent | KeyboardEvent) => {
 let expandableEl: HTMLDivElement
 
 function handleOutsideClick(e: MouseEvent) {
-  if (isAttentionExpanded && !expandableEl.contains(e.target as Node)) {
+  if (isExpanded && !expandableEl.contains(e.target as Node)) {
     expandedBlock.set({ id: null })
   }
 }
@@ -96,13 +100,10 @@ onMount(() => {
 let expandTl = gsap.timeline()
 let collapseTl = gsap.timeline()
 
-// google analytics
-let startTime = null
-
-function expandAttention() {
+function expand() {
   highlightAttentionPath()
 
-  isAttentionExpanded = true
+  isExpanded = true
   isExpandOrCollapseRunning.set(true)
   collapseTl.progress(1)
 
@@ -227,13 +228,11 @@ function expandAttention() {
       isExpandOrCollapseRunning.set(false)
     },
   })
-
-  startTime = performance.now()
 }
 
-function collapseAttention() {
+function collapse() {
   removeAttentionPathHighlight()
-  isAttentionExpanded = false
+  isExpanded = false
   isExpandOrCollapseRunning.set(true)
   expandTl.progress(1)
   collapseTl.to([attentionQK, attentionMask, attentionSoftmax], {
@@ -299,21 +298,20 @@ const showTooltip = (d: number) => {
 <div
 	class="flex items-center gap-8 px-5"
 	style={`--attention-matrix-width: ${attentionMatrixWidth}px;`}
-	data-click="attention-matrix"
 >
 	<!-- QK -->
 	<div
 		role="none"
 		class={classNames('attention-matrix-container relative flex', {
-			active: isAttentionExpanded
+			active: isExpanded
 		})}
 		bind:this={expandableEl}
-		onclick={onClickAttention}
-		onkeydown={onClickAttention}
+		onclick={onClick}
+		onkeydown={onClick}
 	>
 		<div
 			class={classNames('attention-matrix attention-qk flex flex-col items-center', {
-				'attention-initial': isAttentionExpanded
+				'attention-initial': isExpanded
 			})}
 			bind:this={attentionQK}
 		>
@@ -348,24 +346,7 @@ const showTooltip = (d: number) => {
 			class="attention-matrix attention-mask flex flex-col items-center"
 			bind:this={attentionMask}
 		>
-			<svg
-				class="arrow"
-				aria-hidden="true"
-				xmlns="http://www.w3.org/2000/svg"
-				width="24"
-				height="24"
-				fill="none"
-				viewBox="0 0 24 24"
-			>
-				<path
-					stroke="currentColor"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M19 12H5m14 0-4 4m4-4-4-4"
-				/>
-			</svg>
-
+			<MoveRight />
 			<div>
 				<Matrix
 					className="prev absolute top-0 left-0 pointer-events-none"
@@ -413,27 +394,11 @@ const showTooltip = (d: number) => {
 		<!-- Softmax -->
 		<div
 			class={classNames('attention-matrix attention-softmax flex flex-col items-center', {
-				'attention-out': isAttentionExpanded
+				'attention-out': isExpanded
 			})}
 			bind:this={attentionSoftmax}
 		>
-			<svg
-				class="arrow"
-				aria-hidden="true"
-				xmlns="http://www.w3.org/2000/svg"
-				width="24"
-				height="24"
-				fill="none"
-				viewBox="0 0 24 24"
-			>
-				<path
-					stroke="currentColor"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M19 12H5m14 0-4 4m4-4-4-4"
-				/>
-			</svg>
+			<MoveRight />
 			<div>
 				<Matrix
 					className="prev absolute top-0 left-0  pointer-events-none"
@@ -479,8 +444,8 @@ const showTooltip = (d: number) => {
 		</div>
 		<div
 			class={classNames('attention-matrix attention-result flex flex-col items-center', {
-				'attention-initial': !isAttentionExpanded,
-				'attention-out': !isAttentionExpanded
+				'attention-initial': !isExpanded,
+				'attention-out': !isExpanded
 			})}
 			bind:this={attentionResult}
 			bind:offsetWidth={attentionMatrixWidth}

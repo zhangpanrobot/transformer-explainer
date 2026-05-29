@@ -27,7 +27,7 @@ const valHeadVectorColor = 'bg-green-300'
 
 const outputVectorColor = 'bg-purple-300'
 
-let isHovered = false
+let isHovered = $state(false)
 
 function handleMouseEnter() {
   isHovered = true
@@ -42,14 +42,12 @@ function handleMouseLeave() {
 	class={classNames('attention', className, {
 		expanded: isAttentionExpanded
 	})}
-	data-click="attention-step"
 >
 	<div
 		class="title"
 		onmouseenter={handleMouseEnter}
 		onmouseleave={handleMouseLeave}
 		role="group"
-		data-click="attention-step-title"
 	>
 		<div class="w-max">
 			<TextbookTooltip id="self-attention">Multi-head Self Attention</TextbookTooltip>
@@ -67,7 +65,7 @@ function handleMouseLeave() {
 					class="head-block flex w-full items-center justify-between px-2"
 					style={`height:${$headContentHeight}px;`}
 				>
-					<div class="qkv flex h-full flex-col justify-center gap-[5rem] pl-[6rem]">
+					<div class="qkv flex h-full flex-col justify-center gap-20 pl-24">
 						<div class="column key">
 							<div class="head1 title"><TextbookTooltip id="qkv">Key</TextbookTooltip></div>
 
@@ -83,8 +81,7 @@ function handleMouseLeave() {
 							{/each}
 							<DaisyTooltip class="popover" triggeredBy={'.step.attention .key .cell'} placement="right"
 								>Key, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
-									$modelMeta.attention_head_num})</DaisyTooltip
-							>
+									$modelMeta.attention_head_num})</DaisyTooltip>
 						</div>
 						<div class="column query">
 							<div class="head1 title"><TextbookTooltip id="qkv">Query</TextbookTooltip></div>
@@ -103,8 +100,7 @@ function handleMouseLeave() {
 								triggeredBy={'.step.attention .query .cell'}
 								placement="right"
 								>Query, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
-									$modelMeta.attention_head_num})</DaisyTooltip
-							>
+									$modelMeta.attention_head_num})</DaisyTooltip>
 						</div>
 						<div class="column value">
 							<div class="head1 title"><TextbookTooltip id="qkv">Value</TextbookTooltip></div>
@@ -119,27 +115,25 @@ function handleMouseLeave() {
 								triggeredBy={'.step.attention .value .cell'}
 								placement="right"
 								>Value, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
-									$modelMeta.attention_head_num})</DaisyTooltip
-							>
+									$modelMeta.attention_head_num})</DaisyTooltip>
 						</div>
 					</div>
 					<div class="resize-watch attention-matrix flex">
 						<AttentionMatrix />
 					</div>
-					<div class="head-out mx-[2rem]">
+					<div class="head-out mx-8">
 						<div class="column out">
 							<div class="head1 title">
 								<TextbookTooltip id="output-concatenation">Out</TextbookTooltip>
 							</div>
-							{#each $tokens as token, index}
+							{#each $tokens as _, index}
 								<div class="head1 cell x1-12" class:last={index === $tokens.length - 1}>
 									<div class={`vector x1-12 ${outputVectorColor}`}></div>
 								</div>
 							{/each}
 							<DaisyTooltip class="popover" triggeredBy={'.step.attention .out .cell'} placement="right"
 								>Attention Out, Head 1, vector({$modelMeta.dimension /
-									$modelMeta.attention_head_num})</DaisyTooltip
-							>
+									$modelMeta.attention_head_num})</DaisyTooltip>
 						</div>
 					</div>
 				</div>
@@ -154,9 +148,6 @@ function handleMouseLeave() {
 		z-index: $COLUMN_TITLE_INDEX;
 	}
 	.attention {
-		> .title > div {
-			// cursor: help;
-		}
 		&.expanded {
 			.title,
 			:global(.head-content) {

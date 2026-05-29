@@ -1,13 +1,11 @@
 ﻿<script lang="ts">
 import { temperature } from '~/store'
-import { removeFingerFromElements } from '~/utils/textbook'
-import { textPages } from '~/utils/textbookPages'
-import HelpPopover from './common/HelpPopover.svelte'
+import { completePage } from '~/utils/textbook/pages/actions'
 import TextbookTooltip from './common/TextbookTooltip.svelte'
 
 let { disabled = false }: { disabled?: boolean } = $props()
 // TEMPERATURE
-let temperatureIndex = 6 // Default to the value corresponding to 0.8 in the array
+let temperatureIndex = $state(6) // Default to the value corresponding to 0.8 in the array
 const temperatureArray = [
   // 0.05, 0.1, // error in Math.exp()
   0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
@@ -19,7 +17,7 @@ $effect(() => {
 })
 </script>
 
-<div class="temperature-input flex shrink-0 flex-col items-center justify-between h-full" data-click="temperature-input">
+<div class="temperature-input flex shrink-0 flex-col items-center justify-between h-full">
 	<div class="temperature-text flex items-center justify-center gap-[2px] shrink-0 w-full">
 		<TextbookTooltip id="temperature">
 			<div>Temperature</div></TextbookTooltip
@@ -34,10 +32,10 @@ $effect(() => {
 			max={temperatureArray.length - 1}
 			step={1}
 			bind:value={temperatureIndex}
-			onclick={(e) => {
+			onchange={(e) => {
 				e.preventDefault();
 				e.stopPropagation();
-				textPages.find((page) => page.id === 'temperature')?.complete?.();
+				completePage('temperature');
 			}}
 		/>
 		<div class="value">

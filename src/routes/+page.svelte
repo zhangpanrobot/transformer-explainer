@@ -1,4 +1,4 @@
-﻿<script lang="ts">
+<script lang="ts">
 import { AutoTokenizer, PreTrainedTokenizer } from '@huggingface/transformers'
 import classNames from 'classnames'
 import * as ort from 'onnxruntime-web'
@@ -11,7 +11,7 @@ import Embedding from '~/components/Embedding.svelte'
 import LinearSoftmax from '~/components/LinearSoftmax.svelte'
 import Mlp from '~/components/Mlp.svelte'
 import QKV from '~/components/QKV.svelte'
-import Sankey from '~/components/Sankey.svelte'
+import Sankey from '~/components/Sankey/index.svelte'
 import SubsequentBlocks from '~/components/SubsequentBlocks.svelte'
 import Textbook from '~/components/textbook/Textbook.svelte'
 import WeightPopovers from '~/components/WeightPopovers.svelte'
@@ -47,14 +47,13 @@ const mainSectionCtx: { current: HTMLElement | null } = { current: null }
 setContext('main-section', mainSectionCtx)
 const blocksCtx: { current: HTMLElement | null } = { current: null }
 setContext('blocks', blocksCtx)
-let appStartTime = Date.now()
 
 // fetch model
 onMount(() => {
   let unsubscribe: (() => void) | undefined
 
   void (async () => {
-    const gpt2Tokenizer = await AutoTokenizer.from_pretrained('gpt2')
+    const gpt2Tokenizer = await AutoTokenizer.from_pretrained('distilbert/distilgpt2')
     active = true
 
     unsubscribe = subscribeInputs(gpt2Tokenizer)
@@ -75,22 +74,13 @@ const fetchModel = async () => {
   // Fetch from cache
   const { mergedArray } = await fetchAndMergeChunks(chunkUrls)
 
-  // Create a Blob from the merged array
   const blob = new Blob([mergedArray], { type: 'application/octet-stream' })
-
-  // Create a URL for the Blob
   const url = URL.createObjectURL(blob)
-
-  // Create ONNX session using the Blob URL
-  const session = await ort.InferenceSession.create(url, {
-    // logSeverityLevel: 0
-  })
+  const session = await ort.InferenceSession.create(url)
 
   modelSession.set(session)
 
   isFetchingModel.set(false)
-
-  const loadTime = Date.now() - appStartTime
 }
 
 // Subscribe inputs
@@ -582,12 +572,6 @@ $: if (vizHeight || $tokens.length) {
 				z-index: $EXPANDED_ATTENTION_INDEX !important;
 				pointer-events: none;
 			}
-			// :global(.sankey-top > g) {
-			// 	opacity: 0.3;
-			// }
-			// :global(.sankey-top > g.attention) {
-			// 	opacity: 1;
-			// }
 		}
 	}
 

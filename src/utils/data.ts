@@ -76,22 +76,9 @@ export const runModel = async ({
     await showFlowAnimation(input_tokens.length, isOneTokenAdded)
 
     predictedToken.set(sampled)
-    // setPredictedTokenForAnimation(probabilities, sampled, sampling);
 
     isModelRunning.set(false)
   }, 0)
-}
-
-const setPredictedTokenForAnimation = (probabilities, sampled, sampling) => {
-  const delay = 10
-  const topK = probabilities.slice(0, sampling.value)
-  const animationTokens = [...topK, ...topK.slice(sampled.rank).reverse()]
-
-  for (let i = 0; i < animationTokens.length; i++) {
-    setTimeout(() => {
-      predictedToken.set(animationTokens[i])
-    }, i * delay)
-  }
 }
 
 export const adjustTemperature = async ({

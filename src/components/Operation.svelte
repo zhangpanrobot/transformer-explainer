@@ -2,8 +2,22 @@
 import classNames from 'classnames'
 import { onMount } from 'svelte'
 import { vectorHeight } from '~/store'
-let { id = undefined, className = undefined, type = undefined, head = false, tail = false, active = false }: { id?: string | undefined, className?: string | undefined, type?: string | undefined, head?: boolean, tail?: boolean, active?: boolean } = $props();
 
+let {
+  id = undefined,
+  className = undefined,
+  type = undefined,
+  head = false,
+  tail = false,
+  active = false,
+}: {
+  id?: string | undefined
+  className?: string | undefined
+  type?: string | undefined
+  head?: boolean
+  tail?: boolean
+  active?: boolean
+} = $props()
 
 let textElement: SVGTextElement
 let textBBox: DOMRect

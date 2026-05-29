@@ -1,4 +1,4 @@
-﻿<script lang="ts">
+<script lang="ts">
 import { Maximize2 } from '@lucide/svelte'
 import { getContext, onMount } from 'svelte'
 import { get } from 'svelte/store'
@@ -10,19 +10,29 @@ import {
   highlightPath,
   removeAttentionPathHighlight,
   removePathHighlight,
-} from '~/utils/textbook'
-import AttentionWeightPopover from './popovers/AttentionWeightPopover.svelte'
-import LogitWeightPopover from './popovers/LogitWeightPopover.svelte'
-import MLPDownWeightPopover from './popovers/MLPDownWeightPopover.svelte'
-import MLPWeightPopover from './popovers/MLPWeightPopover.svelte'
-import QkvWeightPopover from './popovers/QKVWeightPopover.svelte'
+} from '~/utils/textbook/index'
+import AttentionWeight from './popovers/AttentionWeight.svelte'
+import LogitWeight from './popovers/LogitWeight.svelte'
+import MLPDownWeight from './popovers/MLPDownWeight.svelte'
+import MLPWeight from './popovers/MLPWeight.svelte'
+import QkvWeight from './popovers/QKVWeight.svelte'
 
 let resizeObserver: ResizeObserver
-let qkvPos = $state({ left: 0, top: 0 })
-let mlpPos = $state({ left: 0, top: 0 })
-let mlpDownPos = $state({ left: 0, top: 0 })
-let attentionPos = $state({ left: 0, top: 0 })
-let softmaxPos = $state({ left: 0, top: 0 })
+let positions: Record<string, { left: number; top: number }> = $state({
+  qkv: { left: 0, top: 0 },
+  mlpUp: { left: 0, top: 0 },
+  mlpDown: { left: 0, top: 0 },
+  attention: { left: 0, top: 0 },
+  softmax: { left: 0, top: 0 },
+})
+
+const popoverConfig = [
+  { key: 'qkv', cssClass: 'qkv-weight-popover', component: QkvWeight },
+  { key: 'attention', cssClass: 'attention-weight-popover', component: AttentionWeight },
+  { key: 'mlpUp', cssClass: 'mlp-weight-popover', component: MLPWeight },
+  { key: 'mlpDown', cssClass: 'mlp-weight-popover', component: MLPDownWeight },
+  { key: 'softmax', cssClass: 'softmax-weight-popover', component: LogitWeight },
+]
 
 let popoverEl: HTMLElement
 
@@ -34,10 +44,10 @@ function handleOutsideClick(e) {
 // tooltip state
 let isVisible = $derived(!!$tooltip && !$weightPopover);
 
-let x = 0
-let y = 0
+let x = $state(0)
+let y = $state(0)
 
-function handleMouseMove(e) {
+function handleMouseMove(e: MouseEvent) {
   x = e.clientX + 10
   y = e.clientY + 10
 }
@@ -63,14 +73,14 @@ onMount(() => {
     const attentionRect = attention?.getBoundingClientRect()
     const softmaxRect = softmax?.getBoundingClientRect()
 
-    qkvPos = { left: embeddingRect?.right + scrollLeft, top: embeddingRect?.top - tbh }
-    mlpPos = { left: mlpRect?.left + scrollLeft, top: mlpRect?.top - tbh }
-    mlpDownPos = { left: mlpDownRect?.left + scrollLeft, top: mlpDownRect?.top - tbh }
-    attentionPos = {
+    positions.qkv = { left: embeddingRect?.right + scrollLeft, top: embeddingRect?.top - tbh }
+    positions.mlpUp = { left: mlpRect?.left + scrollLeft, top: mlpRect?.top - tbh }
+    positions.mlpDown = { left: mlpDownRect?.left + scrollLeft, top: mlpDownRect?.top - tbh }
+    positions.attention = {
       left: attentionRect?.right + scrollLeft,
       top: attentionRect?.top + attentionRect?.height / 2 - tbh,
     }
-    softmaxPos = {
+    positions.softmax = {
       left: softmaxRect?.left + scrollLeft,
       top: softmaxRect?.top - tbh,
     }
@@ -82,7 +92,9 @@ onMount(() => {
     setPosition()
   })
   const elements = document?.querySelectorAll('.resize-watch')
-  elements.forEach((el) => resizeObserver.observe(el))
+  elements.forEach((el) => {
+	resizeObserver.observe(el)
+  })
 
   // tooltip + weight popover highlighting
   window.addEventListener('mousemove', handleMouseMove)
@@ -122,61 +134,19 @@ onMount(() => {
 	</div>
 {/if}
 
-{#if $weightPopover === 'qkv'}
-	<div
-		bind:this={popoverEl}
-		class="qkv-weight-popover weight-popover"
-		style={`left:${qkvPos.left}px;top:${qkvPos.top}px;`}
-		in:fade={{ duration: 300 }}
-		role="group"
-	>
-		<QkvWeightPopover></QkvWeightPopover>
-	</div>
-{/if}
-{#if $weightPopover === 'attention'}
-	<div
-		bind:this={popoverEl}
-		class="attention-weight-popover weight-popover"
-		style={`left:${attentionPos.left}px;top:${attentionPos.top}px;`}
-		in:fade={{ duration: 300 }}
-		role="group"
-	>
-		<AttentionWeightPopover></AttentionWeightPopover>
-	</div>
-{/if}
-{#if $weightPopover === 'mlpUp'}
-	<div
-		bind:this={popoverEl}
-		class="mlp-weight-popover weight-popover"
-		style={`left:${mlpPos.left}px;top:${mlpPos.top}px;`}
-		in:fade={{ duration: 300 }}
-		role="group"
-	>
-		<MLPWeightPopover></MLPWeightPopover>
-	</div>
-{/if}
-{#if $weightPopover === 'mlpDown'}
-	<div
-		bind:this={popoverEl}
-		class="mlp-weight-popover weight-popover"
-		style={`left:${mlpDownPos.left}px;top:${mlpDownPos.top}px;`}
-		in:fade={{ duration: 300 }}
-		role="group"
-	>
-		<MLPDownWeightPopover></MLPDownWeightPopover>
-	</div>
-{/if}
-{#if $weightPopover === 'softmax'}
-	<div
-		bind:this={popoverEl}
-		class="softmax-weight-popover weight-popover"
-		style={`left:${softmaxPos.left}px;top:${softmaxPos.top}px;`}
-		in:fade={{ duration: 300 }}
-		role="group"
-	>
-		<LogitWeightPopover></LogitWeightPopover>
-	</div>
-{/if}
+{#each popoverConfig as p}
+	{#if $weightPopover === p.key}
+		<div
+			bind:this={popoverEl}
+			class="{p.cssClass} weight-popover"
+			style={`left:${positions[p.key].left}px;top:${positions[p.key].top}px;`}
+			in:fade={{ duration: 300 }}
+			role="group"
+		>
+			<svelte:component this={p.component} />
+		</div>
+	{/if}
+{/each}
 
 <style lang="scss">
 	.weight-popover {

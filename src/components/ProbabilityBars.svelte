@@ -1,7 +1,7 @@
 ﻿<script lang="ts">
 import * as d3 from 'd3'
 import { onMount } from 'svelte'
-import { modelData, predictedColor, predictedToken, rootRem, temperature } from '~/store'
+import { modelData, predictedColor, predictedToken, rootRem } from '~/store'
 
 
 import { theme } from '~/utils/tailwind-theme'
@@ -22,7 +22,7 @@ let hoverColor = theme.colors.purple[400]
 export let drawBars = () => {
   const data = $modelData?.probabilities
 
-  const svg = d3.select(svgEl)
+  const svg = d3.select(svgEl as HTMLElement)
 
   let xScale = d3
     .scaleLinear()
@@ -34,7 +34,7 @@ export let drawBars = () => {
     .data(data)
     .join('g')
     .attr('class', 'probability')
-    .attr('transform', (d, i) => {
+    .attr('transform', (_, i) => {
       const x = 0
       const y = i * rowHeight + i * rowGap
       return `translate(${x}, ${y})`
@@ -46,12 +46,12 @@ export let drawBars = () => {
     .join('rect')
     .classed('bar', true)
     // .attr('x', 0)
-    .attr('y', (d, i) => rowHeight / 2 - barHeight / 2)
+    .attr('y', () => rowHeight / 2 - barHeight / 2)
     .attr('height', barHeight)
     .attr('width', (d) => xScale(d.probability))
     .attr('rx', 1)
     .attr('ry', 1)
-    .on('mouseenter', function (event, d) {
+    .on('mouseenter', function (_, d) {
       hoveredIndex = d.rank
       d3.select(this).style('cursor', 'pointer')
     })
@@ -67,7 +67,7 @@ export let drawBars = () => {
     .data((d) => [d])
     .join('text')
     .classed('label', true)
-    .on('mouseenter', (event, d) => {
+    .on('mouseenter', (_, d) => {
       hoveredIndex = d.rank
     })
     .on('mouseleave', () => {
@@ -124,13 +124,13 @@ $: if ($predictedToken !== undefined) {
 }
 
 // for hover and sampling
-const updateColor = () => {
+function updateColor() {
   if (!svgEl) return
-  const svg = d3.select(svgEl)
+  const svg = d3.select(svgEl as HTMLElement)
   const groups = svg.selectAll('g.probability')
 
-  groups.each(function (d, i) {
-    let color
+  groups.each(function (_, i) {
+    let color: string
     if (i === hoveredIndex) {
       color = hoverColor
     } else if ($predictedToken?.rank === i) {

@@ -1,9 +1,9 @@
 <script>
-	import Katex from '~/utils/Katex.svelte';
+	import Katex from '~/components/Katex.svelte';
 </script>
 
 <div id="description">
-	<div class="article-section" data-click="article-intro">
+	<div class="article-section">
 		<h1>What is a Transformer?</h1>
 
 		<p>
@@ -57,7 +57,7 @@
 		</p>
 	</div>
 
-	<div class="article-section" data-click="article-overview">
+	<div class="article-section">
 		<h1>Transformer Architecture</h1>
 
 		<p>
@@ -94,7 +94,7 @@
 		</ol>
 	</div>
 
-	<div class="article-section" id="embedding" data-click="article-embedding">
+	<div class="article-section" id="embedding">
 		<h2>Embedding</h2>
 		<p>
 			Let's say you want to generate text using a Transformer model. You add the prompt like this
@@ -197,7 +197,7 @@
 		</div>
 	</div>
 
-	<div class="article-section" data-click="article-transformer-block">
+	<div class="article-section">
 		<h2>Transformer Block</h2>
 
 		<p>
@@ -212,7 +212,7 @@
 		</p>
 	</div>
 
-	<div class="article-section" id="self-attention" data-click="article-attention">
+	<div class="article-section" id="self-attention">
 		<h3>Multi-Head Self-Attention</h3>
 		<p>
 			The self-attention mechanism enables the model to capture relationships among tokens in a
@@ -293,7 +293,7 @@
 			</p>
 
 			<div class="figure">
-				<img src="./article_assets/attention.png" width="80%" align="middle" />
+				<img src="./article_assets/attention.png" width="80%" />
 			</div>
 			<div class="figure-caption">
 				Figure <span class="attention">3</span>. Using Query, Key, and Value matrices to calculate
@@ -335,11 +335,11 @@
 		</div>
 	</div>
 
-	<div class="article-section" id="article-activation" data-click="article-mlp">
+	<div class="article-section" id="article-activation">
 		<h3>MLP: Multi-Layer Perceptron</h3>
 
 		<div class="figure">
-			<img src="./article_assets/mlp.png" width="70%" align="middle" />
+			<img src="./article_assets/mlp.png" width="70%" />
 		</div>
 		<div class="figure-caption">
 			Figure <span class="attention">4</span>. Using MLP layer to project the self-attention
@@ -377,7 +377,7 @@
 		</p>
 	</div>
 
-	<div class="article-section" id="article-prob" data-click="article-prob">
+	<div class="article-section" id="article-prob">
 		<h2>Output Probabilities</h2>
 		<p>
 			After the input has been processed through all Transformer blocks, the output is passed
@@ -399,7 +399,7 @@
 			of each token being the next word in the sequence.
 		</div>
 
-		<p id="article-temperature" data-click="article-temperature">
+		<p id="article-temperature">
 			The final step is to generate the next token by sampling from this distribution The <code
 				>temperature</code
 			>
@@ -424,7 +424,7 @@
 			</li>
 		</ul>
 
-		<p id="article-sampling" data-click="article-sampling">
+		<p id="article-sampling">
 			In addition, the sampling process can be further refined using <code>top-k</code>
 			and
 			<code>top-p</code> parameters:
@@ -447,7 +447,7 @@
 		</p>
 	</div>
 
-	<div class="article-section" data-click="article-advanced-features">
+	<div class="article-section">
 		<h2>Auxiliary Architectural Features</h2>
 
 		<p>
@@ -500,7 +500,7 @@
 		</div>
 	</div>
 
-	<div class="article-section" data-click="article-interactive-features">
+	<div class="article-section">
 		<h1>Interactive Features</h1>
 		<p>
 			Transformer Explainer is built to be interactive and allows you to explore the inner workings
@@ -531,11 +531,12 @@
 		</ul>
 	</div>
 
-	<div class="article-section" data-click="article-video">
+	<div class="article-section">
 		<h2>Video Tutorial</h2>
 		<div class="video-container">
 			<iframe
 				src="https://www.youtube.com/embed/ECR4oAwocjs"
+				title="youtube"
 				frameborder="0"
 				allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
 				allowfullscreen
@@ -544,7 +545,7 @@
 		</div>
 	</div>
 
-	<div class="article-section" data-click="article-implementation">
+	<div class="article-section">
 		<h2>How is Transformer Explainer Implemented?</h2>
 		<p>
 			Transformer Explainer features a live GPT-2 (small) model running directly in the browser.
@@ -559,24 +560,6 @@
 			as a front-end framework and
 			<a href="https://d3js.org/" title="D3" target="_blank">D3.js</a>
 			for creating dynamic visualizations. Numerical values are updated live following the user input.
-		</p>
-	</div>
-
-	<div class="article-section" data-click="article-credit">
-		<h2>Who developed the Transformer Explainer?</h2>
-		<p>
-			Transformer Explainer was created by
-
-			<a href="https://aereeeee.github.io/" target="_blank">Aeree Cho</a>,
-			<a href="https://www.linkedin.com/in/chaeyeonggracekim/" target="_blank">Grace C. Kim</a>,
-			<a href="https://alexkarpekov.com/" target="_blank">Alexander Karpekov</a>,
-			<a href="https://alechelbling.com/" target="_blank">Alec Helbling</a>,
-			<a href="https://zijie.wang/" target="_blank">Jay Wang</a>,
-			<a href="https://seongmin.xyz/" target="_blank">Seongmin Lee</a>,
-			<a href="https://bhoov.com/" target="_blank">Benjamin Hoover</a>, and
-			<a href="https://poloclub.github.io/polochau/" target="_blank">Polo Chau</a>
-
-			at the Georgia Institute of Technology.
 		</p>
 	</div>
 </div>

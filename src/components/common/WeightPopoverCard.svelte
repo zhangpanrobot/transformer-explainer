@@ -1,6 +1,6 @@
 <script lang="ts">
+import { CircleX, RefreshCcw, SkipForward } from '@lucide/svelte'
 import type { Snippet } from 'svelte'
-import { CircleX } from '@lucide/svelte'
 import { onDestroy, onMount } from 'svelte'
 import { weightPopover } from '~/store'
 
@@ -35,7 +35,6 @@ onDestroy(() => {
 
 <div
 	class={`weight-popover-card popover bg-white text-sm font-light text-gray-500 ${className}`}
-	data-click="weight-popover"
 	onclick={(e) => {
 		e.stopPropagation();
 	}}
@@ -48,60 +47,27 @@ onDestroy(() => {
 			{#if isAnimationActive}
 				<button
 					class="play-control forward"
-					data-click="matrix-calc-forward-btn"
 					onclick={(e) => {
 						e.stopPropagation();
 						timeline.progress(1);
 						isAnimationActive = false;
 					}}
-					><svg
-						class="h-5 w-5 text-gray-500"
-						aria-hidden="true"
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						fill="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							fill-rule="evenodd"
-							d="M17 6a1 1 0 1 0-2 0v4L8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8L15 14v4a1 1 0 1 0 2 0V6Z"
-							clip-rule="evenodd"
-						/>
-					</svg>
+					><SkipForward />
 				</button>
 			{:else}
 				<button
 					class="play-control restart"
-					data-click="matrix-calc-restart-btn"
 					onclick={(e) => {
 						e.stopPropagation();
 						isAnimationActive = true;
 						timeline.restart();
 					}}
 				>
-					<svg
-						class="h-5 w-5 text-gray-500"
-						aria-hidden="true"
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						fill="none"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke="currentColor"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M17.651 7.65a7.131 7.131 0 0 0-12.68 3.15M18.001 4v4h-4m-7.652 8.35a7.13 7.13 0 0 0 12.68-3.15M6 20v-4h4"
-						/>
-					</svg></button
+					<RefreshCcw /></button
 				>
 			{/if}
 			<button
 				class="close"
-				data-click="matrix-calc-close-btn"
 				onclick={(e) => {
 					e.stopPropagation();
 					weightPopover.set(null);

@@ -9,7 +9,7 @@ import {
   modelMeta,
 } from '~/store'
 import { gsap, Power1 } from '~/utils/gsap'
-import { textPages } from '~/utils/textbookPages'
+import { completePage } from '~/utils/textbook/pages/actions'
 import TextbookTooltip from './common/TextbookTooltip.svelte'
 
 const asyncUpdateAttentionIdx = () => {
@@ -96,8 +96,6 @@ const animateForwardTransition = () => {
     tl.progress(1).kill()
   }
 
-  // disablePagination = true;
-
   const shiftTime = 0.4
 
   const [firstHead, ...restHeads] = heads
@@ -132,27 +130,14 @@ const animateForwardTransition = () => {
     stagger: { from: 'end', amount: 0.06 },
   })
 
-  // hide content
-  // tl.set(headContent, {
-  // 	opacity: 0.6
-  // });
-  // tl.set('.sankey-top', { zIndex: $modelMeta.attention_head_num - 1 });
-
   // hide first card
   tl.to(firstHead, {
     ease: Power1.easeIn,
-    // x: '-10%',
-    // y: '10%',
     scale: 1.4,
     opacity: 0,
     duration: shiftTime,
   })
 
-  // show content
-  // tl.set('.sankey-top', { zIndex: $modelMeta.attention_head_num });
-  // tl.set(headContent, {
-  // 	opacity: 1
-  // });
   tl.set(restHeads, {
     zIndex: (i) => headStyles[i].zIndex,
     opacity: (i) => headStyles[i].opacity,
@@ -259,21 +244,21 @@ const animateBackwardTransition = () => {
 }
 
 const onClickNext = () => {
-  textPages.find((page) => page.id === 'multi-head')?.complete?.()
+  completePage('multi-head')
 
   $attentionHeadIdxTemp =
     $attentionHeadIdxTemp < $modelMeta.attention_head_num - 1 ? $attentionHeadIdxTemp + 1 : 0
 }
 
 const onClickPrev = () => {
-  textPages.find((page) => page.id === 'multi-head')?.complete?.()
+  completePage('multi-head')
 
   $attentionHeadIdxTemp =
     $attentionHeadIdxTemp > 0 ? $attentionHeadIdxTemp - 1 : $modelMeta.attention_head_num - 1
 }
 </script>
 
-<div class="multi-head flex w-full" data-click="attention-head">
+<div class="multi-head flex w-full">
 	<div class="head-title absolute bottom-2 right-3 text-right text-gray-400">
 		<TextbookTooltip id="multi-head">
 			<span class="title-text"
@@ -282,13 +267,11 @@ const onClickPrev = () => {
 		>
 		<button
 			onclick={onClickPrev}
-			disabled={$isOnAnimation || disablePagination}
-			data-click="attention-head-prev-btn"><ChevronLeft></ChevronLeft></button
+			disabled={$isOnAnimation || disablePagination}><ChevronLeft></ChevronLeft></button
 		>
 		<button
 			onclick={onClickNext}
-			disabled={$isOnAnimation || disablePagination}
-			data-click="attention-head-next-btn"><ChevronRight></ChevronRight></button
+			disabled={$isOnAnimation || disablePagination}><ChevronRight></ChevronRight></button
 		>
 	</div>
 	<div class={'head-content'} bind:this={headContent}>

@@ -2,10 +2,10 @@
 import * as d3 from 'd3'
 import { onDestroy, onMount } from 'svelte'
 import Matrix from '~/components/common/Matrix.svelte'
+import Katex from '~/components/Katex.svelte'
 import { attentionHeadIdx, blockIdx, modelData, modelMeta, rootRem, tokens } from '~/store'
 import { maskArray } from '~/utils/array'
 import { gsap } from '~/utils/gsap'
-import Katex from '~/utils/Katex.svelte'
 import { theme } from '~/utils/tailwind-theme'
 import WeightPopoverCard from '../common/WeightPopoverCard.svelte'
 

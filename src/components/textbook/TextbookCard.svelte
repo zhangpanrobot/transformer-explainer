@@ -1,7 +1,7 @@
 ﻿<script lang="ts">
 import { fade } from 'svelte/transition'
 import { textbookCurrentPage } from '~/store'
-import { textPages } from '~/utils/textbookPages'
+import { textPages } from '~/utils/textbook/pages/index'
 import TextbookNavigation from './TextbookNavigation.svelte'
 
 let { onClose = undefined }: { onClose?: (() => void) | undefined } = $props()

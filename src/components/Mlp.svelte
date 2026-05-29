@@ -43,13 +43,12 @@ onMount(() => {
 })
 </script>
 
-<div class={classNames('mlp', 'mlpUp', 'mlpDown', className)} data-click="mlp-step">
+<div class={classNames('mlp', 'mlpUp', 'mlpDown', className)}>
 	<div
 		class="title"
 		onmouseenter={handleMouseEnter}
 		onmouseleave={handleMouseLeave}
 		role="group"
-		data-click="mlp-step-title"
 	>
 		<div class="w-max">
 			<TextbookTooltip id="mlp">MLP</TextbookTooltip>
@@ -85,8 +84,7 @@ onMount(() => {
 				{/each}
 			</div>
 			<DaisyTooltip triggeredBy={'.step.mlp .initial .cell'} class="popover" placement="right">
-				vector({$modelMeta.dimension})</DaisyTooltip
-			>
+				vector({$modelMeta.dimension})</DaisyTooltip>
 			<OperationGroup type="dropout" id={'mlp-first-dropout'} />
 			<OperationGroup type="residual-end" id={'embedding-residual'} />
 			<OperationGroup type="ln" id={'mlp-first-ln'} />
@@ -107,8 +105,7 @@ onMount(() => {
 			</div>
 		</div>
 		<DaisyTooltip triggeredBy={'.step.mlp .mlp-mid-column .cell'} class="popover" placement="right">
-			vector({$modelMeta.dimension * 4})</DaisyTooltip
-		>
+			vector({$modelMeta.dimension * 4})</DaisyTooltip>
 		<div class="layer mlpDown out-layer relative flex justify-between">
 			<div class="activation">
 				<OperationGroup type="activation" id={'mlp-activation'} className="x4" />
@@ -136,8 +133,7 @@ onMount(() => {
 					{/each}
 				</div>
 				<DaisyTooltip triggeredBy={'.step.mlp .mlp-out-column .cell'} class="popover" placement="right">
-					vector({$modelMeta.dimension})</DaisyTooltip
-				>
+					vector({$modelMeta.dimension})</DaisyTooltip>
 			</div>
 		</div>
 	</div>

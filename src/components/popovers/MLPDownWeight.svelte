@@ -1,72 +1,65 @@
-<script lang="ts">
+﻿<script lang="ts">
 import * as d3 from 'd3'
 import { onDestroy, onMount } from 'svelte'
 import Matrix from '~/components/common/Matrix.svelte'
-import { modelMeta, rootRem } from '~/store'
+import Katex from '~/components/Katex.svelte'
+import { modelMeta, rootRem, tokens } from '~/store'
 import { gsap } from '~/utils/gsap'
-import Katex from '~/utils/Katex.svelte'
 import { theme } from '~/utils/tailwind-theme'
 import HelpPopover from '../common/HelpPopover.svelte'
 import WeightPopoverCard from '../common/WeightPopoverCard.svelte'
 
-let { isOpen = true }: { isOpen?: any } = $props()
-
 const tokenGap = 6
 
 // generate data
-const visibleDimension = 18
-let inputData = $derived(
-  Array(1)
-    .fill(0)
-    .map(() =>
-      Array(visibleDimension)
-        .fill(0)
-        .map(() => Math.random()),
-    ),
-)
+const visibleDimension = 15
 
-const weightData = Array(visibleDimension * 5)
+$: tokenLen = $tokens.length
+
+const mlpDownWeightData = Array(visibleDimension)
+  .fill(0)
+  .map((col) =>
+    Array(visibleDimension * 4)
+      .fill(0)
+      .map((d) => Math.random()),
+  )
+
+const mlpDownBiasData = Array(1)
+  .fill(0)
+  .map((col) =>
+    Array(visibleDimension)
+      .fill(0)
+      .map((d) => Math.random()),
+  )
+$: mlpUpOutData = Array(tokenLen)
+  .fill(0)
+  .map(() =>
+    Array(visibleDimension * 4)
+      .fill(0)
+      .map(() => Math.random()),
+  )
+$: mlpDownOutData = Array(tokenLen)
   .fill(0)
   .map(() =>
     Array(visibleDimension)
       .fill(0)
       .map(() => Math.random()),
   )
-const biasData = Array(1)
-  .fill(0)
-  .map(() =>
-    Array(visibleDimension * 5)
-      .fill(0)
-      .map(() => Math.random()),
-  )
-
-let logitData = $derived(
-  Array(1)
-    .fill(0)
-    .map(() =>
-      Array(visibleDimension * 5)
-        .fill(0)
-        .map(() => Math.random()),
-    ),
-)
-
 // color scale
-const embeddingColorScale = (d: number) => {
-  return d3.interpolate(theme.colors.blue[100], theme.colors.blue[400])(d)
-}
-
 const weightColorScale = (d: number) => {
   return d3.interpolate(theme.colors.gray[100], theme.colors.gray[400])(d)
 }
-
-const logitColorScale = (d: number) => {
-  return d3.interpolate(theme.colors.blue[100], theme.colors.gray[400])(d)
+const out1ColorScale = (d: number) => {
+  return d3.interpolate(theme.colors.indigo[100], theme.colors.indigo[400])(d)
+}
+const out2ColorScale = (d: number) => {
+  return d3.interpolate(theme.colors.blue[100], theme.colors.blue[400])(d)
 }
 
 // animation
-let isAnimationActive = $state(false)
+let isAnimationActive = false
 let progress = 0
-let timeline = $state(gsap.timeline())
+let timeline = gsap.timeline()
 
 onMount(() => {
   timeline.eventCallback('onUpdate', () => {
@@ -83,15 +76,17 @@ onMount(() => {
 onDestroy(() => {
   if (timeline) {
     timeline.kill()
+    timeline = null
   }
 })
 
 const draw = () => {
-  const embeddingRows = d3.selectAll('.weight-popover-content .hidden-state g.g-row').nodes()
-  const weightCols = d3.selectAll('.weight-popover-content .lm-head-weights g.g-col').nodes()
-  const weightBiasCells = d3.selectAll('.weight-popover-content .lm-head-bias rect').nodes()
+  // upscale --------------------------------
+  const embeddingRows = d3.selectAll('.weight-popover-content .embedding-matrix g.g-row').nodes()
+  const weightCols = d3.selectAll('.weight-popover-content .mlp-down-weights g.g-col').nodes()
+  const weightBiasCells = d3.selectAll('.weight-popover-content .mlp-down-bias rect').nodes()
 
-  const outRows = d3.selectAll('.weight-popover-content .logits g.g-row').nodes()
+  const outRows = d3.selectAll('.weight-popover-content .mlp-down-out g.g-row').nodes()
 
   const mulSymbol = d3.select('.weight-popover-content .symbol.mul').node()
   const plusSymbol = d3.select('.weight-popover-content .symbol.plus').node()
@@ -163,9 +158,9 @@ const draw = () => {
         [
           mulSymbol,
           equalSymbol,
-          '.formula .first-row .part1',
           plusSymbol,
-          equalSymbol,
+          //   '',
+          '.formula .first-row .part1',
           '.formula .first-row .part2',
         ],
         {
@@ -174,15 +169,6 @@ const draw = () => {
         },
         '<50%',
       )
-
-      // timeline.from(
-      // 	[plusSymbol, equalSymbol, '.formula .first-row .part2'],
-      // 	{
-      // 		duration: 0.5,
-      // 		opacity: 0.1
-      // 	},
-      // 	'<'
-      // );
     }
     //bias
     timeline
@@ -230,7 +216,6 @@ const draw = () => {
         },
         '<50%',
       )
-
     if (isFirstOutCell) {
       timeline.to('.formula .first-row', { opacity: 0, duration: 0.3 }, '>+1')
       timeline.to('.formula .total', { opacity: 1, duration: 0.3 }, `<`)
@@ -260,7 +245,7 @@ const draw = () => {
       )
 
       const weightColRects = d3
-        .selectAll('.weight-popover-content .lm-head-weights g.g-col rect')
+        .selectAll('.weight-popover-content .mlp-weights g.g-col rect')
         .nodes()
       timeline.set(weightColRects, { opacity: 0.1 })
       timeline.set(weightBiasCells, { opacity: 0.1 })
@@ -302,8 +287,8 @@ const draw = () => {
 }
 
 // event
-let highlightCol: number | undefined = $state()
-let highlightRow: number | undefined = $state()
+let highlightCol: number | undefined
+let highlightRow: number | undefined
 
 const onMouseOverCell = (d: Cell) => {
   if (isAnimationActive) return
@@ -317,95 +302,102 @@ const onMouseOutSvg = () => {
 }
 </script>
 
-<WeightPopoverCard id="logits" title={'Logits'} bind:isAnimationActive {timeline} bind:isOpen>
-	<div class="weight-popover-content flex items-center justify-start">
+<WeightPopoverCard id="mlp-down" title={'MLP Compression'} bind:isAnimationActive {timeline}>
+	<div class="mlp-weight-popover weight-popover-content flex items-center justify-start">
+		<div class="matrix flex flex-col items-center">
+			<div class="tokens" style={`gap:${tokenGap}px`}>
+				{#each $tokens as token, index}
+					<div class="token-label"><span>{token}</span></div>
+				{/each}
+			</div>
+		</div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				<span>Output<br />Embedding</span>
-				<HelpPopover id="hidden-states" 
-					>{`After passing through all blocks, \nthe final token's embedding vector \ncontains all the contextual information \nfrom the preceding tokens.`}</HelpPopover
+				Expanded Embeddings <HelpPopover id="mlp-down-emgeddings" 
+					>{`Expanded latent vectors through MLP expansion layer.`}</HelpPopover
 				>
 			</div>
-			<Matrix
-				className="hidden-state"
-				data={inputData}
-				showSize={false}
-				cellHeight={rootRem * 0.8}
-				cellWidth={2}
-				rowGap={tokenGap}
-				colorScale={embeddingColorScale}
-				{highlightRow}
-			/>
-			<div class="size">(1, {$modelMeta.dimension})</div>
+			<div class="flex">
+				<Matrix
+					className="embedding-matrix"
+					data={mlpUpOutData}
+					showSize={false}
+					cellHeight={rootRem * 0.8}
+					cellWidth={2}
+					rowGap={tokenGap}
+					colorScale={out1ColorScale}
+					{highlightRow}
+				/>
+			</div>
+			<div class="size">({tokenLen}, {$modelMeta.dimension * 4})</div>
 		</div>
-		<div class="operator"><div class="symbol mul pl-3">&times;</div></div>
+
+		<div class="operator">
+			<div class="symbol mul">&times;</div>
+		</div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Output Projection Weights
-				<HelpPopover id="lm-head-weights" 
-					>{`Transforms the final embedding into a vocabulary distribution.\nParameters were learned in training, fixed in prediction.`}</HelpPopover
+				Compression Weights <HelpPopover id="mlp-down-weights" 
+					>{`Projects expanded latent vectors back to original space. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
 			<div class="flex gap-0">
 				<Matrix
-					className="lm-head-weights"
-					data={weightData}
+					className="mlp-down-weights"
+					data={mlpDownWeightData}
 					showSize={false}
 					groupBy={'col'}
-					cellHeight={2}
-					cellWidth={2}
+					cellHeight={3}
+					cellWidth={3}
 					rowGap={0}
 					colorScale={weightColorScale}
 					{highlightCol}
 				/>
 			</div>
 
-			<div class="size">({$modelMeta.dimension}, 50,257)</div>
+			<div class="size">({$modelMeta.dimension * 4}, {$modelMeta.dimension})</div>
 		</div>
-		<div class="operator"><div class="symbol plus">+</div></div>
+		<div class="operator"><div class="symbol plus px-3">+</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Output Projection Bias<HelpPopover id="lm-head-bias" 
-					>{`Offsets added after the transformation.\nParameters were learned in training, fixed in prediction.`}</HelpPopover
+				Compression Bias <HelpPopover id="mlp-down-bias" 
+					>{`Offsets added after compression. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
 			<Matrix
-				className="lm-head-bias"
-				data={biasData}
+				className="mlp-down-bias"
+				data={mlpDownBiasData}
 				showSize={false}
 				groupBy={'col'}
-				cellHeight={1}
+				cellHeight={2}
 				cellWidth={8}
 				rowGap={0}
 				colorScale={weightColorScale}
 				highlightRow={highlightCol}
 			/>
-			<div class="size">(50,257)</div>
+			<div class="size">({$modelMeta.dimension})</div>
 		</div>
-		<div class="operator"><div class="symbol equal">=</div></div>
+		<div class="operator">
+			<div class="symbol equal px-4">=</div>
+		</div>
 		<div class="matrix flex flex-col items-center">
-			<div class="title flex items-center gap-1">
-				Logits
-				<HelpPopover id="logits" 
-					>{`Raw scores representing the model’s preference \nfor each vocabulary token before applying softmax.`}</HelpPopover
-				>
-			</div>
+			<div class="title">Compressed <br />Embeddings</div>
 			<div class="flex">
 				<Matrix
-					className="logits"
-					data={logitData}
+					className="mlp-down-out"
+					data={mlpDownOutData}
 					showSize={false}
 					cellHeight={rootRem * 0.8}
 					cellWidth={2}
 					rowGap={tokenGap}
-					colorScale={logitColorScale}
+					colorScale={out2ColorScale}
 					{onMouseOverCell}
 					{onMouseOutSvg}
 					{highlightCol}
 					{highlightRow}
 				/>
 			</div>
-			<div class="size">(1, 50,257)</div>
+			<div class="size">({tokenLen}, {$modelMeta.dimension})</div>
 		</div>
 	</div>
 	<div class="formula">
@@ -413,20 +405,17 @@ const onMouseOutSvg = () => {
 			<span class="part1">
 				<Katex
 					displayMode
-					math={`
-	(Embedding_{1}×Weights_{1,1} + \\cdots + Embedding_{768}×Weights_{768,1})`}
+					math={`(Emb_{1,1}Ã—W_{1,1} + \\cdots + Emb_{1,768}Ã—W_{768,1})`}
 				/>
 			</span>
 			<span class="part2">
-				<Katex displayMode math={`+ Bias_1 = Logits_{1}`} />
+				<Katex displayMode math={`+ Bias_1 = Compressed_Emb{1,1}`} />
 			</span>
 		</div>
 		<div class="total">
 			<Katex
 				displayMode
-				math={`
-	\\sum_{d=1}^{768} Embedding_{d} \\cdot Weights_{di} + Bias_j = Logits_{i} 
-	`}
+				math={`\\sum_{d=1}^{768} Emb_{id} \\cdot Weights_{dj} + Bias_j = Compressed_Emb{ij}`}
 			/>
 		</div>
 	</div>
@@ -434,11 +423,11 @@ const onMouseOutSvg = () => {
 
 <style lang="scss">
 	.weight-popover-content {
-		padding: 3rem 2rem 1.5rem 3.5rem;
-		gap: 0.5rem;
+		padding: 3rem 4rem 1.5rem 1rem;
+		gap: 1rem;
 	}
-	.matrix .title {
-		text-align: center;
-		line-height: 1.2;
+
+	.operator {
+		position: relative;
 	}
 </style>

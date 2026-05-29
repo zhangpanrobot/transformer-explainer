@@ -12,16 +12,14 @@ import {
   selectedExampleIdx,
   weightPopover,
 } from '~/store'
-import { completeCurrentAnimation } from '~/utils/animation'
-import { textPages } from '~/utils/textbookPages'
+import { completeCurrentAnimation } from '~/utils/animation/flow'
+import { completePage } from '~/utils/textbook/pages/actions'
 import Sampling from './Sampling.svelte'
 import Temperature from './Temperature.svelte'
 
 let inputRef: HTMLDivElement
 let predictRef: HTMLDivElement
 let dropdownDetails: HTMLDetailsElement
-
-let useCustomInput = false
 
 $: inputTextTemp = $inputText || ''
 
@@ -52,7 +50,7 @@ const handleSubmit = () => {
 
   setTimeout(() => {
     onFocusInput()
-    textPages.find((page) => page.id === 'how-transformers-work')?.complete?.()
+    completePage('how-transformers-work')
 
     inputText.set(inputTextTemp)
   }, 0)
@@ -65,13 +63,12 @@ const handleKeyDown = (e: KeyboardEvent) => {
     handleSubmit()
     return
   }
-  useCustomInput = true
 }
 
 // Example select box
 const onSelectExample = (d: string, i: number) => {
   if ($isFetchingModel) {
-    textPages.find((page) => page.id === 'how-transformers-work')?.complete?.()
+    completePage('how-transformers-work')
   }
 
   if (dropdownDetails) dropdownDetails.open = false
@@ -83,11 +80,10 @@ const onSelectExample = (d: string, i: number) => {
   inputRef.innerText = inputTextTemp
   inputText.update((prev) => {
     if (prev === d.trim()) {
-      return d + ' '
+      return `${d} `
     }
     return d.trim()
   })
-  useCustomInput = false
 }
 
 const moveCursorToEnd = (element: HTMLElement) => {
@@ -110,12 +106,11 @@ $: selectDisabled = $isModelRunning || $expandedBlock.id !== null || !!$weightPo
 $: parameterDisabled = !!$weightPopover
 </script>
 
-<div class="input-area" data-click="input-area">
-	<form class="input-form" data-click="input-form">
+<div class="input-area">
+	<form class="input-form">
 		<div class="join input-btn-group">
 			<details class="dropdown join-item" bind:this={dropdownDetails}>
 				<summary
-					data-click="dropdown-btn"
 					class:selectDisabled
 					class="select-button"
 					aria-disabled={selectDisabled}
@@ -125,7 +120,6 @@ $: parameterDisabled = !!$weightPopover
 				<ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
 					{#each inputTextExample as text, index}
 						<li><button
-							data-click={`dropdown-item-${index}`}
 							class={$selectedExampleIdx === index ? 'active' : ''}
 							onclick={() => {
 								onSelectExample(text, index);
@@ -135,7 +129,6 @@ $: parameterDisabled = !!$weightPopover
 			</details>
 
 			<div
-				data-click="text-input"
 				class="input-container"
 				class:disabled
 				role="none"
@@ -192,7 +185,6 @@ $: parameterDisabled = !!$weightPopover
 			</div>
 		</div>
 		<button
-			data-click="generate-btn"
 			disabled={disabled || exceedLimit || exceedLimit}
 			class={classNames('generate-button rounded-lg text-center text-sm shadow-sm', {
 				disabled: disabled || exceedLimit,
@@ -204,7 +196,7 @@ $: parameterDisabled = !!$weightPopover
 			Generate
 		</button>
 	</form>
-	<div class="parameters" data-click="input-parameters">
+	<div class="parameters">
 		<Temperature disabled={parameterDisabled} />
 		<Sampling disabled={parameterDisabled} />
 	</div>

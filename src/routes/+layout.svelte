@@ -2,10 +2,9 @@
 import '~/styles/app.css'
 import '~/styles/global.scss'
 import { onMount } from 'svelte'
-import { page } from '$app/stores'
 import Article from '~/components/article/Article.svelte'
 import Topbar from '~/components/Topbar.svelte'
-import { isLoaded, predictedColor, rootRem, topbarHeight, userId } from '~/store'
+import { isLoaded, predictedColor, rootRem, topbarHeight } from '~/store'
 
 let topBarHeight = 0
 $: topbarHeight.set(topBarHeight)
@@ -20,17 +19,6 @@ let target: HTMLElement
 
 onMount(() => {
   isLoaded.set(true)
-
-  const userIdParam = $page.url.searchParams.get('userId')
-
-  if (userIdParam) {
-    userId.set(userIdParam)
-    ;(window as any).dataLayer?.push({
-      event: 'user_identified',
-      user_id: userIdParam,
-      timestamp: new Date().toISOString(),
-    })
-  }
 
   intersectionObserver = new IntersectionObserver(handleIntersection, {
     root: null,
@@ -63,9 +51,9 @@ function handleIntersection(entries: any[]) {
 	style={`--min-screen-width:${minScreenWidth}px;--min-column-width:${minColumWidth}px;--predicted-color:${predictedColor};`}
 >
 	<div id="landing">
-		<header bind:offsetHeight={topBarHeight} style="transform: translateX({-1 * scrollLeft}px);">
+		<!-- <header bind:offsetHeight={topBarHeight} style="transform: translateX({-1 * scrollLeft}px);">
 			<Topbar isActive={tobBarActive} />
-		</header>
+		</header> -->
 		<main id="main" style={`padding-top:${topBarHeight}px`} bind:this={target}>
 			{#if $isLoaded}
 				<!-- {@render children?.()} -->
@@ -77,9 +65,9 @@ function handleIntersection(entries: any[]) {
 			{/if}
 		</main>
 	</div>
-	<div class="article h-auto w-full">
+	<!-- <div class="article h-auto w-full">
 		<Article></Article>
-	</div>
+	</div> -->
 </div>
 
 <style lang="scss">

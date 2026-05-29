@@ -1,4 +1,4 @@
-﻿<script lang="ts">
+<script lang="ts">
 import { Eye, ZoomIn } from '@lucide/svelte'
 import classNames from 'classnames'
 import { getContext, onMount, setContext, tick } from 'svelte'
@@ -6,6 +6,7 @@ import type { KeyboardEventHandler } from 'svelte/elements'
 import { fade } from 'svelte/transition'
 import DaisyTooltip from '~/components/common/DaisyTooltip.svelte'
 import TextbookTooltip from '~/components/common/TextbookTooltip.svelte'
+import Katex from '~/components/Katex.svelte'
 import {
   expandedBlock,
   highlightedIndex,
@@ -19,11 +20,10 @@ import {
   textbookCurrentPageId,
 } from '~/store'
 import { Flip, gsap } from '~/utils/gsap'
-import Katex from '~/utils/Katex.svelte'
-import { textPages } from '~/utils/textbookPages'
+import { outPage } from '~/utils/textbook/pages/actions'
 import ProbabilityBars from './ProbabilityBars.svelte'
-import LogitWeightPopover from './popovers/LogitWeightPopover.svelte'
-import SoftmaxPopover from './popovers/SoftmaxPopover.svelte'
+import LogitWeight from './popovers/LogitWeight.svelte'
+import Softmax from './popovers/Softmax.svelte'
 
 let { className = undefined }: { className?: string | undefined } = $props()
 
@@ -31,25 +31,25 @@ setContext('block-id', 'softmax')
 
 const blockId = getContext('block-id') as string
 
-let isSoftmaxExpanded = false
-let showLogitPopover = false
+let showLogitPopover = $state(false)
+let isExpanded = $state(false)
 
-// event handling
 $effect(() => {
-  if ($expandedBlock.id !== blockId && isSoftmaxExpanded) {
-    isSoftmaxExpanded = false
-    collapseSoftmax()
-  }
-})
-$effect(() => {
-  if ($expandedBlock.id === blockId && !isSoftmaxExpanded) {
-    isSoftmaxExpanded = true
-    expandSoftmax()
+  if ($expandedBlock.id === blockId) {
+    if (!isExpanded) {
+      isExpanded = true
+      expand()
+    }
+  } else {
+    if (isExpanded) {
+      isExpanded = false
+      collapse()
+    }
   }
 })
 
 const onClickSoftmax = () => {
-  if (!isSoftmaxExpanded) {
+  if (!isExpanded) {
     expandedBlock.set({ id: blockId })
   }
 }
@@ -57,25 +57,25 @@ const onClickSoftmax = () => {
 const onClickSoftmaxTitle = (e: MouseEvent) => {
   e.stopPropagation()
   e.preventDefault()
-  textPages.find((page) => page.id === 'output-probabilities')?.out()
+  outPage('output-probabilities')
 
-  if (!isSoftmaxExpanded) {
+  if (!isExpanded) {
     expandedBlock.set({ id: blockId })
-    expandSoftmax()
+    expand()
   } else {
     expandedBlock.set({ id: null })
-    collapseSoftmax()
+    collapse()
   }
 }
 let expandableEl: HTMLDivElement
 
 function handleOutsideClick(e: MouseEvent) {
-  if (isSoftmaxExpanded && !expandableEl.contains(e.target as Node)) {
+  if (isExpanded && !expandableEl.contains(e.target as Node)) {
     expandedBlock.set({ id: null })
   }
 }
 onMount(() => {
-const mainSection = getContext<{ current: HTMLElement | null }>('main-section')?.current
+  const mainSection = getContext<{ current: HTMLElement | null }>('main-section')?.current
   if (!mainSection) return
   mainSection.addEventListener('click', handleOutsideClick)
   return () => {
@@ -88,12 +88,9 @@ let containerState: any
 
 let drawBars: () => void
 
-// google analytics
-let startTime = null
-
-async function expandSoftmax() {
+async function expand() {
   containerState = Flip.getState('.softmax .softmax-detail.expandable')
-  isSoftmaxExpanded = true
+  isExpanded = true
   await tick()
 
   isExpandOrCollapseRunning.set(true)
@@ -114,15 +111,13 @@ async function expandSoftmax() {
     duration: 0.2,
     delay: 0.5,
   })
-
-  startTime = performance.now()
 }
 
-async function collapseSoftmax() {
+async function collapse() {
   showLogitPopover = false
 
   containerState = Flip.getState('.softmax .softmax-detail.expandable')
-  isSoftmaxExpanded = false
+  isExpanded = false
   await tick()
 
   isExpandOrCollapseRunning.set(true)
@@ -146,7 +141,7 @@ async function collapseSoftmax() {
 let rowHeight = rootRem * 1.4
 let rowGap = 0.5 * rootRem
 
-let hoveredIndex: number | null = null
+let hoveredIndex: number | null = $state(null)
 
 let data = $derived($modelData?.probabilities || [])
 let tokenIds = $derived(data?.map((d) => d.tokenId))
@@ -180,14 +175,13 @@ const onClickLogits = (e: MouseEvent) => {
 
 <div
 	class={classNames('softmax', className, {
-		expanded: isSoftmaxExpanded,
+		expanded: isExpanded,
 		'textbook-highlight': $isTextbookOpen && $textbookCurrentPageId === 'transformer-architecture'
 	})}
 	role="none"
 	bind:this={expandableEl}
 	onclick={onClickSoftmax}
 	onkeydown={onClickSoftmax}
-	data-click="prob-step"
 >
 	<div
 		class="title expandable"
@@ -196,7 +190,6 @@ const onClickLogits = (e: MouseEvent) => {
 		onkeydown={onClickSoftmaxTitle as unknown as KeyboardEventHandler<HTMLDivElement>}
 		onmouseenter={handleMouseEnter}
 		onmouseleave={handleMouseLeave}
-		data-click="prob-step-title"
 	>
 		<div class="title-text flex w-max items-center gap-1">
 			Probabilities
@@ -208,7 +201,7 @@ const onClickLogits = (e: MouseEvent) => {
 		class="content resize-watch relative"
 		style={`--softmax-row-height: ${rowHeight}px;--softmax-row-gap: ${rowGap}px`}
 	>
-		<div class="bounding softmax-bounding" class:active={isHovered && !isSoftmaxExpanded}></div>
+		<div class="bounding softmax-bounding" class:active={isHovered && !isExpanded}></div>
 		<div class="first-column relative flex justify-end">
 			<div class="content-box token-string">
 				{#each data as item, idx}
@@ -232,7 +225,7 @@ const onClickLogits = (e: MouseEvent) => {
 		</div>
 
 		<div class="second-column flex flex-col">
-			{#if isSoftmaxExpanded}
+			{#if isExpanded}
 				<div class="softmax-subtitle softmax-detail flex text-center text-xs opacity-0">
 					<div class="title-box token-string justify-end!">
 						<div class="title-text">Tokens</div>
@@ -241,7 +234,6 @@ const onClickLogits = (e: MouseEvent) => {
 						<button
 							class="title-text btn shadow-sm"
 							onclick={onClickLogits}
-							data-click="prob-expansion-logit-btn"
 						>
 							Logits <Eye class="icon text-gray-400" />
 					</button>
@@ -267,7 +259,7 @@ const onClickLogits = (e: MouseEvent) => {
 			{/if}
 			<div class="content-row flex gap-2">
 				<div class="softmax-detail expandable flex gap-2 opacity-0">
-					{#if isSoftmaxExpanded}
+					{#if isExpanded}
 						<div class="content-box vector-box logits ml-2">
 							{#each logits as logit, idx}
 								{#if logit !== undefined}
@@ -367,14 +359,14 @@ const onClickLogits = (e: MouseEvent) => {
 				<ProbabilityBars bind:hoveredIndex {rowGap} {rowHeight} bind:drawBars />
 			</div>
 		</div>
-		{#if isSoftmaxExpanded && !!$predictedToken}
+		{#if isExpanded && !!$predictedToken}
 			<div class="softmax-popover">
-				<SoftmaxPopover bind:hoveredIndex />
+				<Softmax bind:hoveredIndex />
 			</div>
 		{/if}
-		{#if isSoftmaxExpanded && showLogitPopover}
+		{#if isExpanded && showLogitPopover}
 			<div class="softmax-weight-popover weight-popover logit-popover" in:fade={{ duration: 300 }}>
-				<LogitWeightPopover bind:isOpen={showLogitPopover}></LogitWeightPopover>
+				<LogitWeight bind:isOpen={showLogitPopover}></LogitWeight>
 			</div>
 		{/if}
 	</div>

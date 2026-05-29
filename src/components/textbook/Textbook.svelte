@@ -2,9 +2,10 @@
 import { BookOpen } from '@lucide/svelte'
 import { fade } from 'svelte/transition'
 import { isTextbookOpen, textbookCurrentPage, textbookPreviousPage } from '~/store'
-import { textPages } from '~/utils/textbookPages'
+import { textPages } from '~/utils/textbook/pages/index'
 import TextbookCard from './TextbookCard.svelte'
-let { showTextCard = false }: { showTextCard?: boolean } = $props();
+
+let { showTextCard = false }: { showTextCard?: boolean } = $props()
 
 $effect(() => {
   if (showTextCard) {
@@ -15,8 +16,7 @@ $effect(() => {
     }
     textbookPreviousPage.set(-1)
   }
-  
-});
+})
 
 function handlePageTransition(newPage: number, oldPage: number) {
   if (oldPage >= 0 && oldPage !== newPage) {
@@ -32,7 +32,7 @@ function handlePageTransition(newPage: number, oldPage: number) {
 {#if !showTextCard}
 	<div class="floating-container" transition:fade={{ duration: 150 }}>
 		<button
-			class="btn btn-circle btn-lg floating-btn h-14 w-14 bg-gradient-to-r from-purple-500 to-blue-500 text-white border-none shadow-lg"
+			class="btn btn-circle btn-lg floating-btn h-14 w-14 bg-linear-to-r from-purple-500 to-blue-500 text-white border-none shadow-lg"
 			onclick={() => {
 				isTextbookOpen.set(true);
 

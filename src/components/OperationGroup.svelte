@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 import classNames from 'classnames'
 import {
   isTextbookOpen,
@@ -7,20 +7,40 @@ import {
   textbookPreviousPage,
   tokens,
 } from '~/store'
-import { drawResidualLine } from '~/utils/animation'
-import { onClickReadMore } from '~/utils/event'
-import { textPages } from '~/utils/textbookPages'
+import { drawResidualLine } from '~/utils/animation/residual'
+import { textPages } from '~/utils/textbook/pages/index'
 import Operation from './Operation.svelte'
-import ActivationPopover from './popovers/ActivationPopover.svelte'
-import DropoutPopover from './popovers/DropoutPopover.svelte'
-import LayerNormPopover from './popovers/LayerNormPopover.svelte'
-import ResidualPopover from './popovers/ResidualPopover.svelte'
-let { id, className = undefined, type = undefined }: { id: string, className?: string | undefined, type?: string | undefined } = $props();
 
+const typeToPageIdMap = {
+  activation: 'mlp',
+  dropout: 'dropout',
+  ln: 'layer-normalization',
+  'residual-start': 'residual',
+  'residual-end': 'residual',
+} as const
 
-const { drawLine, removeLine } = drawResidualLine(id)
-let isHovered = false
-let containerElement
+type OpType = keyof typeof typeToPageIdMap
+
+let {
+  id,
+  className = undefined,
+  type,
+}: {
+  id: string
+  className?: string | undefined
+  type: OpType
+} = $props()
+
+let drawLine: () => void = () => {}
+let removeLine: () => void = () => {}
+
+$effect(() => {
+  ({ drawLine, removeLine } = drawResidualLine(id))
+  return removeLine
+})
+
+let isHovered = $state(false)
+let containerElement: HTMLDivElement | undefined = $state()
 
 const onMouseOver = () => {
   if ($isTextbookOpen && $textbookCurrentPageId === 'residual') return
@@ -33,15 +53,7 @@ const onMouseOut = () => {
   removeLine()
 }
 
-const typeToPageIdMap = {
-  activation: 'mlp',
-  dropout: 'dropout',
-  ln: 'layer-normalization',
-  'residual-start': 'residual',
-  'residual-end': 'residual',
-}
-
-function openTextbookPage(e) {
+function openTextbookPage(e: MouseEvent) {
   e.preventDefault()
   e.stopPropagation()
 
@@ -56,140 +68,35 @@ function openTextbookPage(e) {
     textbookCurrentPageId.set(pageId)
   }
 }
+
+const isResidual = $derived(type === 'residual-start' || type === 'residual-end')
+const isActivation = $derived(type === 'activation')
+const containerId = $derived(type === 'residual-start' ? `${id}-start` : type === 'residual-end' ? `${id}-end` : id)
+const classSuffix = $derived(isResidual ? 'residual' : type)
+const residualAttrs = $derived(isResidual ? { 'data-click': type } : {})
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-{#if type === 'activation'}
+{#if type}
 	<div
-		{id}
-		data-click="activation"
-		class={classNames('operation-col column activation', className)}
+		id={containerId}
+		class={classNames("operation-col column", classSuffix, className)}
 		role="group"
 		class:active={isHovered}
 		bind:this={containerElement}
-		onmouseenter={() => {
-			isHovered = true;
-		}}
-		onmouseleave={() => {
-			isHovered = false;
-		}}
+		onmouseenter={isResidual ? onMouseOver : () => { isHovered = true }}
+		onmouseleave={isResidual ? onMouseOut : () => { isHovered = false }}
 		onclick={openTextbookPage}
+		{...residualAttrs}
 	>
-		{#each $tokens as token, index}
+		{#each $tokens as _, index}
 			<Operation
+				id={isResidual ? id : undefined}
 				className={classNames(className, {
-					last: index === $tokens.length - 1
+					last: index === $tokens.length - 1,
 				})}
-				type="activation"
-				head={index === 0}
-				tail={index === $tokens.length - 1}
-				active={isHovered}
-			/>
-		{/each}
-	</div>
-	<!-- <ActivationPopover triggeredBy={`#${id}`} offset={1} /> -->
-{:else if type === 'dropout'}
-	<div
-		{id}
-		data-click="dropout"
-		class={classNames('operation-col column dropout', className)}
-		role="group"
-		class:active={isHovered}
-		bind:this={containerElement}
-		onmouseenter={() => {
-			isHovered = true;
-		}}
-		onmouseleave={() => {
-			isHovered = false;
-		}}
-		onclick={openTextbookPage}
-	>
-		{#each $tokens as token, index}
-			<Operation
-				className={classNames(className, {
-					last: index === $tokens.length - 1
-				})}
-				type="dropout"
-				tail={index === $tokens.length - 1}
-				active={isHovered}
-			/>
-		{/each}
-	</div>
-	<!-- <DropoutPopover triggeredBy={`#${id}`} offset={1} /> -->
-{:else if type === 'ln'}
-	<div
-		{id}
-		data-click="layernorm"
-		class={classNames('operation-col column ln', className)}
-		role="group"
-		class:active={isHovered}
-		bind:this={containerElement}
-		onmouseenter={() => {
-			isHovered = true;
-		}}
-		onmouseleave={() => {
-			isHovered = false;
-		}}
-		onclick={openTextbookPage}
-	>
-		{#each $tokens as token, index}
-			<Operation
-				className={classNames(className, {
-					last: index === $tokens.length - 1
-				})}
-				type="ln"
-				tail={index === $tokens.length - 1}
-				active={isHovered}
-			/>
-		{/each}
-	</div>
-	<!-- <LayerNormPopover triggeredBy={`#${id}`} /> -->
-{:else if type === 'residual-start'}
-	<div
-		data-click="residual-start"
-		id={`${id}-start`}
-		class={classNames('operation-col column residual', className)}
-		role="group"
-		class:active={isHovered}
-		bind:this={containerElement}
-		onmouseenter={onMouseOver}
-		onmouseleave={onMouseOut}
-		onclick={openTextbookPage}
-	>
-		{#each $tokens as token, index}
-			<Operation
-				{id}
-				className={classNames(className, {
-					last: index === $tokens.length - 1
-				})}
-				type="residual-start"
-				head={index === 0}
-				active={isHovered}
-			/>
-		{/each}
-	</div>
-	<!-- <ResidualPopover reference={`#${id}-start`} triggeredBy={`[id^='${id}-']`} offset={1} /> -->
-{:else if type === 'residual-end'}
-	<div
-		id={`${id}-end`}
-		data-click="residual-end"
-		class={classNames('operation-col column residual', className)}
-		role="group"
-		class:active={isHovered}
-		bind:this={containerElement}
-		onmouseenter={onMouseOver}
-		onmouseleave={onMouseOut}
-		onclick={openTextbookPage}
-	>
-		{#each $tokens as token, index}
-			<Operation
-				{id}
-				className={classNames(className, {
-					last: index === $tokens.length - 1
-				})}
-				type="residual-end"
-				head={index === 0}
+				{type}
+				head={isActivation || type === 'residual-start' ? index === 0 : undefined}
+				tail={type !== 'residual-start' ? index === $tokens.length - 1 : undefined}
 				active={isHovered}
 			/>
 		{/each}
@@ -212,7 +119,7 @@ function openTextbookPage(e) {
 		&.active {
 			z-index: $ABOVE_COLUMN;
 			&::after {
-				content: '';
+				content: "";
 				position: absolute;
 				height: 100%;
 				width: 1.3rem;

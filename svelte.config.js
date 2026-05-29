@@ -10,7 +10,7 @@ const config = {
 			const ignoreList = [
 				'a11y_click_events_have_key_events',
 				'a11y_no_static_element_interactions',
-				'css_unused_selector'
+				// 'css_unused_selector'
 			]
 			return !ignoreList.includes(warning.code)
 		}
@@ -37,3 +37,23 @@ const config = {
 };
 
 export default config;
+
+    // "overrides": [
+    //     {
+    //         "includes": [
+    //             "**/*.svelte"
+    //         ],
+    //         "linter": {
+    //             "rules": {
+    //                 "style": {
+    //                     "useConst": "off",
+    //                     "useImportType": "off"
+    //                 },
+    //                 "correctness": {
+    //                     "noUnusedVariables": "off",
+    //                     "noUnusedImports": "off"
+    //                 }
+    //             }
+    //         }
+    //     }
+    // ]

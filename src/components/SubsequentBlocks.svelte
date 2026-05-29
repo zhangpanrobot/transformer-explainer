@@ -1,4 +1,5 @@
 ﻿<script lang="ts">
+import { MoveDown } from '@lucide/svelte'
 import classNames from 'classnames'
 import { blockIdx, expandedBlock, isBoundingBoxActive, modelMeta, tokens } from '~/store'
 import DaisyTooltip from './common/DaisyTooltip.svelte'
@@ -33,21 +34,10 @@ let { className = undefined }: { className?: string | undefined } = $props()
 						/><span class="strong">Transformer<br />Blocks</span>
 					</TextbookTooltip>
 				</div>
-
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					class="h-6 w-6 text-gray-300"
-					viewBox="0 0 3 5"
-					fill="none"
-				>
-					<path
-						d="M1.18221 4.58047C1.23103 4.62928 1.31017 4.62928 1.35899 4.58047L2.15448 3.78497C2.2033 3.73616 2.2033 3.65701 2.15448 3.6082C2.10567 3.55938 2.02652 3.55938 1.97771 3.6082L1.2706 4.3153L0.563493 3.6082C0.514677 3.55938 0.435531 3.55938 0.386716 3.6082C0.3379 3.65701 0.3379 3.73616 0.386716 3.78497L1.18221 4.58047ZM1.1456 0.285461V4.49208H1.3956V0.285461H1.1456Z"
-						fill="currentColor"
-					/>
-				</svg>
+				<MoveDown />
 			</div>
 
-			{#each $tokens as token, index}
+			{#each $tokens as _, index}
 				<div class="cell" class:last={index === $tokens.length - 1}>
 					<div
 						class={classNames(`vector shrink-0 bg-blue-200`, {
@@ -59,8 +49,7 @@ let { className = undefined }: { className?: string | undefined } = $props()
 				</div>
 			{/each}
 			<DaisyTooltip class="popover" triggeredBy={'.transformer-blocks .vector'} placement="right"
-				>vector({$modelMeta.dimension})</DaisyTooltip
-			>
+				>vector({$modelMeta.dimension})</DaisyTooltip>
 		</div>
 		<div class="second-column">
 			<div class="prob-dim" class:expanded={$expandedBlock.id === 'softmax'}></div>

@@ -2,7 +2,7 @@
 import { derived, writable } from 'svelte/store'
 import { ex0 } from '~/constants/examples'
 import { theme } from '~/utils/tailwind-theme'
-import { textPages } from '~/utils/textbookPages'
+import { textPages } from '~/utils/textbook/pages/index'
 export const attentionHeadIdxTemp = writable(0)
 export const attentionHeadIdx = writable(0)
 export const blockIdxTemp = writable(0)
@@ -67,7 +67,6 @@ export const isExpandOrCollapseRunning = writable(false)
 
 // user input text
 export const inputText = writable(inputTextExample[initialExIdx])
-// export const tokens = derived(inputText, ($inputText) => $inputText.trim().split(' '));
 
 // selected model and meta data
 const initialSelectedModel = 'gpt2'
@@ -108,7 +107,3 @@ const cell: WritableCell = { row: null, col: null }
 export const hoveredMatrixCell = writable(cell)
 export const weightPopover = writable()
 export const tooltip = writable()
-
-// User identification
-export const userId = writable<string | null>(null)
-

@@ -1,22 +1,16 @@
 ﻿<script>
-	import { page } from '$app/stores';
-	import InputForm from '~/components/InputForm.svelte';
-let { isActive } = $props();
+import InputForm from '~/components/InputForm.svelte'
 
-
-	// Check if current page is about page
-	let isAboutPage = $derived($page.url.pathname === '/about');
+let { isActive } = $props()
 </script>
 
 <div class="top-bar flex w-full items-center gap-4 px-10 py-2 pb-3" class:active={isActive}>
-	<div class="logo text-bold text-gray-700" data-click="logo">
+	<div class="logo text-bold text-gray-700">
 		T<span class="small">RANSFORMER</span> E<span class="small">XPLAINER</span>
 	</div>
 	<div class="inputs flex grow items-center">
 		<div class="input-wrapper w-full" class:active={isActive}>
-			{#if !isAboutPage}
-				<InputForm />
-			{/if}
+			<InputForm />
 		</div>
 	</div>
 </div>

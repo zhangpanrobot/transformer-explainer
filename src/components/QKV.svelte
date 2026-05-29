@@ -35,7 +35,7 @@ onMount(() => {
 })
 </script>
 
-<div class={classNames('qkv', className)} role="none" data-click="qkv-step">
+<div class={classNames('qkv', className)} role="none">
 	<div class="content relative">
 		<div
 			class="vector-column block-start-column relative flex"
@@ -52,8 +52,7 @@ onMount(() => {
 				{/each}
 			</div>
 			<DaisyTooltip class="popover" triggeredBy={'.qkv .embedding-column .vector'} placement="right"
-				>vector({$modelMeta.dimension})</DaisyTooltip
-			>
+				>vector({$modelMeta.dimension})</DaisyTooltip>
 
 			<div class="operations flex">
 				<OperationGroup type="dropout" id={'embedding-dropout'} />
@@ -107,8 +106,7 @@ onMount(() => {
 				</div>
 			{/each}
 			<DaisyTooltip class="popover" triggeredBy={'.qkv .qkv-column .vector'} placement="right"
-				>vector({$modelMeta.dimension * 3})</DaisyTooltip
-			>
+				>vector({$modelMeta.dimension * 3})</DaisyTooltip>
 		</div>
 	</div>
 </div>

@@ -6,14 +6,14 @@ import {
   textbookPreviousPage,
   textbookPreviousPageId,
 } from '~/store'
-import type { TextbookPage } from '~/utils/textbookPages'
+import type { TextbookPage } from '~/utils/textbook/pages/index'
 
 let { textPages }: { textPages: TextbookPage[] } = $props();
 
-let showPageDropdown = false
-let isDragging = false
+let showPageDropdown = $state(false)
+let isDragging = $state(false)
+let previewProgress = $state(0)
 let progressBarElement: HTMLElement
-let previewProgress = 0
 
 function updatePageFromPosition(clientX: number) {
   if (!progressBarElement) return

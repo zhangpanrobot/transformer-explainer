@@ -2,9 +2,9 @@
 import * as d3 from 'd3'
 import { onDestroy, onMount } from 'svelte'
 import Matrix from '~/components/common/Matrix.svelte'
+import Katex from '~/components/Katex.svelte'
 import { modelMeta, rootRem, tokens } from '~/store'
 import { gsap } from '~/utils/gsap'
-import Katex from '~/utils/Katex.svelte'
 import { theme } from '~/utils/tailwind-theme'
 import HelpPopover from '../common/HelpPopover.svelte'
 import WeightPopoverCard from '../common/WeightPopoverCard.svelte'
@@ -12,54 +12,59 @@ import WeightPopoverCard from '../common/WeightPopoverCard.svelte'
 const tokenGap = 6
 
 // generate data
-const visibleDimension = 15
+const visibleDimension = 18
+let tokenLen = $derived($tokens.length)
+let embeddingData = $derived(
+  Array(tokenLen)
+    .fill(0)
+    .map(() =>
+      Array(visibleDimension)
+        .fill(0)
+        .map(() => Math.random()),
+    ),
+)
 
-$: tokenLen = $tokens.length
-$: embeddingData = Array(tokenLen)
+const qkvWeightData = Array(visibleDimension * 3)
   .fill(0)
-  .map((col) =>
+  .map(() =>
     Array(visibleDimension)
       .fill(0)
-      .map((d) => Math.random()),
+      .map(() => Math.random()),
+  )
+const qkvBiasData = Array(1)
+  .fill(0)
+  .map(() =>
+    Array(visibleDimension * 3)
+      .fill(0)
+      .map(() => Math.random()),
   )
 
-const mlpUpWeightData = Array(visibleDimension * 4)
-  .fill(0)
-  .map((col) =>
-    Array(visibleDimension)
-      .fill(0)
-      .map((d) => Math.random()),
-  )
-
-const mlpUpBiasData = Array(1)
-  .fill(0)
-  .map((col) =>
-    Array(visibleDimension * 4)
-      .fill(0)
-      .map((d) => Math.random()),
-  )
-
-$: mlpUpOutData = Array(tokenLen)
-  .fill(0)
-  .map((col) =>
-    Array(visibleDimension * 4)
-      .fill(0)
-      .map((d) => Math.random()),
-  )
+let qkvOutData = $derived(
+  Array(tokenLen)
+    .fill(0)
+    .map(() =>
+      Array(visibleDimension * 3)
+        .fill(0)
+        .map(() => Math.random()),
+    ),
+)
 
 // color scale
 const embeddingColorScale = (d: number) => {
-  return d3.interpolate(theme.colors.purple[100], theme.colors.purple[400])(d)
-}
-const weightColorScale = (d: number) => {
   return d3.interpolate(theme.colors.gray[100], theme.colors.gray[400])(d)
 }
-const out1ColorScale = (d: number) => {
-  return d3.interpolate(theme.colors.indigo[100], theme.colors.indigo[400])(d)
+
+const qkvColorScale = (d: number, i?: number) => {
+  const idx = i ?? 0
+  const color = (idx < visibleDimension ? 'blue' : idx < visibleDimension * 2 ? 'red' : 'green') as
+    | 'blue'
+    | 'red'
+    | 'green'
+  return d3.interpolate(theme.colors[color][100], theme.colors[color][400])(d)
 }
 
 // animation
-let isAnimationActive = false
+let isAnimationActive = $state(false)
 let progress = 0
 let timeline = gsap.timeline()
 
@@ -76,19 +81,15 @@ onMount(() => {
 })
 
 onDestroy(() => {
-  if (timeline) {
-    timeline.kill()
-    timeline = null
-  }
+  timeline?.kill()
 })
 
 const draw = () => {
-  // upscale --------------------------------
-  const embeddingRows = d3.selectAll('.weight-popover-content .embedding-matrix g.g-row').nodes()
-  const weightCols = d3.selectAll('.weight-popover-content .mlp-weights g.g-col').nodes()
-  const weightBiasCells = d3.selectAll('.weight-popover-content .mlp-bias rect').nodes()
+  const embeddingRows = d3.selectAll('.weight-popover-content .token-embedding g.g-row').nodes()
+  const weightCols = d3.selectAll('.weight-popover-content .qkv-weights g.g-col').nodes()
+  const weightBiasCells = d3.selectAll('.weight-popover-content .qkv-bias rect').nodes()
 
-  const outRows = d3.selectAll('.weight-popover-content .mlp-out g.g-row').nodes()
+  const outRows = d3.selectAll('.weight-popover-content .qkv-output g.g-row').nodes()
 
   const mulSymbol = d3.select('.weight-popover-content .symbol.mul').node()
   const plusSymbol = d3.select('.weight-popover-content .symbol.plus').node()
@@ -161,7 +162,7 @@ const draw = () => {
           mulSymbol,
           equalSymbol,
           plusSymbol,
-          ,
+
           '.formula .first-row .part1',
           '.formula .first-row .part2',
         ],
@@ -169,7 +170,7 @@ const draw = () => {
           duration: 0.05,
           opacity: 1,
         },
-        '<',
+        '<50%',
       )
     }
     //bias
@@ -248,7 +249,7 @@ const draw = () => {
       )
 
       const weightColRects = d3
-        .selectAll('.weight-popover-content .mlp-weights g.g-col rect')
+        .selectAll('.weight-popover-content .qkv-weights g.g-col rect')
         .nodes()
       timeline.set(weightColRects, { opacity: 0.1 })
       timeline.set(weightBiasCells, { opacity: 0.1 })
@@ -290,8 +291,8 @@ const draw = () => {
 }
 
 // event
-let highlightCol: number | undefined
-let highlightRow: number | undefined
+let highlightCol = $state<number | undefined>(undefined)
+let highlightRow = $state<number | undefined>(undefined)
 
 const onMouseOverCell = (d: Cell) => {
   if (isAnimationActive) return
@@ -304,8 +305,8 @@ const onMouseOutSvg = () => {
 }
 </script>
 
-<WeightPopoverCard id="mlp-up" title={'MLP Expansion'} bind:isAnimationActive {timeline}>
-	<div class="mlp-weight-popover weight-popover-content flex items-center justify-start">
+<WeightPopoverCard id="qkv" title={'Query Key Value'} bind:isAnimationActive {timeline}>
+	<div class="weight-popover-content flex items-center justify-start">
 		<div class="matrix flex flex-col items-center">
 			<div class="tokens" style={`gap:${tokenGap}px`}>
 				{#each $tokens as token, index}
@@ -314,13 +315,14 @@ const onMouseOutSvg = () => {
 			</div>
 		</div>
 		<div class="matrix flex flex-col items-center">
-			<div class="title flex items-center gap-1">
-				Embeddings<HelpPopover id="mlp-emgeddings" 
-					>{`Embeddings transformed through attention mechanism.`}</HelpPopover
+			<div class="title flex items-center gap-1 self-end">
+				Embeddings<HelpPopover id="qkv-emgeddings" 
+					>{`Embeddings originate from tokens \nbut evolve through blocks, becoming \nabstract representations.`}</HelpPopover
 				>
 			</div>
+			<!-- (tokenLen, 768) -->
 			<Matrix
-				className="embedding-matrix"
+				className="token-embedding"
 				data={embeddingData}
 				showSize={false}
 				cellHeight={rootRem * 0.8}
@@ -334,75 +336,72 @@ const onMouseOutSvg = () => {
 		<div class="operator"><div class="symbol mul">&times;</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Expansion Weights<HelpPopover id="mlp-weights" 
-					>{`Projects embedding vectors to expanded latent space. \nParameters were learned in training, fixed in prediction.`}</HelpPopover
+				QÂ·KÂ·V Weights<HelpPopover id="qkv-weights" 
+					>{`Transforms embedding vectors into Query, Key, and Value vectors. \nParameters were learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
 			<div class="flex gap-0">
 				<Matrix
-					className="mlp-weights"
-					data={mlpUpWeightData}
+					className="qkv-weights"
+					data={qkvWeightData}
 					showSize={false}
 					groupBy={'col'}
 					cellHeight={3}
 					cellWidth={3}
 					rowGap={0}
-					colorScale={weightColorScale}
+					colorScale={qkvColorScale}
 					{highlightCol}
 				/>
 			</div>
 
-			<div class="size">({$modelMeta.dimension}, {$modelMeta.dimension * 4})</div>
+			<div class="size">({$modelMeta.dimension}, {$modelMeta.dimension * 3})</div>
 		</div>
 		<div class="operator"><div class="symbol plus">+</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Expansion Bias <HelpPopover id="mlp-bias" 
-					>{`Offsets added after expansion. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
+				QÂ·KÂ·V Bias<HelpPopover id="qkv-bias" 
+					>{`Offsets added after transformation. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
 			<Matrix
-				className="mlp-bias"
-				data={mlpUpBiasData}
+				className="qkv-bias"
+				data={qkvBiasData}
 				showSize={false}
 				groupBy={'col'}
 				cellHeight={2}
 				cellWidth={8}
 				rowGap={0}
-				colorScale={weightColorScale}
+				colorScale={embeddingColorScale}
 				highlightRow={highlightCol}
 			/>
-			<div class="size">({$modelMeta.dimension * 4})</div>
+			<div class="size">({$modelMeta.dimension * 3})</div>
 		</div>
-		<div class="operator">
-			<div class="symbol equal px-2">=</div>
-			<!-- <div class="symbol arrow absolute top-0">&rArr;</div> -->
-		</div>
-		<!-- <div class="matrix flex flex-col items-center">
-			<div class="tokens" style={`gap:${tokenGap - 2}px`}>
+		<div class="operator"><div class="symbol equal">=</div></div>
+		<div class="matrix flex flex-col items-center">
+			<div class="tokens" style={`gap:${tokenGap}px`}>
 				{#each $tokens as token, index}
 					<div class="token-label"><span>{token}</span></div>
 				{/each}
 			</div>
-		</div> -->
+		</div>
 		<div class="matrix flex flex-col items-center">
-			<div class="title">Expanded <br />Embeddings</div>
+			<div class="title">QÂ·KÂ·V</div>
 			<div class="flex">
 				<Matrix
-					className="mlp-out"
-					data={mlpUpOutData}
+					className="qkv-output"
+					data={qkvOutData}
 					showSize={false}
 					cellHeight={rootRem * 0.8}
 					cellWidth={2}
 					rowGap={tokenGap}
-					colorScale={out1ColorScale}
+					colorScale={qkvColorScale}
 					{onMouseOverCell}
 					{onMouseOutSvg}
 					{highlightCol}
 					{highlightRow}
 				/>
 			</div>
-			<div class="size">({tokenLen}, {$modelMeta.dimension * 4})</div>
+			<div class="size">({tokenLen}, {$modelMeta.dimension * 3})</div>
 		</div>
 	</div>
 	<div class="formula">
@@ -411,40 +410,23 @@ const onMouseOutSvg = () => {
 				<Katex
 					displayMode
 					math={`
-	(Emb_{1,1}Ã—W_{1,1} + \\cdots + Emb_{1,768}Ã—W_{768,1})`}
+	(Embedding_{1,1}Ã—Weights_{1,1} + \\cdots + Embedding_{1,768}Ã—Weights_{768,1})`}
 				/>
 			</span>
 			<span class="part2">
-				<Katex displayMode math={`+ Bias_1 = Expanded{1,1}`} />
+				<Katex displayMode math={`+ Bias_1 = QKV_{1,1}`} />
 			</span>
 		</div>
 		<div class="total">
 			<Katex
 				displayMode
 				math={`
-	\\sum_{d=1}^{768} Emb_{id} \\cdot Weights_{dj} + Bias_j = Expanded{ij} 
+	\\sum_{d=1}^{768} Embedding_{id} \\cdot Weights_{dj} + Bias_j = QKV_{ij} 
 	`}
 			/>
 		</div>
-	</div></WeightPopoverCard
->
+	</div>
+</WeightPopoverCard>
 
 <style lang="scss">
-	.weight-popover-content {
-		padding: 3rem 3rem 1.5rem 1rem;
-		gap: 0.6rem;
-	}
-	.operator {
-		position: relative;
-	}
-	.symbol.activation {
-		font-size: 0.8rem;
-		font-weight: 500;
-	}
-	.matrix {
-		.title {
-			line-height: 1.1;
-			text-align: center;
-		}
-	}
 </style>

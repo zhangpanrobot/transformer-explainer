@@ -1,21 +1,22 @@
-﻿<script lang="ts">
+<script lang="ts">
 import * as d3 from 'd3'
 import { onDestroy, onMount } from 'svelte'
 import Matrix from '~/components/common/Matrix.svelte'
-import { modelMeta, rootRem, tokens } from '~/store'
+import Katex from '~/components/Katex.svelte'
+import { modelMeta, rootRem } from '~/store'
 import { gsap } from '~/utils/gsap'
-import Katex from '~/utils/Katex.svelte'
 import { theme } from '~/utils/tailwind-theme'
 import HelpPopover from '../common/HelpPopover.svelte'
 import WeightPopoverCard from '../common/WeightPopoverCard.svelte'
+
+let { isOpen = true }: { isOpen?: any } = $props()
 
 const tokenGap = 6
 
 // generate data
 const visibleDimension = 18
-let tokenLen = $derived($tokens.length)
-let embeddingData = $derived(
-  Array(tokenLen)
+let inputData = $derived(
+  Array(1)
     .fill(0)
     .map(() =>
       Array(visibleDimension)
@@ -24,49 +25,48 @@ let embeddingData = $derived(
     ),
 )
 
-const qkvWeightData = Array(visibleDimension * 3)
+const weightData = Array(visibleDimension * 5)
   .fill(0)
   .map(() =>
     Array(visibleDimension)
       .fill(0)
       .map(() => Math.random()),
   )
-const qkvBiasData = Array(1)
+const biasData = Array(1)
   .fill(0)
   .map(() =>
-    Array(visibleDimension * 3)
+    Array(visibleDimension * 5)
       .fill(0)
       .map(() => Math.random()),
   )
 
-let qkvOutData = $derived(
-  Array(tokenLen)
+let logitData = $derived(
+  Array(1)
     .fill(0)
     .map(() =>
-      Array(visibleDimension * 3)
+      Array(visibleDimension * 5)
         .fill(0)
         .map(() => Math.random()),
     ),
 )
 
 // color scale
-const embeddingColorScale = (d:number) => {
+const embeddingColorScale = (d: number) => {
+  return d3.interpolate(theme.colors.blue[100], theme.colors.blue[400])(d)
+}
+
+const weightColorScale = (d: number) => {
   return d3.interpolate(theme.colors.gray[100], theme.colors.gray[400])(d)
 }
 
-const qkvColorScale = (d: number, i?: number) => {
-  const idx = i ?? 0
-  const color = (idx < visibleDimension ? 'blue' : idx < visibleDimension * 2 ? 'red' : 'green') as
-    | 'blue'
-    | 'red'
-    | 'green'
-  return d3.interpolate(theme.colors[color][100], theme.colors[color][400])(d)
+const logitColorScale = (d: number) => {
+  return d3.interpolate(theme.colors.blue[100], theme.colors.gray[400])(d)
 }
 
 // animation
 let isAnimationActive = $state(false)
 let progress = 0
-let timeline = gsap.timeline()
+let timeline = $state(gsap.timeline())
 
 onMount(() => {
   timeline.eventCallback('onUpdate', () => {
@@ -81,15 +81,17 @@ onMount(() => {
 })
 
 onDestroy(() => {
-  timeline?.kill()
+  if (timeline) {
+    timeline.kill()
+  }
 })
 
 const draw = () => {
-  const embeddingRows = d3.selectAll('.weight-popover-content .token-embedding g.g-row').nodes()
-  const weightCols = d3.selectAll('.weight-popover-content .qkv-weights g.g-col').nodes()
-  const weightBiasCells = d3.selectAll('.weight-popover-content .qkv-bias rect').nodes()
+  const embeddingRows = d3.selectAll('.weight-popover-content .hidden-state g.g-row').nodes()
+  const weightCols = d3.selectAll('.weight-popover-content .lm-head-weights g.g-col').nodes()
+  const weightBiasCells = d3.selectAll('.weight-popover-content .lm-head-bias rect').nodes()
 
-  const outRows = d3.selectAll('.weight-popover-content .qkv-output g.g-row').nodes()
+  const outRows = d3.selectAll('.weight-popover-content .logits g.g-row').nodes()
 
   const mulSymbol = d3.select('.weight-popover-content .symbol.mul').node()
   const plusSymbol = d3.select('.weight-popover-content .symbol.plus').node()
@@ -161,9 +163,9 @@ const draw = () => {
         [
           mulSymbol,
           equalSymbol,
-          plusSymbol,
-
           '.formula .first-row .part1',
+          plusSymbol,
+          equalSymbol,
           '.formula .first-row .part2',
         ],
         {
@@ -172,6 +174,15 @@ const draw = () => {
         },
         '<50%',
       )
+
+      // timeline.from(
+      // 	[plusSymbol, equalSymbol, '.formula .first-row .part2'],
+      // 	{
+      // 		duration: 0.5,
+      // 		opacity: 0.1
+      // 	},
+      // 	'<'
+      // );
     }
     //bias
     timeline
@@ -249,7 +260,7 @@ const draw = () => {
       )
 
       const weightColRects = d3
-        .selectAll('.weight-popover-content .qkv-weights g.g-col rect')
+        .selectAll('.weight-popover-content .lm-head-weights g.g-col rect')
         .nodes()
       timeline.set(weightColRects, { opacity: 0.1 })
       timeline.set(weightBiasCells, { opacity: 0.1 })
@@ -291,40 +302,33 @@ const draw = () => {
 }
 
 // event
-let highlightCol = $state<number | undefined>(undefined)
-let highlightRow = $state<number | undefined>(undefined)
+let highlightCol: number | undefined = $state()
+let highlightRow: number | undefined = $state()
 
 const onMouseOverCell = (d: Cell) => {
   if (isAnimationActive) return
   highlightRow = d.rowIndex
   highlightCol = d.colIndex
 }
+
 const onMouseOutSvg = () => {
   highlightCol = undefined
   highlightRow = undefined
 }
-
 </script>
 
-<WeightPopoverCard id="qkv" title={'Query Key Value'} bind:isAnimationActive {timeline}>
+<WeightPopoverCard id="logits" title={'Logits'} bind:isAnimationActive {timeline} bind:isOpen>
 	<div class="weight-popover-content flex items-center justify-start">
 		<div class="matrix flex flex-col items-center">
-			<div class="tokens" style={`gap:${tokenGap}px`}>
-				{#each $tokens as token, index}
-					<div class="token-label"><span>{token}</span></div>
-				{/each}
-			</div>
-		</div>
-		<div class="matrix flex flex-col items-center">
-			<div class="title flex items-center gap-1 self-end">
-				Embeddings<HelpPopover id="qkv-emgeddings" 
-					>{`Embeddings originate from tokens \nbut evolve through blocks, becoming \nabstract representations.`}</HelpPopover
+			<div class="title flex items-center gap-1">
+				<span>Output<br />Embedding</span>
+				<HelpPopover id="hidden-states" 
+					>{`After passing through all blocks, \nthe final token's embedding vector \ncontains all the contextual information \nfrom the preceding tokens.`}</HelpPopover
 				>
 			</div>
-			<!-- (tokenLen, 768) -->
 			<Matrix
-				className="token-embedding"
-				data={embeddingData}
+				className="hidden-state"
+				data={inputData}
 				showSize={false}
 				cellHeight={rootRem * 0.8}
 				cellWidth={2}
@@ -332,77 +336,76 @@ const onMouseOutSvg = () => {
 				colorScale={embeddingColorScale}
 				{highlightRow}
 			/>
-			<div class="size">({tokenLen}, {$modelMeta.dimension})</div>
+			<div class="size">(1, {$modelMeta.dimension})</div>
 		</div>
-		<div class="operator"><div class="symbol mul">&times;</div></div>
+		<div class="operator"><div class="symbol mul pl-3">&times;</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				QÂ·KÂ·V Weights<HelpPopover id="qkv-weights" 
-					>{`Transforms embedding vectors into Query, Key, and Value vectors. \nParameters were learned in training, fixed in prediction.`}</HelpPopover
+				Output Projection Weights
+				<HelpPopover id="lm-head-weights" 
+					>{`Transforms the final embedding into a vocabulary distribution.\nParameters were learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
 			<div class="flex gap-0">
 				<Matrix
-					className="qkv-weights"
-					data={qkvWeightData}
+					className="lm-head-weights"
+					data={weightData}
 					showSize={false}
 					groupBy={'col'}
-					cellHeight={3}
-					cellWidth={3}
+					cellHeight={2}
+					cellWidth={2}
 					rowGap={0}
-					colorScale={qkvColorScale}
+					colorScale={weightColorScale}
 					{highlightCol}
 				/>
 			</div>
 
-			<div class="size">({$modelMeta.dimension}, {$modelMeta.dimension * 3})</div>
+			<div class="size">({$modelMeta.dimension}, 50,257)</div>
 		</div>
 		<div class="operator"><div class="symbol plus">+</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				QÂ·KÂ·V Bias<HelpPopover id="qkv-bias" 
-					>{`Offsets added after transformation. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
+				Output Projection Bias<HelpPopover id="lm-head-bias" 
+					>{`Offsets added after the transformation.\nParameters were learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
 			<Matrix
-				className="qkv-bias"
-				data={qkvBiasData}
+				className="lm-head-bias"
+				data={biasData}
 				showSize={false}
 				groupBy={'col'}
-				cellHeight={2}
+				cellHeight={1}
 				cellWidth={8}
 				rowGap={0}
-				colorScale={embeddingColorScale}
+				colorScale={weightColorScale}
 				highlightRow={highlightCol}
 			/>
-			<div class="size">({$modelMeta.dimension * 3})</div>
+			<div class="size">(50,257)</div>
 		</div>
 		<div class="operator"><div class="symbol equal">=</div></div>
 		<div class="matrix flex flex-col items-center">
-			<div class="tokens" style={`gap:${tokenGap}px`}>
-				{#each $tokens as token, index}
-					<div class="token-label"><span>{token}</span></div>
-				{/each}
+			<div class="title flex items-center gap-1">
+				Logits
+				<HelpPopover id="logits" 
+					>{`Raw scores representing the model’s preference \nfor each vocabulary token before applying softmax.`}</HelpPopover
+				>
 			</div>
-		</div>
-		<div class="matrix flex flex-col items-center">
-			<div class="title">QÂ·KÂ·V</div>
 			<div class="flex">
 				<Matrix
-					className="qkv-output"
-					data={qkvOutData}
+					className="logits"
+					data={logitData}
 					showSize={false}
 					cellHeight={rootRem * 0.8}
 					cellWidth={2}
 					rowGap={tokenGap}
-					colorScale={qkvColorScale}
+					colorScale={logitColorScale}
 					{onMouseOverCell}
 					{onMouseOutSvg}
 					{highlightCol}
 					{highlightRow}
 				/>
 			</div>
-			<div class="size">({tokenLen}, {$modelMeta.dimension * 3})</div>
+			<div class="size">(1, 50,257)</div>
 		</div>
 	</div>
 	<div class="formula">
@@ -411,18 +414,18 @@ const onMouseOutSvg = () => {
 				<Katex
 					displayMode
 					math={`
-	(Embedding_{1,1}Ã—Weights_{1,1} + \\cdots + Embedding_{1,768}Ã—Weights_{768,1})`}
+	(Embedding_{1}×Weights_{1,1} + \\cdots + Embedding_{768}×Weights_{768,1})`}
 				/>
 			</span>
 			<span class="part2">
-				<Katex displayMode math={`+ Bias_1 = QKV_{1,1}`} />
+				<Katex displayMode math={`+ Bias_1 = Logits_{1}`} />
 			</span>
 		</div>
 		<div class="total">
 			<Katex
 				displayMode
 				math={`
-	\\sum_{d=1}^{768} Embedding_{id} \\cdot Weights_{dj} + Bias_j = QKV_{ij} 
+	\\sum_{d=1}^{768} Embedding_{d} \\cdot Weights_{di} + Bias_j = Logits_{i} 
 	`}
 			/>
 		</div>
@@ -430,4 +433,12 @@ const onMouseOutSvg = () => {
 </WeightPopoverCard>
 
 <style lang="scss">
+	.weight-popover-content {
+		padding: 3rem 2rem 1.5rem 3.5rem;
+		gap: 0.5rem;
+	}
+	.matrix .title {
+		text-align: center;
+		line-height: 1.2;
+	}
 </style>

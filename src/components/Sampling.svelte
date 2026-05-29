@@ -1,7 +1,6 @@
 ﻿<script lang="ts">
-import { sampling, userId } from '~/store'
-import { textPages } from '~/utils/textbookPages'
-import HelpPopover from './common/HelpPopover.svelte'
+import { sampling } from '~/store'
+import { completePage } from '~/utils/textbook/pages/actions'
 import TextbookTooltip from './common/TextbookTooltip.svelte'
 
 let { disabled = false }: { disabled?: boolean } = $props()
@@ -11,7 +10,7 @@ let samplingValMin = $derived($sampling.type === 'top-k' ? 1 : 0.1)
 let samplingValStep = $derived($sampling.type === 'top-k' ? 1 : 0.1)
 </script>
 
-<div class="sampling-input flex shrink-0 flex-col items-center justify-between h-full" data-click="input-sampling">
+<div class="sampling-input flex shrink-0 flex-col items-center justify-between h-full">
 	<div class="sampling-type">
 		<div class="title flex items-center gap-[2px]">
 			<TextbookTooltip id="sampling">
@@ -67,7 +66,7 @@ let samplingValStep = $derived($sampling.type === 'top-k' ? 1 : 0.1)
 			onclick={(e) => {
 				e.preventDefault();
 				e.stopPropagation();
-				textPages.find((page) => page.id === 'sampling')?.complete?.();
+				completePage('sampling');
 			}}
 		/>
 		<div class="value">

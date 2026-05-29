@@ -1,7 +1,7 @@
 import { AutoTokenizer } from '@huggingface/transformers';
 
 export const getTokenization = async(input: string) => {
-    const tokenizer = await AutoTokenizer.from_pretrained('gpt2'); // load pre-trained toakenizer
+    const tokenizer = await AutoTokenizer.from_pretrained('distilbert/distilgpt2'); // load pre-trained toakenizer
 
     const token_ids = tokenizer.encode(input);
     const input_tokens = tokenizer.decode(token_ids);

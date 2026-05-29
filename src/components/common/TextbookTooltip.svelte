@@ -5,9 +5,8 @@
     textbookCurrentPage,
     textbookCurrentPageId,
     textbookPreviousPage,
-    userId,
   } from "~/store";
-  import { textPages } from "~/utils/textbookPages";
+  import { pageIndexById } from '~/utils/textbook/pages/actions'
 
   let { id, children }: { id: string; children?: Snippet } = $props();
 
@@ -15,7 +14,7 @@
     e.stopPropagation();
     e.preventDefault();
 
-    const pageIndex = textPages.findIndex((page) => page.id === id);
+    const pageIndex = pageIndexById(id);
     if (pageIndex !== -1) {
       textbookPreviousPage.set($textbookCurrentPage);
       isTextbookOpen.set(true);
@@ -28,7 +27,7 @@
 <div
   {id}
   class="textbook-tooltip"
-  data-click={`textbook-tooltip`}
+ 
   onclick={openTextbook}
   role="button"
   tabindex="0"

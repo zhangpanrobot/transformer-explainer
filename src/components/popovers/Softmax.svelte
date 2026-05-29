@@ -1,7 +1,7 @@
 <script lang="ts">
 import { ChevronRight, ChevronUp } from '@lucide/svelte'
+import Katex from '~/components/Katex.svelte'
 import { modelData, predictedToken, sampling, temperature } from '~/store'
-import Katex from '~/utils/Katex.svelte'
 import TextbookTooltip from '../common/TextbookTooltip.svelte'
 
 let { hoveredIndex = null }: { hoveredIndex?: number | null } = $props()

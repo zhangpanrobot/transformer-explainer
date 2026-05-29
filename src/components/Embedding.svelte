@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-import { ZoomIn } from '@lucide/svelte'
+import { MoveRight, ZoomIn } from '@lucide/svelte'
 import classNames from 'classnames'
 import * as d3 from 'd3'
 import { getContext, onMount, setContext, tick } from 'svelte'
@@ -15,7 +15,7 @@ import {
 } from '~/store'
 import { Flip, gsap } from '~/utils/gsap'
 import { theme } from '~/utils/tailwind-theme'
-import { textPages } from '~/utils/textbookPages'
+import { completePage } from '~/utils/textbook/pages/actions'
 import DaisyTooltip from './common/DaisyTooltip.svelte'
 import TextbookTooltip from './common/TextbookTooltip.svelte'
 import VectorCanvas from './common/VectorCanvas.svelte'
@@ -24,36 +24,35 @@ let { className }: { className?: string | undefined } = $props()
 
 setContext('block-id', 'embedding')
 
-const blockId = getContext('block-id')
+const blockId = getContext('block-id') as string
+let isExpanded = $state(false)
 
-let isEmbeddingExpanded = $state(false)
-
-// event handling
 $effect(() => {
-  if ($expandedBlock.id !== blockId && isEmbeddingExpanded) {
-    isEmbeddingExpanded = false
-    collapseEmbedding()
+  if ($expandedBlock.id === blockId) {
+    if (!isExpanded) {
+      isExpanded = true
+      expand()
+    }
+  } else {
+    if (isExpanded) {
+      isExpanded = false
+      collapse()
+    }
   }
 })
-$effect(() => {
-  if ($expandedBlock.id === blockId && !isEmbeddingExpanded) {
-    isEmbeddingExpanded = true
-    expandEmbedding()
-  }
-})
 
-const onClickEmbedding = () => {
-  if (!isEmbeddingExpanded) {
+const onClick = () => {
+  if (!isExpanded) {
     expandedBlock.set({ id: blockId })
   }
 }
 
-const onClickEmbeddingTitle = (e) => {
+const onClickTitle = (e: MouseEvent | KeyboardEvent) => {
   e.stopPropagation()
   e.preventDefault()
-  textPages.find((page) => page.id === 'embedding')?.complete()
+  completePage('embedding')
 
-  if (!isEmbeddingExpanded) {
+  if (!isExpanded) {
     expandedBlock.set({ id: blockId })
   } else {
     expandedBlock.set({ id: null })
@@ -62,11 +61,12 @@ const onClickEmbeddingTitle = (e) => {
 
 let expandableEl: HTMLDivElement
 
-function handleOutsideClick(e) {
-  if (isEmbeddingExpanded && !expandableEl.contains(e.target)) {
+function handleOutsideClick(e: MouseEvent) {
+  if (isExpanded && !expandableEl.contains(e.target as HTMLElement)) {
     expandedBlock.set({ id: null })
   }
 }
+
 onMount(() => {
   const mainSection = getContext<{ current: HTMLElement | null }>('main-section')?.current
   if (!mainSection) return
@@ -79,12 +79,9 @@ onMount(() => {
 // animation
 let containerState: any
 
-// google analytics
-let startTime = null
-
-const expandEmbedding = async () => {
+const expand = async () => {
   containerState = Flip.getState('.embedding .token-column')
-  isEmbeddingExpanded = true
+  isExpanded = true
 
   await tick()
 
@@ -102,13 +99,11 @@ const expandEmbedding = async () => {
     duration: 0.5,
     delay: 0.5,
   })
-
-  startTime = performance.now()
 }
 
-const collapseEmbedding = async () => {
+const collapse = async () => {
   containerState = Flip.getState('.embedding .token-column')
-  isEmbeddingExpanded = false
+  isExpanded = false
   await tick()
 
   isExpandOrCollapseRunning.set(true)
@@ -137,23 +132,21 @@ const embeddingVectorColor = 'bg-gray-300'
 
 <div
 	class={classNames('embedding', className, {
-		expanded: isEmbeddingExpanded,
+		expanded: isExpanded,
 		'textbook-highlight': $isTextbookOpen && $textbookCurrentPageId === 'transformer-architecture'
 	})}
 	bind:this={expandableEl}
 	role="none"
-	onclick={onClickEmbedding}
-	onkeydown={onClickEmbedding}
-	data-click="embedding-step"
+	onclick={onClick}
+	onkeydown={onClick}
 >
 	<div
 		class="title expandable"
 		role="none"
-		onclick={onClickEmbeddingTitle}
-		onkeydown={onClickEmbeddingTitle}
+		onclick={onClickTitle}
+		onkeydown={onClickTitle}
 		onmouseenter={handleMouseEnter}
 		onmouseleave={handleMouseLeave}
-		data-click="embedding-step-title"
 	>
 		<div class="title-text flex w-max items-center gap-1">
 			Embedding
@@ -161,11 +154,11 @@ const embeddingVectorColor = 'bg-gray-300'
 		</div>
 	</div>
 	<div class="content relative">
-		<div class="bounding embedding-bounding" class:active={isHovered && !isEmbeddingExpanded}></div>
+		<div class="bounding embedding-bounding" class:active={isHovered && !isExpanded}></div>
 		<div class="token-column resizable resize-watch flex">
 			<!-- token -->
 			<div class="column token-string relative">
-				{#if isEmbeddingExpanded}<div class="subtitle embedding-detail">
+				{#if isExpanded}<div class="subtitle embedding-detail">
 						<TextbookTooltip id="token-embedding">Tokenization</TextbookTooltip>
 					</div>{/if}
 				{#each $tokens as token, index}
@@ -174,33 +167,18 @@ const embeddingVectorColor = 'bg-gray-300'
 					</div>
 				{/each}
 			</div>
-			{#if isEmbeddingExpanded}
+			{#if isExpanded}
 				<!-- token id and embedding -->
 				<div class="column token-embedding embedding-detail">
 					<div class="subtitle flex items-center gap-1">
 						<TextbookTooltip id="token-embedding"><span>Token<br />Embedding</span></TextbookTooltip
 						>
-						<!-- <HelpPopover
-							id="token-embedding"
-							goTo="article-token-embedding"
-							>{`Converts tokens into numerical \nrepresentations using embeddings \nderived from predefined vocabulary, \ncapturing their semantic meaning.`}</HelpPopover
-						> -->
 					</div>
 					{#each $tokens as token, index}
 						<div class="token-id flex items-center">
 							<div class="vocab-index ellipsis flex items-center text-right text-xs text-gray-400">
 								<div class="flex flex-col items-center">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										viewBox="0 0 31 9"
-										fill="none"
-										class="w-10 text-gray-300"
-									>
-										<path
-											fill="currentColor"
-											d="M30.3886 4.74352C30.5839 4.54826 30.5839 4.23168 30.3886 4.03642L27.2067 0.854435C27.0114 0.659173 26.6948 0.659173 26.4996 0.854435C26.3043 1.0497 26.3043 1.36628 26.4996 1.56154L29.328 4.38997L26.4996 7.2184C26.3043 7.41366 26.3043 7.73024 26.4996 7.9255C26.6948 8.12076 27.0114 8.12076 27.2067 7.9255L30.3886 4.74352ZM0.31958 4.88997H30.0351V3.88997H0.31958V4.88997Z"
-										/>
-									</svg>
+									<MoveRight />
 								</div>
 							</div>
 							<div class="cell flex items-center">
@@ -219,7 +197,7 @@ const embeddingVectorColor = 'bg-gray-300'
 				</div>
 				<!-- position embedding -->
 				<div class="column symbol embedding-detail">
-					{#each $tokens as token, index}
+					{#each $tokens}
 						<div class="cell text-lg">+</div>
 					{/each}
 				</div>
@@ -228,13 +206,8 @@ const embeddingVectorColor = 'bg-gray-300'
 						<TextbookTooltip id="positional-encoding">
 							<span>Positional<br />Encoding</span>
 						</TextbookTooltip>
-						<!-- <HelpPopover
-							id="position-embedding"
-							goTo="article-positional-embedding"
-							>{`Converts token positions into \nnumerical representations that \ncapture their order in the sequence.`}</HelpPopover
-						> -->
 					</div>
-					{#each $tokens as token, index}
+					{#each $tokens as _, index}
 						<div class="cell flex items-center">
 							<div class={`vector ${embeddingVectorColor}`}>
 								<VectorCanvas
@@ -257,28 +230,25 @@ const embeddingVectorColor = 'bg-gray-300'
 					{/each}
 				</div>
 				<div class="column symbol embedding-detail">
-					{#each $tokens as token, index}
+					{#each $tokens}
 						<div class="cell">=</div>
 					{/each}
 				</div>
 				<DaisyTooltip triggeredBy=".embedding .vector" class="popover" placement="right"
-					>vector({$modelMeta.dimension})</DaisyTooltip
-				>
-				<!-- <PositionalEncodingPopover triggeredBy=".position-embedding" /> -->
+					>vector({$modelMeta.dimension})</DaisyTooltip>
 			{/if}
 		</div>
 
 		<div class="vector-column block-start-column relative flex">
 			<div class="column vectors embedding-column">
-				{#each $tokens as token, index}
+				{#each $tokens as _, index}
 					<div class={`vector ${embeddingVectorColor}`} class:last={index === $tokens.length - 1}>
-						<VectorCanvas active={$blockIdx === 0 && (isHovered || isEmbeddingExpanded)} />
+						<VectorCanvas active={$blockIdx === 0 && (isHovered || isExpanded)} />
 					</div>
 				{/each}
 			</div>
 			<DaisyTooltip triggeredBy=".step.embedding .vector" class="popover" placement="right"
-				>vector({$modelMeta.dimension})</DaisyTooltip
-			>
+				>vector({$modelMeta.dimension})</DaisyTooltip>
 		</div>
 	</div>
 </div>

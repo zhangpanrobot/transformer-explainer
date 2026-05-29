@@ -14,7 +14,7 @@ import {
   topbarHeight,
   weightPopover,
 } from '~/store'
-import { textPages } from '~/utils/textbookPages'
+import { completePage } from '~/utils/textbook/pages/actions'
 import TextbookTooltip from './common/TextbookTooltip.svelte'
 
 let resizeObserver: ResizeObserver
@@ -148,13 +148,13 @@ onMount(() => {
 
 const onClickNext = (e: MouseEvent) => {
   e.stopPropagation()
-  textPages.find((page) => page.id === 'blocks')?.complete?.()
+  completePage('blocks')
 
   $blockIdxTemp = $blockIdxTemp < $modelMeta.layer_num - 1 ? $blockIdxTemp + 1 : 0
 }
 const onClickPrev = (e: MouseEvent) => {
   e.stopPropagation()
-  textPages.find((page) => page.id === 'blocks')?.complete?.()
+  completePage('blocks')
 
   $blockIdxTemp = $blockIdxTemp > 0 ? $blockIdxTemp - 1 : $modelMeta.layer_num - 1
 }
@@ -168,7 +168,6 @@ const onClickPrev = (e: MouseEvent) => {
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
 	class="transformer-bounding-title"
-	data-click="transformer-bounding-title"
 	class:deactive={!!$weightPopover}
 	class:hide={!!$expandedBlock.id}
 	onmouseenter={() => {
@@ -184,13 +183,11 @@ const onClickPrev = (e: MouseEvent) => {
 		<span class="title-text">Transformer Block {$blockIdxTemp + 1}</span>
 	</TextbookTooltip>
 	<button
-		data-click="transformer-block-prev-btn"
 		onclick={onClickPrev}
 		disabled={$isOnAnimation || $isOnBlockTransition || $blockIdxTemp === 0}
 		><ChevronLeft /></button
 	>
 	<button
-		data-click="transformer-block-next-btn"
 		onclick={onClickNext}
 		disabled={$isOnAnimation || $isOnBlockTransition || $blockIdxTemp === $modelMeta.layer_num - 1}
 		><ChevronRight /></button
